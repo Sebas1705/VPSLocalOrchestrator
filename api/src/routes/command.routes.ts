@@ -74,4 +74,64 @@ router.post('/batch', requireAuth, async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * POST /api/command/service
+ * Gestiona servicios systemd (start, stop, restart, status, enable, disable)
+ * Requiere autenticación
+ */
+router.post('/service', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { service, action } = req.body;
+
+    if (!service || !action) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'Service name and action are required',
+      });
+    }
+
+    const validActions = ['start', 'stop', 'restart', 'status', 'enable', 'disable'];
+    if (!validActions.includes(action)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: `Action must be one of: ${validActions.join(', ')}`,
+      });
+    }
+
+    const command = `sudo -n systemctl ${action} ${service}`; // -n evita prompt interactivo
+    console.log(`[command] Service operation: ${command}`);
+
+    const result = await executeCommand(command, { timeout: 30000 });
+
+    // Si sudo falla por falta de permisos o requiere password, retorna 403
+    if (result.exitCode !== 0 && /sudo:|permission/i.test(result.stderr)) {
+      return res.status(403).json({
+        success: false,
+        error: 'Forbidden',
+        message: 'Sudo not permitted or password required. Configure sudoers for passwordless access.',
+        stderr: result.stderr,
+      });
+    }
+
+    res.json({
+      success: result.exitCode === 0,
+      service,
+      action,
+      result: {
+        stdout: result.stdout,
+        stderr: result.stderr,
+        exitCode: result.exitCode,
+        duration: result.duration,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
 export default router;

@@ -54,13 +54,11 @@ Información general de la API.
     "health": "GET /health",
     "executeCommand": "POST /api/command/execute",
     "batchCommands": "POST /api/command/batch",
+    "serviceManagement": "POST /api/command/service",
     "systemResources": "GET /api/resources",
     "processes": "GET /api/resources/processes",
     "networkStats": "GET /api/resources/network",
-    "killProcess": "DELETE /api/resources/process/:pid",
-    "privilegedExecute": "POST /api/privileged/execute (requires token)",
-    "privilegedBatch": "POST /api/privileged/batch (requires token)",
-    "privilegedService": "POST /api/privileged/service (requires token)"
+    "killProcess": "DELETE /api/resources/process/:pid"
   }
 }
 ```
@@ -144,6 +142,45 @@ Ejecuta múltiples comandos en secuencia. **Requiere autenticación**.
 - `200`: Todos los comandos ejecutados
 - `401`: Token inválido o no proporcionado
 - `400`: Array de comandos vacío
+
+---
+
+### POST /api/command/service
+Gestiona servicios systemd (start, stop, restart, status, enable, disable). **Requiere autenticación**.
+
+> Nota: usa `sudo -n` y fallará con 403 si sudo requiere contraseña. Configure sudoers para passwordless si necesita usarlo sin prompt.
+
+**Request**:
+```json
+{
+  "service": "nginx",
+  "action": "status"
+}
+```
+
+**Acciones disponibles**: `start`, `stop`, `restart`, `status`, `enable`, `disable`
+
+**Response** (ejemplo):
+```json
+{
+  "success": true,
+  "service": "nginx",
+  "action": "status",
+  "result": {
+    "stdout": "● nginx.service - A high performance web server and a reverse proxy server\n   Loaded: loaded (/lib/systemd/system/nginx.service; enabled; vendor preset: enabled)\n   Active: active (running)...",
+    "stderr": "",
+    "exitCode": 0,
+    "duration": 120
+  }
+}
+```
+
+**Status Codes**:
+- `200`: Operación ejecutada
+- `401`: Token inválido o no proporcionado
+- `403`: Sudo no permitido o requiere password (ver stderr)
+- `400`: Parámetros inválidos
+- `500`: Error al ejecutar el comando
 
 ---
 
@@ -291,96 +328,6 @@ Termina un proceso por su PID.
 
 ---
 
-## 🔒 Comandos Privilegiados
-
-> ⚠️ Todos estos endpoints requieren autenticación con token válido.
-
-### POST /api/privileged/execute
-Ejecuta comandos con permisos elevados (requiere sudo).
-
-**Request**:
-```json
-{
-  "command": "systemctl restart nginx"
-}
-```
-
-**Response**:
-```json
-{
-  "success": true,
-  "stdout": "",
-  "stderr": "",
-  "exitCode": 0
-}
-```
-
-**Status Codes**:
-- `200`: Comando ejecutado
-- `401`: Token inválido
-- `403`: Comando rechazado por políticas de seguridad
-
----
-
-### POST /api/privileged/batch
-Ejecuta múltiples comandos privilegiados.
-
-**Request**:
-```json
-{
-  "commands": [
-    "systemctl restart nginx",
-    "systemctl restart mysql"
-  ]
-}
-```
-
-**Response**:
-```json
-{
-  "success": true,
-  "results": [
-    {
-      "command": "systemctl restart nginx",
-      "stdout": "",
-      "stderr": "",
-      "exitCode": 0
-    },
-    {
-      "command": "systemctl restart mysql",
-      "stdout": "",
-      "stderr": "",
-      "exitCode": 0
-    }
-  ]
-}
-```
-
----
-
-### POST /api/privileged/service
-Gestiona servicios systemd.
-
-**Request**:
-```json
-{
-  "action": "restart",
-  "service": "nginx"
-}
-```
-
-**Acciones disponibles**: `start`, `stop`, `restart`, `reload`, `status`
-
-**Response**:
-```json
-{
-  "success": true,
-  "message": "Service 'nginx' restarted successfully",
-  "status": "active (running)"
-}
-```
-
----
 
 ## ⚠️ Errores Comunes
 
