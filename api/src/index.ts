@@ -36,7 +36,7 @@ app.use('/api/privileged', privilegedRoutes);
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '1.0.0',
+    version: '1.0.1',
     description: 'API para orquestar recursos y ejecutar comandos localmente',
     endpoints: {
       health: 'GET /health',
@@ -44,6 +44,7 @@ app.get('/', (req: Request, res: Response) => {
       batchCommands: 'POST /api/command/batch',
       systemResources: 'GET /api/resources',
       processes: 'GET /api/resources/processes',
+      networkStats: 'GET /api/resources/network',
       killProcess: 'DELETE /api/resources/process/:pid',
       privilegedExecute: 'POST /api/privileged/execute (requires token)',
       privilegedBatch: 'POST /api/privileged/batch (requires token)',
