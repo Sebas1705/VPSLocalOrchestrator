@@ -526,21 +526,21 @@ IMPACTO vs COMPLEJIDAD
 (Alto impacto, baja complejidad = prioridad alta)
 
 Tier 1 (Empezar por estos):
-  ✅ Network Monitoring         [Alto impacto, Media complejidad]
-  ✅ Process Priority Control   [Medio impacto, Baja complejidad]
-  ✅ Service Health Checks      [Alto impacto, Media complejidad]
-  ✅ Basic Logging/Audit        [Alto impacto, Media complejidad]
+  [x] Network Monitoring         [Alto impacto, Media complejidad]
+  [ ] Process Priority Control   [Medio impacto, Baja complejidad]
+  [ ] Service Health Checks      [Alto impacto, Media complejidad]
+  [ ] Basic Logging/Audit        [Alto impacto, Media complejidad]
 
 Tier 2 (Después):
-  ✅ File Operations            [Medio impacto, Media complejidad]
-  ✅ Backup/Restore             [Alto impacto, Alta complejidad]
-  ✅ Secrets Management         [Alto impacto, Media complejidad]
-  ✅ Webhooks/Events            [Medio impacto, Media complejidad]
+  [ ] File Operations            [Medio impacto, Media complejidad]
+  [ ] Backup/Restore             [Alto impacto, Alta complejidad]
+  [ ] Secrets Management         [Alto impacto, Media complejidad]
+  [ ] Webhooks/Events            [Medio impacto, Media complejidad]
 
 Tier 3 (Avanzado):
-  ✅ Workflows                  [Alto impacto, Alta complejidad]
-  ✅ Docker Integration         [Medio impacto, Media complejidad]
-  ✅ Custom Metrics             [Medio impacto, Baja complejidad]
+  [ ] Workflows                  [Alto impacto, Alta complejidad]
+  [ ] Docker Integration         [Medio impacto, Media complejidad]
+  [ ] Custom Metrics             [Medio impacto, Baja complejidad]
 ```
 
 ---
@@ -548,10 +548,10 @@ Tier 3 (Avanzado):
 ## 🚀 Roadmap Sugerido
 
 ### Fase 1 (v1.2.0 - 1 mes)
-- Network monitoring
-- Enhanced service status
-- Basic audit logging
-- Process priority control
+- [x] Network monitoring
+- [ ] Enhanced service status
+- [ ] Basic audit logging
+- [ ] Process priority control
 
 ### Fase 2 (v1.3.0 - 1-2 meses)
 - File operations
