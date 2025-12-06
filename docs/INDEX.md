@@ -24,13 +24,12 @@ Bienvenido a la documentación interna del **VPS Local Orchestrator API**. Esta 
 ### 📡 **API & Referencia Técnica**
 | Archivo | Contenido |
 |---------|----------|
-| [`api/ENDPOINTS.md`](api/ENDPOINTS.md) | Documentación técnica de todos los endpoints |
+| [`API.md`](API.md) | Documentación técnica de todos los endpoints |
 
 ### 💻 **Ejemplos Prácticos**
 | Archivo | Contenido |
 |---------|----------|
-| [`examples/CURL.md`](examples/CURL.md) | 20+ ejemplos reales con curl |
-| [`examples/N8N.md`](examples/N8N.md) | Workflows de integración con n8n |
+| [`examples/`](examples/) | Configuración de ejemplo y workflows de n8n |
 
 ### 👨‍💻 **Desarrollo & Contribución**
 | Archivo | Contenido |
@@ -50,11 +49,6 @@ Bienvenido a la documentación interna del **VPS Local Orchestrator API**. Esta 
 | [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) | Solución de problemas comunes |
 | [`FAQ.md`](FAQ.md) | Preguntas frecuentes con respuestas |
 
-### 📦 **Información del Proyecto**
-| Archivo | Contenido |
-|---------|----------|
-| [`legacy/`](legacy/) | Documentación anterior (archivada) |
-
 ---
 
 ## 🎯 Guías Rápidas por Caso de Uso
@@ -62,11 +56,11 @@ Bienvenido a la documentación interna del **VPS Local Orchestrator API**. Esta 
 ### 👶 **Soy nuevo en el proyecto**
 1. **Lee primero**: [`../README.md`](../README.md) (5 min) - Visión general
 2. **Luego instala**: [`setup/INSTALLATION.md`](setup/INSTALLATION.md) (10 min)
-3. **Prueba**: [`examples/CURL.md`](examples/CURL.md) - Primeros comandos (10 min)
+3. **Prueba**: [`API.md`](API.md) - Primeros comandos (10 min)
 
 ### 🔑 **Necesito entender la autenticación**
 1. [`guides/AUTHENTICATION.md`](guides/AUTHENTICATION.md) - Conceptos y cómo funciona
-2. [`examples/CURL.md`](examples/CURL.md) - Ejemplos con token
+2. [`API.md`](API.md) - Ejemplos con token
 3. [`guides/ENVIRONMENT.md`](guides/ENVIRONMENT.md) - Variables API_TOKEN
 
 ### ⚙️ **Necesito configurar la API**
@@ -76,11 +70,11 @@ Bienvenido a la documentación interna del **VPS Local Orchestrator API**. Esta 
 
 ### 🔗 **Quiero integrar con n8n**
 1. [`../README.md`](../README.md) - Ejemplo rápido en la sección "Integración n8n"
-2. [`examples/N8N.md`](examples/N8N.md) - Workflows completos
-3. [`api/ENDPOINTS.md`](api/ENDPOINTS.md) - Referencia de endpoints
+2. [`examples/`](examples/) - Workflows de n8n y configuración
+3. [`API.md`](API.md) - Referencia de endpoints
 
 ### 📡 **Necesito documentación técnica de endpoints**
-→ [`api/ENDPOINTS.md`](api/ENDPOINTS.md)
+→ [`API.md`](API.md)
 
 ### 🗺️ **Quiero ver el roadmap futuro**
 1. [`FEATURE_ROADMAP.md`](FEATURE_ROADMAP.md) - 12 categorías, 3 tiers, timeline
@@ -100,7 +94,7 @@ Bienvenido a la documentación interna del **VPS Local Orchestrator API**. Esta 
 2. [`setup/DEVELOPMENT.md`](setup/DEVELOPMENT.md) - Setup para desarrollo
 
 ### 💡 **Quiero ver ejemplos reales**
-→ [`examples/CURL.md`](examples/CURL.md) (20+ comandos listos para copiar)
+→ [`API.md`](API.md)
 
 ---
 
@@ -109,6 +103,10 @@ Bienvenido a la documentación interna del **VPS Local Orchestrator API**. Esta 
 ```
 docs/
 ├── INDEX.md                           # 📍 Este archivo - Guía de navegación
+├── API.md                             # 📡 Documentación técnica de endpoints
+├── FEATURE_ROADMAP.md                 # 🗺️ Features futuras (12 categorías, 3 tiers)
+├── ANALYSIS_SUMMARY.md                # 📊 Análisis pre-merge y mejoras implementadas
+├── MERGE_INSTRUCTIONS.md              # 🔗 Instrucciones para merge a main
 ├── CONTRIBUTING.md                    # 👨‍💻 Cómo contribuir
 ├── TROUBLESHOOTING.md                 # 🆘 Problemas comunes
 ├── FAQ.md                             # ❓ Preguntas frecuentes
@@ -122,29 +120,10 @@ docs/
 │   ├── CONFIGURATION.md               # Sistema .env
 │   └── ENVIRONMENT.md                 # Variables de entorno
 │
-├── api/                               # 📡 Referencia técnica
-│   └── ENDPOINTS.md                   # Documentación de endpoints
-│
-├── examples/                          # 💻 Ejemplos prácticos
-│   ├── CURL.md                        # 20+ ejemplos con curl
-│   └── N8N.md                         # Workflows n8n
-│
-├── FEATURE_ROADMAP.md                 # 🗺️ Features futuras (12 categorías, 3 tiers)
-├── ANALYSIS_SUMMARY.md                # 📊 Análisis pre-merge y mejoras implementadas
-├── MERGE_INSTRUCTIONS.md              # 🔗 Instrucciones para merge a main
-│
-├── CONTRIBUTING.md                    # 👨‍💻 Guía de contribución
-├── TROUBLESHOOTING.md                 # 🆘 Problemas comunes
-├── FAQ.md                             # ❓ Preguntas frecuentes
-│
-└── legacy/                            # 📦 Archivos anteriores
-    ├── AUTH.md
-    ├── CONFIG_SETUP.md
-    ├── ENV_GUIDE.md
-    ├── EXAMPLES.md
-    ├── GIT_WORKFLOW.md
-    ├── PROJECT_SUMMARY.md
-    └── TEST_RESULTS.md
+└── examples/                          # 💻 Ejemplos prácticos
+    ├── .env.example                   # Ejemplo de configuración
+    ├── n8n-examples.json              # Ejemplos de n8n
+    └── n8n-workflow-monitor.json      # Workflow monitor de n8n
 ```
 
 ---
