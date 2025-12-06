@@ -2,6 +2,7 @@ import express, { type Application, type Request, type Response } from 'express'
 import { localhostOnly, requestLogger, errorHandler } from './middleware/security.js';
 import commandRoutes from './routes/command.routes.js';
 import resourceRoutes from './routes/resources.routes.js';
+import servicesRoutes from './routes/services.routes.js';
 import { getConfig, Logger } from './config/index.js';
 
 const config = getConfig();
@@ -29,12 +30,13 @@ app.get('/health', (req: Request, res: Response) => {
 // Rutas principales
 app.use('/api/command', commandRoutes);
 app.use('/api/resources', resourceRoutes);
+app.use('/api/services', servicesRoutes);
 
 // Ruta por defecto
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '1.0.2',
+    version: '1.0.3',
     description: 'API para orquestar recursos y ejecutar comandos localmente',
     endpoints: {
       health: 'GET /health',
@@ -46,6 +48,8 @@ app.get('/', (req: Request, res: Response) => {
       networkStats: 'GET /api/resources/network',
       processPriority: 'POST /api/resources/process/:pid/priority',
       killProcess: 'DELETE /api/resources/process/:pid',
+      services: 'GET /api/services',
+      serviceHealth: 'GET /api/services/:name/health',
     },
   });
 });

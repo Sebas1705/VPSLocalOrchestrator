@@ -2,7 +2,7 @@
 
 Guía completa de todos los endpoints disponibles en la VPS Local Orchestrator API.
 
-**Versión actual**: v1.0.2
+**Versión actual**: v1.0.3
 
 ---
 
@@ -374,6 +374,77 @@ Termina un proceso por su PID.
 
 ---
 
+## 🔧 Salud de Servicios Systemd
+
+### GET /api/services
+Lista todos los servicios systemd activos del sistema.
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "name": "ssh",
+      "status": "active"
+    },
+    {
+      "name": "docker",
+      "status": "active"
+    },
+    ...
+  ]
+}
+```
+
+**Status Code**: 200
+
+**Ejemplo de uso**:
+```bash
+curl -s http://localhost:3000/api/services | jq .
+```
+
+---
+
+### GET /api/services/:name/health
+Obtiene información detallada del estado de salud de un servicio systemd específico. **NEW en v1.0.3**
+
+**URL Parameters**:
+- `name` (requerido): Nombre del servicio (ej: `ssh`, `docker`, `mysql`)
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "name": "ssh",
+    "active": true,
+    "enabled": true,
+    "status": "running",
+    "uptime": "4d 12h 30m",
+    "memoryUsage": "7.6M",
+    "cpuUsage": "0.2%"
+  }
+}
+```
+
+**Campos opcionales**: `uptime`, `memoryUsage`, `cpuUsage` pueden no estar disponibles dependiendo del servicio.
+
+**Status Codes**:
+- `200`: Información del servicio obtenida
+- `400`: Nombre de servicio no proporcionado
+- `500`: Error al obtener estado del servicio
+
+**Ejemplo de uso**:
+```bash
+# Verificar estado de SSH
+curl -s http://localhost:3000/api/services/ssh/health | jq .
+
+# Verificar estado de Docker
+curl -s http://localhost:3000/api/services/docker/health | jq .
+```
+
+---
 
 ## ⚠️ Errores Comunes
 
@@ -450,6 +521,7 @@ curl -X POST http://localhost:3000/api/command/batch \
 - **v1.0.0**: API base con ejecución de comandos y monitoreo básico
 - **v1.0.1**: Agregado monitoreo de interfaces de red y conexiones (GET /api/resources/network)
 - **v1.0.2**: Control de prioridad de procesos (POST /api/resources/process/:pid/priority)
+- **v1.0.3**: Verificación de salud de servicios systemd (GET /api/services/:name/health)
 - **v1.2.0**: Fase 1 completada (Enhanced Service Status, Audit Logging)
 - **v1.3.0**: Fase 2 completada
 - **v2.0.0**: Fase 3 completada
