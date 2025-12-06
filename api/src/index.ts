@@ -4,6 +4,7 @@ import commandRoutes from './routes/command.routes.js';
 import resourceRoutes from './routes/resources.routes.js';
 import servicesRoutes from './routes/services.routes.js';
 import auditRoutes from './routes/audit.routes.js';
+import fileRoutes from './routes/file.routes.js';
 import { getConfig, Logger } from './config/index.js';
 
 const config = getConfig();
@@ -33,12 +34,13 @@ app.use('/api/command', commandRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/logs', auditRoutes);
+app.use('/api/files', fileRoutes);
 
 // Ruta por defecto
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '1.0.4',
+    version: '1.1.0',
     description: 'API para orquestar recursos y ejecutar comandos localmente',
     endpoints: {
       health: 'GET /health',
@@ -54,6 +56,11 @@ app.get('/', (req: Request, res: Response) => {
       serviceHealth: 'GET /api/services/:name/health',
       auditLogs: 'GET /api/logs',
       searchLogs: 'POST /api/logs/search',
+      fileRead: 'GET /api/files?path=<path>',
+      fileWrite: 'POST /api/files',
+      fileDelete: 'DELETE /api/files?path=<path>',
+      mkdir: 'POST /api/files/mkdir',
+      rmdir: 'DELETE /api/files/rmdir?path=<path>',
     },
   });
 });

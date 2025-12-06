@@ -554,10 +554,10 @@ Tier 3 (Avanzado):
 - [x] Process priority control
 
 ### Fase 2 (v1.3.0 - 1-2 meses)
-- File operations
-- Webhooks/events
-- Secrets management
-- Basic backup
+- [x] File operations
+- [ ] Webhooks/events
+- [ ] Secrets management
+- [ ] Basic backup
 
 ### Fase 3 (v2.0.0 - 2-3 meses)
 - Workflow engine

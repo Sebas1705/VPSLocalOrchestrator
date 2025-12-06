@@ -2,7 +2,7 @@
 
 Guía completa de todos los endpoints disponibles en la VPS Local Orchestrator API.
 
-**Versión actual**: v1.0.4
+**Versión actual**: v1.1.0
 
 ---
 
@@ -564,6 +564,217 @@ curl -X POST http://localhost:3000/api/logs/search \
 
 ---
 
+## 📁 Operaciones de Archivos
+
+### GET /api/files?path=<path>
+Lee un archivo o lista contenido de un directorio. **Requiere autenticación**. **NEW en v1.1.0**
+
+**Query Parameters**:
+- `path` (requerido): Ruta del archivo o directorio
+
+**Response (lectura de archivo)**:
+```json
+{
+  "success": true,
+  "data": {
+    "path": "/tmp/test.txt",
+    "content": "Contenido del archivo",
+    "size": 22,
+    "type": "text"
+  }
+}
+```
+
+**Response (listado de directorio)**:
+```json
+{
+  "success": true,
+  "data": {
+    "path": "/tmp",
+    "files": [
+      {
+        "name": "test.txt",
+        "path": "/tmp/test.txt",
+        "type": "file",
+        "size": 22,
+        "modified": "2025-12-06T21:00:00.000Z",
+        "permissions": "644"
+      }
+    ]
+  }
+}
+```
+
+**Status Codes**:
+- `200`: Archivo/directorio encontrado
+- `400`: path no proporcionado
+- `404`: Archivo/directorio no encontrado
+- `500`: Error al leer
+
+**Rutas permitidas**: `/home/*`, `/tmp/*`, `/var/log/*`, `/var/tmp/*`
+
+**Ejemplo de uso**:
+```bash
+# Leer archivo
+curl -s http://localhost:3000/api/files?path=/tmp/test.txt \
+  -H "Authorization: Bearer tu-token-secreto-aqui" | jq .
+
+# Listar directorio
+curl -s http://localhost:3000/api/files?path=/tmp \
+  -H "Authorization: Bearer tu-token-secreto-aqui" | jq .data.files
+```
+
+---
+
+### POST /api/files
+Escribe contenido en un archivo. **Requiere autenticación**. **NEW en v1.1.0**
+
+**Request Body**:
+```json
+{
+  "path": "/tmp/newfile.txt",
+  "content": "contenido del archivo",
+  "append": false
+}
+```
+
+**Body Parameters**:
+- `path` (requerido): Ruta del archivo
+- `content` (requerido): Contenido a escribir (string)
+- `append` (opcional): Si es `true`, agrega al final. Default: `false`
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "path": "/tmp/newfile.txt",
+    "size": 22,
+    "written": 22
+  }
+}
+```
+
+**Status Codes**:
+- `201`: Archivo creado/actualizado
+- `400`: Parámetros inválidos
+- `500`: Error al escribir
+
+**Ejemplo de uso**:
+```bash
+# Crear archivo
+curl -X POST http://localhost:3000/api/files \
+  -H "Authorization: Bearer tu-token-secreto-aqui" \
+  -H "Content-Type: application/json" \
+  -d '{"path":"/tmp/test.txt","content":"Hello World"}'
+
+# Agregar contenido al final
+curl -X POST http://localhost:3000/api/files \
+  -H "Authorization: Bearer tu-token-secreto-aqui" \
+  -H "Content-Type: application/json" \
+  -d '{"path":"/tmp/test.txt","content":"\nAñadida nueva línea","append":true}'
+```
+
+---
+
+### DELETE /api/files?path=<path>
+Elimina un archivo. **Requiere autenticación**. **NEW en v1.1.0**
+
+**Query Parameters**:
+- `path` (requerido): Ruta del archivo a eliminar
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "path": "/tmp/test.txt",
+    "deleted": true
+  }
+}
+```
+
+**Status Codes**:
+- `200`: Archivo eliminado
+- `400`: path no proporcionado
+- `404`: Archivo no encontrado
+- `500`: Error al eliminar
+
+**Ejemplo de uso**:
+```bash
+curl -X DELETE "http://localhost:3000/api/files?path=/tmp/test.txt" \
+  -H "Authorization: Bearer tu-token-secreto-aqui"
+```
+
+---
+
+### POST /api/files/mkdir
+Crea un directorio. **Requiere autenticación**. **NEW en v1.1.0**
+
+**Request Body**:
+```json
+{
+  "path": "/tmp/newdir"
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "path": "/tmp/newdir",
+    "created": true
+  }
+}
+```
+
+**Status Codes**:
+- `201`: Directorio creado
+- `400`: path no proporcionado
+- `500`: Error al crear
+
+**Ejemplo de uso**:
+```bash
+curl -X POST http://localhost:3000/api/files/mkdir \
+  -H "Authorization: Bearer tu-token-secreto-aqui" \
+  -H "Content-Type: application/json" \
+  -d '{"path":"/tmp/newdir"}'
+```
+
+---
+
+### DELETE /api/files/rmdir?path=<path>
+Elimina un directorio vacío. **Requiere autenticación**. **NEW en v1.1.0**
+
+**Query Parameters**:
+- `path` (requerido): Ruta del directorio a eliminar
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "path": "/tmp/emptydir",
+    "deleted": true
+  }
+}
+```
+
+**Status Codes**:
+- `200`: Directorio eliminado
+- `400`: path no proporcionado
+- `404`: Directorio no encontrado
+- `500`: Error al eliminar (puede estar no vacío)
+
+**Ejemplo de uso**:
+```bash
+curl -X DELETE "http://localhost:3000/api/files/rmdir?path=/tmp/emptydir" \
+  -H "Authorization: Bearer tu-token-secreto-aqui"
+```
+
+---
+
 ## ⚠️ Errores Comunes
 
 ### 401 Unauthorized
@@ -641,6 +852,7 @@ curl -X POST http://localhost:3000/api/command/batch \
 - **v1.0.2**: Control de prioridad de procesos (POST /api/resources/process/:pid/priority)
 - **v1.0.3**: Verificación de salud de servicios systemd (GET /api/services/:name/health)
 - **v1.0.4**: Logging de auditoría básico (GET /api/logs, POST /api/logs/search)
+- **v1.1.0**: Operaciones de archivos (GET/POST/DELETE /api/files, mkdir, rmdir)
 - **v1.2.0**: Fase 1 completada (All Tier 1 features)
 - **v1.3.0**: Fase 2 completada
 - **v2.0.0**: Fase 3 completada
