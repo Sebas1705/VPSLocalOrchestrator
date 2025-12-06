@@ -55,10 +55,10 @@ async function getDiskUsage(): Promise<{ total: number; free: number; used: numb
     const [total, used, free, percent] = result.stdout.split(' ');
     
     return {
-      total: parseInt(total) * 1024, // Convertir a bytes
-      used: parseInt(used) * 1024,
-      free: parseInt(free) * 1024,
-      usagePercent: parseFloat(percent),
+      total: parseInt(total ?? '') * 1024, // Convertir a bytes
+      used: parseInt(used ?? '') * 1024,
+      free: parseInt(free ?? '') * 1024,
+      usagePercent: parseFloat(percent ?? ''),
     };
   } catch (error) {
     return { total: 0, free: 0, used: 0, usagePercent: 0 };
@@ -110,10 +110,10 @@ export async function getProcessList(limit: number = 10): Promise<ProcessInfo[]>
       const parts = line.trim().split(/\s+/);
       if (parts.length >= 4) {
         processes.push({
-          pid: parseInt(parts[0]),
-          name: parts[1],
-          cpu: parseFloat(parts[2]),
-          memory: parseFloat(parts[3]),
+          pid: parseInt(parts[0] ?? ''),
+          name: parts[1] ?? '',
+          cpu: parseFloat(parts[2] ?? ''),
+          memory: parseFloat(parts[3] ?? ''),
         });
       }
     }

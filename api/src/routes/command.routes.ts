@@ -1,23 +1,23 @@
-import express, { type Request, type Response, type Router } from 'express';
+import express from 'express';
+import type { Request, Response } from 'express';
 import { executeCommand } from '../services/commandExecutor.js';
 import { validateCommandBody } from '../middleware/security.js';
-
-const router: Router = express.Router();
+import { requireAuth } from '../middleware/requireAuth.js';
+const router = express.Router();
 
 /**
  * POST /api/command/execute
- * Ejecuta un comando del sistema
+ * Ejecuta un comando del sistema (requiere autenticación)
  */
-router.post('/execute', validateCommandBody, async (req: Request, res: Response) => {
+router.post('/execute', requireAuth, validateCommandBody, async (req: Request, res: Response) => {
+  console.log('[handler /execute] Handler ejecutado');
   try {
     const { command, timeout, cwd, env } = req.body;
-
     const result = await executeCommand(command, {
       timeout: timeout || 30000,
       cwd,
       env,
     });
-
     res.json({
       success: result.exitCode === 0,
       result: {
@@ -37,41 +37,31 @@ router.post('/execute', validateCommandBody, async (req: Request, res: Response)
 
 /**
  * POST /api/command/batch
- * Ejecuta múltiples comandos secuencialmente
+ * Ejecuta múltiples comandos secuencialmente (requiere autenticación)
  */
-router.post('/batch', async (req: Request, res: Response) => {
+router.post('/batch', requireAuth, async (req: Request, res: Response) => {
   try {
     const { commands } = req.body;
-
     if (!Array.isArray(commands) || commands.length === 0) {
       return res.status(400).json({
         error: 'Bad Request',
         message: 'Commands must be a non-empty array',
       });
     }
-
     const results = [];
-
     for (const cmd of commands) {
       if (typeof cmd === 'string') {
         const result = await executeCommand(cmd);
-        results.push({
-          command: cmd,
-          ...result,
-        });
+        results.push({ command: cmd, ...result });
       } else if (typeof cmd === 'object' && cmd.command) {
         const result = await executeCommand(cmd.command, {
           timeout: cmd.timeout,
           cwd: cmd.cwd,
           env: cmd.env,
         });
-        results.push({
-          command: cmd.command,
-          ...result,
-        });
+        results.push({ command: cmd.command, ...result });
       }
     }
-
     res.json({
       success: true,
       results,
