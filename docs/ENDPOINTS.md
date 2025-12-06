@@ -2,7 +2,7 @@
 
 Guía completa de todos los endpoints disponibles en la VPS Local Orchestrator API.
 
-**Versión actual**: v1.0.3
+**Versión actual**: v1.0.4
 
 ---
 
@@ -446,6 +446,124 @@ curl -s http://localhost:3000/api/services/docker/health | jq .
 
 ---
 
+## 📋 Auditoría de Logs
+
+### GET /api/logs
+Obtiene los logs de auditoría registrados en el sistema. **NEW en v1.0.4**
+
+**Query Parameters**:
+- `limit` (opcional): Número máximo de logs a retornar. Default: 100
+
+**Response**:
+```json
+{
+  "success": true,
+  "count": 2,
+  "data": [
+    {
+      "timestamp": "2025-12-06T21:00:00.000Z",
+      "action": "process_kill",
+      "details": {
+        "pid": 1234
+      },
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-12-06T20:10:00.000Z",
+      "action": "command_execute",
+      "details": {
+        "command": "invalid"
+      },
+      "status": "failure",
+      "errorMessage": "Command not found"
+    }
+  ]
+}
+```
+
+**Status Code**: 200
+
+**Ejemplo de uso**:
+```bash
+# Obtener últimos 50 logs
+curl -s "http://localhost:3000/api/logs?limit=50" | jq .
+
+# Obtener todos los logs (máx 100)
+curl -s http://localhost:3000/api/logs | jq .
+```
+
+---
+
+### POST /api/logs/search
+Busca logs de auditoría por criterios específicos. **NEW en v1.0.4**
+
+**Request Body**:
+```json
+{
+  "action": "command_execute",
+  "status": "success",
+  "startDate": "2025-12-06T00:00:00Z",
+  "endDate": "2025-12-06T23:59:59Z",
+  "limit": 50
+}
+```
+
+**Body Parameters** (todos opcionales):
+- `action` (string): Filtrar por tipo de acción (búsqueda parcial, case-insensitive)
+- `status` (string): Filtrar por estado: `success` o `failure`
+- `startDate` (ISO string): Fecha mínima
+- `endDate` (ISO string): Fecha máxima
+- `limit` (number): Número máximo de resultados. Default: 100
+
+**Response**:
+```json
+{
+  "success": true,
+  "count": 1,
+  "data": [
+    {
+      "timestamp": "2025-12-06T20:10:00.000Z",
+      "action": "command_execute",
+      "details": {
+        "command": "invalid"
+      },
+      "status": "failure",
+      "errorMessage": "Command not found"
+    }
+  ]
+}
+```
+
+**Status Codes**:
+- `200`: Búsqueda completada
+- `400`: Parámetros inválidos (ej: startDate > endDate)
+- `500`: Error en el servidor
+
+**Ejemplo de uso**:
+```bash
+# Buscar logs de fallos
+curl -X POST http://localhost:3000/api/logs/search \
+  -H "Content-Type: application/json" \
+  -d '{"status":"failure"}'
+
+# Buscar logs de servicio en rango de fechas
+curl -X POST http://localhost:3000/api/logs/search \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "service",
+    "startDate": "2025-12-06T00:00:00Z",
+    "endDate": "2025-12-07T00:00:00Z",
+    "limit": 20
+  }'
+
+# Buscar todos los comandos que fueron exitosos
+curl -X POST http://localhost:3000/api/logs/search \
+  -H "Content-Type: application/json" \
+  -d '{"action":"command","status":"success"}' | jq .
+```
+
+---
+
 ## ⚠️ Errores Comunes
 
 ### 401 Unauthorized
@@ -522,7 +640,8 @@ curl -X POST http://localhost:3000/api/command/batch \
 - **v1.0.1**: Agregado monitoreo de interfaces de red y conexiones (GET /api/resources/network)
 - **v1.0.2**: Control de prioridad de procesos (POST /api/resources/process/:pid/priority)
 - **v1.0.3**: Verificación de salud de servicios systemd (GET /api/services/:name/health)
-- **v1.2.0**: Fase 1 completada (Enhanced Service Status, Audit Logging)
+- **v1.0.4**: Logging de auditoría básico (GET /api/logs, POST /api/logs/search)
+- **v1.2.0**: Fase 1 completada (All Tier 1 features)
 - **v1.3.0**: Fase 2 completada
 - **v2.0.0**: Fase 3 completada
 

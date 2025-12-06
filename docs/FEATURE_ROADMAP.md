@@ -529,7 +529,7 @@ Tier 1 (Empezar por estos):
   [x] Network Monitoring         [Alto impacto, Media complejidad]
   [x] Process Priority Control   [Medio impacto, Baja complejidad]
   [x] Service Health Checks      [Alto impacto, Media complejidad]
-  [ ] Basic Logging/Audit        [Alto impacto, Media complejidad]
+  [x] Basic Logging/Audit        [Alto impacto, Media complejidad]
 
 Tier 2 (Después):
   [ ] File Operations            [Medio impacto, Media complejidad]
@@ -550,7 +550,7 @@ Tier 3 (Avanzado):
 ### Fase 1 (v1.2.0 - 1 mes)
 - [x] Network monitoring
 - [x] Enhanced service status
-- [ ] Basic audit logging
+- [x] Basic audit logging
 - [x] Process priority control
 
 ### Fase 2 (v1.3.0 - 1-2 meses)
