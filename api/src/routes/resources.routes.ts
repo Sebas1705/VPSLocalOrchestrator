@@ -1,5 +1,6 @@
 import express, { type Request, type Response, type Router } from 'express';
 import { getSystemResources, getProcessList, killProcess } from '../services/resourceMonitor.js';
+import { getNetworkStats } from '../services/networkMonitor.js';
 
 const router: Router = express.Router();
 
@@ -34,6 +35,25 @@ router.get('/processes', async (req: Request, res: Response) => {
     res.json({
       success: true,
       data: processes,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * GET /api/resources/network
+ * Obtiene estadísticas de red
+ */
+router.get('/network', async (req: Request, res: Response) => {
+  try {
+    const networkStats = await getNetworkStats();
+    res.json({
+      success: true,
+      data: networkStats,
     });
   } catch (error: any) {
     res.status(500).json({

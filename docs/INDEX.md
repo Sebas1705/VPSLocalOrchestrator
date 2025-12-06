@@ -24,7 +24,7 @@ Bienvenido a la documentación interna del **VPS Local Orchestrator API**. Esta 
 ### 📡 **API & Referencia Técnica**
 | Archivo | Contenido |
 |---------|----------|
-| [`API.md`](API.md) | Documentación técnica de todos los endpoints |
+| [`ENDPOINTS.md`](ENDPOINTS.md) | Documentación completa de todos los endpoints (v1.0.1) |
 
 ### 💻 **Ejemplos Prácticos**
 | Archivo | Contenido |
