@@ -6,6 +6,7 @@ import servicesRoutes from './routes/services.routes.js';
 import auditRoutes from './routes/audit.routes.js';
 import fileRoutes from './routes/file.routes.js';
 import webhookRoutes from './routes/webhook.routes.js';
+import secretsRoutes from './routes/secrets.routes.js';
 import { getConfig, Logger } from './config/index.js';
 
 const config = getConfig();
@@ -37,12 +38,13 @@ app.use('/api/services', servicesRoutes);
 app.use('/api/logs', auditRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/webhooks', webhookRoutes);
+app.use('/api/secrets', secretsRoutes);
 
 // Ruta por defecto
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '1.2.0',
+    version: '1.3.0',
     description: 'API para orquestar recursos y ejecutar comandos localmente',
     endpoints: {
       health: 'GET /health',
@@ -67,6 +69,11 @@ app.get('/', (req: Request, res: Response) => {
       webhooksRegister: 'POST /api/webhooks',
       webhooksDelete: 'DELETE /api/webhooks/:id',
       webhooksTest: 'POST /api/webhooks/:id/test',
+      secretsList: 'GET /api/secrets',
+      secretsCreate: 'POST /api/secrets',
+      secretsGet: 'GET /api/secrets/:id',
+      secretsUpdate: 'PATCH /api/secrets/:id',
+      secretsDelete: 'DELETE /api/secrets/:id',
     },
   });
 });

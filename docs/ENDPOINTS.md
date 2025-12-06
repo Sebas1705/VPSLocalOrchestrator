@@ -2,7 +2,7 @@
 
 Guía completa de todos los endpoints disponibles en la VPS Local Orchestrator API.
 
-**Versión actual**: v1.2.0
+**Versión actual**: v1.3.0
 
 ---
 
@@ -775,6 +775,100 @@ curl -X DELETE "http://localhost:3000/api/files/rmdir?path=/tmp/emptydir" \
 
 ---
 
+## 🔒 Gestión de Secretos (AES-256-GCM)
+
+Requiere autenticación en todos los endpoints. Los valores se almacenan cifrados con AES-256-GCM usando la clave `SECRET_KEY` (base64, 32 bytes). La lista nunca expone el `value`.
+
+### POST /api/secrets
+Creación de un secreto. **NEW en v1.3.0**
+
+**Body**:
+```json
+{
+  "name": "github-token",
+  "value": "ghp_xxx",
+  "tags": ["prod", "github"]
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": "a1b2c3d4e5f6a7b8",
+    "name": "github-token",
+    "tags": ["prod", "github"],
+    "createdAt": "2025-12-06T23:58:00.000Z",
+    "updatedAt": "2025-12-06T23:58:00.000Z"
+  }
+}
+```
+
+### GET /api/secrets
+Lista metadatos de secretos (sin value).
+
+**Response**:
+```json
+{
+  "success": true,
+  "count": 2,
+  "data": [
+    {
+      "id": "a1b2c3d4e5f6a7b8",
+      "name": "github-token",
+      "tags": ["prod"],
+      "createdAt": "2025-12-06T23:58:00.000Z",
+      "updatedAt": "2025-12-06T23:58:00.000Z"
+    }
+  ]
+}
+```
+
+### GET /api/secrets/:id
+Obtiene un secreto y devuelve su `value` descifrado.
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": "a1b2c3d4e5f6a7b8",
+    "name": "github-token",
+    "tags": ["prod"],
+    "createdAt": "2025-12-06T23:58:00.000Z",
+    "updatedAt": "2025-12-06T23:59:10.000Z",
+    "value": "ghp_xxx"
+  }
+}
+```
+
+### PATCH /api/secrets/:id
+Actualiza `name`, `value` (rota) y/o `tags`.
+
+**Body (ejemplo)**:
+```json
+{
+  "value": "ghp_rotated",
+  "tags": ["prod", "rotated"]
+}
+```
+
+**Response**: Igual que GET /:id con valores actualizados.
+
+### DELETE /api/secrets/:id
+Elimina un secreto.
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": { "deleted": true }
+}
+```
+
+---
+
 ## 🔗 Webhooks y Eventos
 
 ### GET /api/webhooks
@@ -1094,7 +1188,7 @@ curl -X POST http://localhost:3000/api/command/batch \
 - **v1.0.4**: Logging de auditoría básico (GET /api/logs, POST /api/logs/search)
 - **v1.1.0**: Operaciones de archivos (GET/POST/DELETE /api/files, mkdir, rmdir)
 - **v1.2.0**: Webhooks y eventos (GET/POST/DELETE /api/webhooks, test)
-- **v1.3.0**: Fase 2 completada (Secrets Management, Backup)
+- **v1.3.0**: Gestión de secretos (CRUD cifrado con AES-256-GCM)
 - **v2.0.0**: Fase 3 completada
 
 ---

@@ -1,13 +1,32 @@
 [
   {
-    "id": "e1361cbf15433a1b",
-    "url": "https://example.com/webhook",
+    "id": "dad7a4ef8a91e093",
+    "url": "http://example.com/webhook",
     "events": [
-      "command_execute",
-      "service_status"
+      "command_execute"
     ],
     "active": true,
-    "createdAt": "2025-12-06T23:43:42.922Z",
-    "secret": "webhook-secret-key"
+    "createdAt": "2025-12-06T23:48:05.044Z",
+    "secret": "my-secret"
+  },
+  {
+    "id": "7b73df8b47bf639f",
+    "url": "http://example.com/webhook",
+    "events": [
+      "command_execute"
+    ],
+    "active": true,
+    "createdAt": "2025-12-06T23:48:10.199Z",
+    "secret": "my-secret"
+  },
+  {
+    "id": "1ee158e745dc41c4",
+    "url": "http://example.com/webhook",
+    "events": [
+      "command_execute"
+    ],
+    "active": true,
+    "createdAt": "2025-12-06T23:48:29.978Z",
+    "secret": "test-secret"
   }
 ]
