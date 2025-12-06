@@ -527,7 +527,7 @@ IMPACTO vs COMPLEJIDAD
 
 Tier 1 (Empezar por estos):
   [x] Network Monitoring         [Alto impacto, Media complejidad]
-  [ ] Process Priority Control   [Medio impacto, Baja complejidad]
+  [x] Process Priority Control   [Medio impacto, Baja complejidad]
   [ ] Service Health Checks      [Alto impacto, Media complejidad]
   [ ] Basic Logging/Audit        [Alto impacto, Media complejidad]
 
@@ -551,7 +551,7 @@ Tier 3 (Avanzado):
 - [x] Network monitoring
 - [ ] Enhanced service status
 - [ ] Basic audit logging
-- [ ] Process priority control
+- [x] Process priority control
 
 ### Fase 2 (v1.3.0 - 1-2 meses)
 - File operations

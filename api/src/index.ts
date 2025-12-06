@@ -34,7 +34,7 @@ app.use('/api/resources', resourceRoutes);
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '1.0.1',
+    version: '1.0.2',
     description: 'API para orquestar recursos y ejecutar comandos localmente',
     endpoints: {
       health: 'GET /health',
@@ -44,6 +44,7 @@ app.get('/', (req: Request, res: Response) => {
       systemResources: 'GET /api/resources',
       processes: 'GET /api/resources/processes',
       networkStats: 'GET /api/resources/network',
+      processPriority: 'POST /api/resources/process/:pid/priority',
       killProcess: 'DELETE /api/resources/process/:pid',
     },
   });

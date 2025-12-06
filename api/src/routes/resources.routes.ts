@@ -1,5 +1,5 @@
 import express, { type Request, type Response, type Router } from 'express';
-import { getSystemResources, getProcessList, killProcess } from '../services/resourceMonitor.js';
+import { getSystemResources, getProcessList, killProcess, setProcessPriority } from '../services/resourceMonitor.js';
 import { getNetworkStats } from '../services/networkMonitor.js';
 
 const router: Router = express.Router();
@@ -85,6 +85,44 @@ router.delete('/process/:pid', async (req: Request, res: Response) => {
       success,
       message: success ? `Process ${pid} killed successfully` : `Failed to kill process ${pid}`,
     });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * POST /api/resources/process/:pid/priority
+ * Cambia la prioridad (nice value) de un proceso
+ */
+router.post('/process/:pid/priority', async (req: Request, res: Response) => {
+  try {
+    const pid = parseInt(req.params.pid ?? '');
+    const { priority } = req.body;
+
+    if (isNaN(pid)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid PID',
+      });
+    }
+
+    if (typeof priority !== 'number' || isNaN(priority)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Priority must be a number between -20 and 19',
+      });
+    }
+
+    const result = await setProcessPriority(pid, priority);
+
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(400).json(result);
+    }
   } catch (error: any) {
     res.status(500).json({
       success: false,

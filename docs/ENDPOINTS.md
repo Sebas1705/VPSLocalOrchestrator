@@ -2,7 +2,7 @@
 
 Guía completa de todos los endpoints disponibles en la VPS Local Orchestrator API.
 
-**Versión actual**: v1.0.1
+**Versión actual**: v1.0.2
 
 ---
 
@@ -20,6 +20,7 @@ Authorization: Bearer tu-token-secreto-aqui
 - `GET /api/resources`
 - `GET /api/resources/processes`
 - `GET /api/resources/network`
+- `POST /api/resources/process/:pid/priority`
 - `DELETE /api/resources/process/:pid`
 
 ---
@@ -58,6 +59,7 @@ Información general de la API.
     "systemResources": "GET /api/resources",
     "processes": "GET /api/resources/processes",
     "networkStats": "GET /api/resources/network",
+    "processPriority": "POST /api/resources/process/:pid/priority",
     "killProcess": "DELETE /api/resources/process/:pid"
   }
 }
@@ -307,6 +309,50 @@ Obtiene estadísticas de interfaces de red y conexiones. **NEW en v1.0.1**
 
 ---
 
+### POST /api/resources/process/:pid/priority
+Cambia la prioridad (nice value) de un proceso. **Requiere ser dueño del proceso o tener permisos sudo**.
+
+**URL Parameters**:
+- `pid` (requerido): Process ID
+
+**Request**:
+```json
+{
+  "priority": 5
+}
+```
+
+**Priority range**: `-20` (máxima prioridad) a `19` (mínima prioridad). Valores negativos requieren sudo.
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Process 3877173 priority changed to 5",
+  "currentPriority": 5
+}
+```
+
+**Status Codes**:
+- `200`: Prioridad cambiada exitosamente
+- `400`: PID inválido, prioridad fuera de rango, o proceso no encontrado
+- `500`: Error al cambiar prioridad
+
+**Ejemplos**:
+```bash
+# Bajar prioridad (proceso usará menos CPU)
+curl -X POST http://localhost:3000/api/resources/process/1234/priority \
+  -H "Content-Type: application/json" \
+  -d '{"priority": 10}'
+
+# Aumentar prioridad (requiere sudo si < 0)
+curl -X POST http://localhost:3000/api/resources/process/1234/priority \
+  -H "Content-Type: application/json" \
+  -d '{"priority": -5}'
+```
+
+---
+
 ### DELETE /api/resources/process/:pid
 Termina un proceso por su PID.
 
@@ -403,7 +449,8 @@ curl -X POST http://localhost:3000/api/command/batch \
 
 - **v1.0.0**: API base con ejecución de comandos y monitoreo básico
 - **v1.0.1**: Agregado monitoreo de interfaces de red y conexiones (GET /api/resources/network)
-- **v1.2.0**: Fase 1 completada (Enhanced Service Status, Audit Logging, Process Priority Control)
+- **v1.0.2**: Control de prioridad de procesos (POST /api/resources/process/:pid/priority)
+- **v1.2.0**: Fase 1 completada (Enhanced Service Status, Audit Logging)
 - **v1.3.0**: Fase 2 completada
 - **v2.0.0**: Fase 3 completada
 

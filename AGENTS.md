@@ -210,4 +210,4 @@ DELETE /api/resources/process/:pid       # Terminar proceso
 ---
 
 **Última actualización**: 2025-12-06  
-**Versión actual**: v1.0.1
+**Versión actual**: v1.0.2
