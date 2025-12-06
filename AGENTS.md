@@ -20,8 +20,11 @@ Cuando se **completen todas las funcionalidades de una fase**, la versión cambi
 1. **En `api/package.json`**: Actualizar `"version"`
 2. **En `api/src/index.ts`**: Actualizar versión en endpoint GET `/`
 3. **Commit**: `git commit -m "bump: version X.X.X - <descripción>"`
-4. **Tag**: `git tag -a vX.X.X -m "Release vX.X.X"`
-5. **Push**: `git push origin develop && git push origin vX.X.X`
+4. **Crear rama release**: `git checkout -b release/vX.X.X`
+5. **Tag**: `git tag -a vX.X.X -m "Release vX.X.X"`
+6. **Push rama y tag**: `git push -u origin release/vX.X.X && git push origin vX.X.X`
+7. **Volver a develop**: `git checkout develop && git merge release/vX.X.X`
+8. **Push develop**: `git push origin develop`
 
 ---
 
@@ -210,4 +213,4 @@ DELETE /api/resources/process/:pid       # Terminar proceso
 ---
 
 **Última actualización**: 2025-12-06  
-**Versión actual**: v1.0.1
+**Versión actual**: v1.0.2

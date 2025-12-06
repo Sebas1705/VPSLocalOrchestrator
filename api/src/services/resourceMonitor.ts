@@ -135,3 +135,59 @@ export async function killProcess(pid: number, signal: string = 'TERM'): Promise
     return false;
   }
 }
+
+/**
+ * Cambia la prioridad de un proceso (nice value)
+ * @param pid - Process ID
+ * @param priority - Nice value (-20 a 19, menor = mayor prioridad)
+ * @returns success y mensaje
+ */
+export async function setProcessPriority(
+  pid: number,
+  priority: number
+): Promise<{ success: boolean; message: string; currentPriority?: number }> {
+  // Validar rango de prioridad
+  if (priority < -20 || priority > 19) {
+    return {
+      success: false,
+      message: 'Priority must be between -20 (highest) and 19 (lowest)',
+    };
+  }
+
+  try {
+    // Verificar que el proceso existe
+    const checkResult = await executeCommand(`ps -p ${pid} -o pid=`);
+    if (checkResult.exitCode !== 0) {
+      return {
+        success: false,
+        message: `Process ${pid} not found`,
+      };
+    }
+
+    // Intentar sin sudo primero (si el proceso pertenece al usuario actual)
+    let result = await executeCommand(`renice ${priority} -p ${pid}`);
+
+    // Si falla por permisos, intentar con sudo -n
+    if (result.exitCode !== 0 && /permission/i.test(result.stderr)) {
+      result = await executeCommand(`sudo -n renice ${priority} -p ${pid}`);
+    }
+
+    if (result.exitCode === 0) {
+      return {
+        success: true,
+        message: `Process ${pid} priority changed to ${priority}`,
+        currentPriority: priority,
+      };
+    } else {
+      return {
+        success: false,
+        message: result.stderr || 'Failed to change priority (insufficient permissions)',
+      };
+    }
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.message || 'Error changing process priority',
+    };
+  }
+}
