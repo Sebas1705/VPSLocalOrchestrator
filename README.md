@@ -251,12 +251,12 @@ Toda la documentación está organizada en la carpeta [`docs/`](docs/):
 | [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md) | Solución de problemas comunes |
 | [`docs/FAQ.md`](docs/FAQ.md) | Preguntas frecuentes |
 
-### 📊 **Análisis & Roadmap**
+### 📊 **Análisis, Roadmap & Release**
 | Archivo | Contenido |
 |---------|----------|
-| [`FEATURE_ROADMAP.md`](FEATURE_ROADMAP.md) | 12 categorías de features futuras |
-| [`ANALYSIS_SUMMARY.md`](ANALYSIS_SUMMARY.md) | Análisis pre-merge de seguridad |
-| [`MERGE_INSTRUCTIONS.md`](MERGE_INSTRUCTIONS.md) | Instrucciones para merge a main |
+| [`docs/FEATURE_ROADMAP.md`](docs/FEATURE_ROADMAP.md) | 12 categorías de features futuras con timeline |
+| [`docs/ANALYSIS_SUMMARY.md`](docs/ANALYSIS_SUMMARY.md) | Análisis de seguridad y mejoras pre-merge |
+| [`docs/MERGE_INSTRUCTIONS.md`](docs/MERGE_INSTRUCTIONS.md) | Instrucciones paso a paso para merge a main |
 
 ---
 
@@ -427,7 +427,7 @@ Tenemos planeadas estas mejoras para los próximos meses:
 - 📈 Custom Metrics
 - 🔔 Advanced Notifications
 
-Ver detalles completos: [`FEATURE_ROADMAP.md`](FEATURE_ROADMAP.md)
+Ver detalles completos: [`docs/FEATURE_ROADMAP.md`](docs/FEATURE_ROADMAP.md)
 
 ---
 

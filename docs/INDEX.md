@@ -37,6 +37,13 @@ Bienvenido a la documentación interna del **VPS Local Orchestrator API**. Esta 
 |---------|----------|
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Guía de contribución y git workflow |
 
+### 🗺️ **Análisis, Roadmap & Release**
+| Archivo | Contenido |
+|---------|----------|
+| [`FEATURE_ROADMAP.md`](FEATURE_ROADMAP.md) | 12 categorías de features futuras (v1.2.0 → v2.0.0) |
+| [`ANALYSIS_SUMMARY.md`](ANALYSIS_SUMMARY.md) | Análisis de seguridad pre-merge e mejoras |
+| [`MERGE_INSTRUCTIONS.md`](MERGE_INSTRUCTIONS.md) | Instrucciones paso a paso para merge a main |
+
 ### 🆘 **Soporte & Referencia**
 | Archivo | Contenido |
 |---------|----------|
@@ -74,6 +81,14 @@ Bienvenido a la documentación interna del **VPS Local Orchestrator API**. Esta 
 
 ### 📡 **Necesito documentación técnica de endpoints**
 → [`api/ENDPOINTS.md`](api/ENDPOINTS.md)
+
+### 🗺️ **Quiero ver el roadmap futuro**
+1. [`FEATURE_ROADMAP.md`](FEATURE_ROADMAP.md) - 12 categorías, 3 tiers, timeline
+2. [`../README.md`](../README.md) - Sección "Roadmap Futuro"
+
+### 🔗 **Quiero entender el merge a main y release**
+1. [`MERGE_INSTRUCTIONS.md`](MERGE_INSTRUCTIONS.md) - Paso a paso del merge
+2. [`ANALYSIS_SUMMARY.md`](ANALYSIS_SUMMARY.md) - Por qué estamos listos para merge
 
 ### 🐛 **Algo no funciona / Tengo errores**
 1. [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) - Problemas comunes
@@ -113,6 +128,14 @@ docs/
 ├── examples/                          # 💻 Ejemplos prácticos
 │   ├── CURL.md                        # 20+ ejemplos con curl
 │   └── N8N.md                         # Workflows n8n
+│
+├── FEATURE_ROADMAP.md                 # 🗺️ Features futuras (12 categorías, 3 tiers)
+├── ANALYSIS_SUMMARY.md                # 📊 Análisis pre-merge y mejoras implementadas
+├── MERGE_INSTRUCTIONS.md              # 🔗 Instrucciones para merge a main
+│
+├── CONTRIBUTING.md                    # 👨‍💻 Guía de contribución
+├── TROUBLESHOOTING.md                 # 🆘 Problemas comunes
+├── FAQ.md                             # ❓ Preguntas frecuentes
 │
 └── legacy/                            # 📦 Archivos anteriores
     ├── AUTH.md
@@ -177,6 +200,30 @@ docs/
 - ✅ Troubleshooting de ejemplos
 - 📍 [Ejemplos curl](examples/CURL.md)
 - 📍 [Ejemplos n8n](examples/N8N.md)
+
+### 🗺️ **Roadmap & Features Futuras**
+- ✅ 12 categorías de features planificadas
+- ✅ 3 tiers de priorización (high, medium, low)
+- ✅ Timeline estimado (v1.2.0, v1.3.0, v2.0.0)
+- ✅ Análisis de impacto vs complejidad
+- ✅ Recomendaciones de orden de implementación
+- 📍 [Ver detalles](FEATURE_ROADMAP.md)
+
+### 🔐 **Análisis & Seguridad Pre-Merge**
+- ✅ 3 vulnerabilidades identificadas y corregidas
+- ✅ DoS prevention implementado
+- ✅ Error handling mejorado
+- ✅ NODE_ENV validation
+- ✅ Validaciones completas
+- 📍 [Ver análisis](ANALYSIS_SUMMARY.md)
+
+### 📤 **Proceso de Merge & Release**
+- ✅ Instrucciones step-by-step
+- ✅ Git workflow (develop → main)
+- ✅ Creación de release tags
+- ✅ Notas de release
+- ✅ Checklist pre-merge
+- 📍 [Ver instrucciones](MERGE_INSTRUCTIONS.md)
 
 ### 👨‍💻 **Desarrollo & Contribución**
 - ✅ Git workflow (main, develop)
