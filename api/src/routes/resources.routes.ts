@@ -49,7 +49,7 @@ router.get('/processes', async (req: Request, res: Response) => {
  */
 router.delete('/process/:pid', async (req: Request, res: Response) => {
   try {
-    const pid = parseInt(req.params.pid);
+    const pid = parseInt(req.params.pid ?? '');
     const signal = (req.query.signal as string) || 'TERM';
 
     if (isNaN(pid)) {

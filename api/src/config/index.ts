@@ -17,8 +17,8 @@ export interface Config {
     allowedScriptPaths: string[];
   };
   notifications: {
-    alertEmail?: string;
-    webhookLogUrl?: string;
+    alertEmail?: string | undefined;
+    webhookLogUrl?: string | undefined;
   };
 }
 
