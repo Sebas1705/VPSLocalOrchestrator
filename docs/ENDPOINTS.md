@@ -2,7 +2,7 @@
 
 Guía completa de todos los endpoints disponibles en la VPS Local Orchestrator API.
 
-**Versión actual**: v1.1.0
+**Versión actual**: v1.2.0
 
 ---
 
@@ -775,6 +775,246 @@ curl -X DELETE "http://localhost:3000/api/files/rmdir?path=/tmp/emptydir" \
 
 ---
 
+## 🔗 Webhooks y Eventos
+
+### GET /api/webhooks
+Lista todos los webhooks registrados. **Requiere autenticación**. **NEW en v1.2.0**
+
+**Response**:
+```json
+{
+  "success": true,
+  "count": 1,
+  "data": [
+    {
+      "id": "e1361cbf15433a1b",
+      "url": "https://example.com/webhook",
+      "events": ["command_execute", "service_status"],
+      "active": true,
+      "createdAt": "2025-12-06T23:43:42.922Z",
+      "secret": "webhook-secret-key"
+    }
+  ]
+}
+```
+
+**Status Code**: 200
+
+**Ejemplo de uso**:
+```bash
+curl -s http://localhost:3000/api/webhooks \
+  -H "Authorization: Bearer tu-token-secreto-aqui" | jq .
+```
+
+---
+
+### POST /api/webhooks
+Registra un nuevo webhook. **Requiere autenticación**. **NEW en v1.2.0**
+
+**Request Body**:
+```json
+{
+  "url": "https://example.com/webhook",
+  "events": ["command_execute", "service_status"],
+  "secret": "optional-secret-for-signature"
+}
+```
+
+**Body Parameters**:
+- `url` (requerido): URL HTTPS del webhook
+- `events` (requerido): Array de eventos a escuchar
+- `secret` (opcional): Clave secreta para firmar requests (HMAC-SHA256)
+
+**Available Events**:
+- `command_execute` - Cuando se ejecuta un comando
+- `service_status` - Cuando cambia el estado de un servicio
+- `file_write` - Cuando se escribe un archivo
+- `file_delete` - Cuando se elimina un archivo
+- `process_priority` - Cuando cambia la prioridad de un proceso
+- `test` - Evento de prueba
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": "e1361cbf15433a1b",
+    "url": "https://example.com/webhook",
+    "events": ["command_execute", "service_status"],
+    "active": true,
+    "createdAt": "2025-12-06T23:43:42.922Z",
+    "secret": "webhook-secret-key"
+  }
+}
+```
+
+**Status Codes**:
+- `201`: Webhook registrado
+- `400`: Parámetros inválidos
+- `500`: Error al registrar
+
+**Webhook Payload** (lo que recibe tu servidor):
+```json
+{
+  "event": "command_execute",
+  "timestamp": "2025-12-06T23:45:00.000Z",
+  "data": {
+    "command": "ls -la",
+    "exitCode": 0,
+    "duration": 150
+  }
+}
+```
+
+**Headers recibidos**:
+- `Content-Type: application/json`
+- `User-Agent: VPS-Orchestrator-Webhook/1.0`
+- `X-Webhook-Signature: <HMAC-SHA256>` (si se configuró secret)
+
+**Ejemplo de uso**:
+```bash
+curl -X POST http://localhost:3000/api/webhooks \
+  -H "Authorization: Bearer tu-token-secreto-aqui" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com/webhook",
+    "events": ["command_execute", "service_status"],
+    "secret": "mi-clave-secreta"
+  }'
+```
+
+---
+
+### GET /api/webhooks/:id
+Obtiene un webhook específico. **Requiere autenticación**. **NEW en v1.2.0**
+
+**URL Parameters**:
+- `id` (requerido): ID del webhook
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": "e1361cbf15433a1b",
+    "url": "https://example.com/webhook",
+    "events": ["command_execute"],
+    "active": true,
+    "createdAt": "2025-12-06T23:43:42.922Z",
+    "lastTriggeredAt": "2025-12-06T23:45:10.000Z"
+  }
+}
+```
+
+**Status Codes**:
+- `200`: Webhook encontrado
+- `404`: Webhook no encontrado
+- `500`: Error
+
+---
+
+### PATCH /api/webhooks/:id
+Actualiza un webhook (activa/desactiva o cambia eventos). **Requiere autenticación**. **NEW en v1.2.0**
+
+**Request Body**:
+```json
+{
+  "active": false,
+  "events": ["command_execute"]
+}
+```
+
+**Body Parameters** (al menos uno requerido):
+- `active` (boolean): Activar/desactivar webhook
+- `events` (array): Nuevos eventos a escuchar
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": "e1361cbf15433a1b",
+    "url": "https://example.com/webhook",
+    "events": ["command_execute"],
+    "active": false,
+    "createdAt": "2025-12-06T23:43:42.922Z"
+  }
+}
+```
+
+**Ejemplo de uso**:
+```bash
+# Desactivar un webhook
+curl -X PATCH http://localhost:3000/api/webhooks/e1361cbf15433a1b \
+  -H "Authorization: Bearer tu-token-secreto-aqui" \
+  -H "Content-Type: application/json" \
+  -d '{"active": false}'
+
+# Cambiar eventos
+curl -X PATCH http://localhost:3000/api/webhooks/e1361cbf15433a1b \
+  -H "Authorization: Bearer tu-token-secreto-aqui" \
+  -H "Content-Type: application/json" \
+  -d '{"events": ["command_execute", "file_write"]}'
+```
+
+---
+
+### DELETE /api/webhooks/:id
+Elimina un webhook. **Requiere autenticación**. **NEW en v1.2.0**
+
+**URL Parameters**:
+- `id` (requerido): ID del webhook
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "deleted": true
+  }
+}
+```
+
+**Status Codes**:
+- `200`: Webhook eliminado
+- `404`: Webhook no encontrado
+- `500`: Error
+
+**Ejemplo de uso**:
+```bash
+curl -X DELETE http://localhost:3000/api/webhooks/e1361cbf15433a1b \
+  -H "Authorization: Bearer tu-token-secreto-aqui"
+```
+
+---
+
+### POST /api/webhooks/:id/test
+Envía un evento de prueba al webhook. **Requiere autenticación**. **NEW en v1.2.0**
+
+**URL Parameters**:
+- `id` (requerido): ID del webhook
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Test webhook sent successfully"
+}
+```
+
+**Status Codes**:
+- `200`: Webhook de prueba enviado
+- `404`: Webhook no encontrado
+- `500`: Error al enviar
+
+**Ejemplo de uso**:
+```bash
+curl -X POST http://localhost:3000/api/webhooks/e1361cbf15433a1b/test \
+  -H "Authorization: Bearer tu-token-secreto-aqui"
+```
+
+---
+
 ## ⚠️ Errores Comunes
 
 ### 401 Unauthorized
@@ -853,8 +1093,8 @@ curl -X POST http://localhost:3000/api/command/batch \
 - **v1.0.3**: Verificación de salud de servicios systemd (GET /api/services/:name/health)
 - **v1.0.4**: Logging de auditoría básico (GET /api/logs, POST /api/logs/search)
 - **v1.1.0**: Operaciones de archivos (GET/POST/DELETE /api/files, mkdir, rmdir)
-- **v1.2.0**: Fase 1 completada (All Tier 1 features)
-- **v1.3.0**: Fase 2 completada
+- **v1.2.0**: Webhooks y eventos (GET/POST/DELETE /api/webhooks, test)
+- **v1.3.0**: Fase 2 completada (Secrets Management, Backup)
 - **v2.0.0**: Fase 3 completada
 
 ---

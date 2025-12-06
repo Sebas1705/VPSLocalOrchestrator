@@ -1,0 +1,13 @@
+[
+  {
+    "id": "e1361cbf15433a1b",
+    "url": "https://example.com/webhook",
+    "events": [
+      "command_execute",
+      "service_status"
+    ],
+    "active": true,
+    "createdAt": "2025-12-06T23:43:42.922Z",
+    "secret": "webhook-secret-key"
+  }
+]
