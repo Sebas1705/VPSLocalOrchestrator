@@ -41,6 +41,7 @@ export function requestLogger(req: Request, res: Response, next: NextFunction) {
  */
 export function validateCommandBody(req: Request, res: Response, next: NextFunction) {
   const { command } = req.body;
+  const MAX_COMMAND_LENGTH = 10000; // Máximo 10KB para prevenir DoS
 
   if (!command || typeof command !== 'string') {
     return res.status(400).json({
@@ -49,10 +50,19 @@ export function validateCommandBody(req: Request, res: Response, next: NextFunct
     });
   }
 
-  if (command.trim().length === 0) {
+  const trimmedCommand = command.trim();
+  
+  if (trimmedCommand.length === 0) {
     return res.status(400).json({
       error: 'Bad Request',
       message: 'Command cannot be empty',
+    });
+  }
+  
+  if (trimmedCommand.length > MAX_COMMAND_LENGTH) {
+    return res.status(413).json({
+      error: 'Payload Too Large',
+      message: `Command exceeds maximum length of ${MAX_COMMAND_LENGTH} characters`,
     });
   }
 
@@ -63,10 +73,19 @@ export function validateCommandBody(req: Request, res: Response, next: NextFunct
  * Middleware global para manejo de errores
  */
 export function errorHandler(err: Error, req: Request, res: Response, next: NextFunction) {
-  console.error('Error:', err);
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  // Log error para debugging (nunca loguear mensaje completo en producción)
+  if (isProduction) {
+    // En producción, loguear mínimamente
+    console.error('Internal Server Error');
+  } else {
+    // En desarrollo, loguear más detalles
+    console.error('Error:', err.message, err.stack);
+  }
 
   res.status(500).json({
     error: 'Internal Server Error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'An unexpected error occurred',
+    message: isProduction ? 'An unexpected error occurred' : err.message,
   });
 }
