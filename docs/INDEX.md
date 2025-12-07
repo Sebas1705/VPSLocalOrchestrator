@@ -26,6 +26,8 @@ Welcome to the **VPS Local Orchestrator API v4.0.0** internal documentation. Thi
 |---------|----------|
 | [`ENDPOINTS.md`](ENDPOINTS.md) | Complete documentation of all endpoints (v4.0.0) |
 | [`TESTING.md`](TESTING.md) | Testing suite, Jest, 50+ tests with coverage |
+| [`ARCHITECTURE_ANALYSIS.md`](ARCHITECTURE_ANALYSIS.md) | **[NEW]** In-depth architecture analysis, limitations & improvement proposals |
+| [`REFACTORING_GUIDE.md`](REFACTORING_GUIDE.md) | **[NEW]** Step-by-step refactoring guide for Phase 5+ (Clean Architecture) |
 
 ### 💻 **Practical Examples**
 | File | Content |
@@ -293,6 +295,34 @@ Al terminar, deberías tener:
 - [ ] Ejemplos probados
 - [ ] n8n integrado (si lo necesitas)
 - [ ] Capaz de hacer cambios
+- [ ] Leído análisis de arquitectura (para mejoras futuras)
+
+---
+
+## 🏗️ Arquitectura & Mejoras (NUEVO - December 2025)
+
+**[ARCHITECTURE_ANALYSIS.md](ARCHITECTURE_ANALYSIS.md)** - Análisis técnico profundo de:
+- ✅ Fortalezas actuales de la arquitectura
+- ⚠️ Limitaciones identificadas
+- 💡 Propuestas de mejora con alternativas
+- 🔄 Patrones de diseño subutilizados
+- 💾 Opciones de persistencia (SQLite recomendado)
+- 🏗️ Clean Architecture propuesta
+- 🚀 Roadmap de fases 5-7
+
+**[REFACTORING_GUIDE.md](REFACTORING_GUIDE.md)** - Guía práctica con:
+- 📋 11 pasos de implementación (Phase 5)
+- 💾 SQLite + Drizzle ORM setup
+- ✅ Validación centralizada con Zod
+- 🛠️ Dependency Injection (Tsyringe)
+- ⚠️ Error handling estratificado
+- 🧪 Testing mejorado
+- 🔄 Estrategia de migración gradual
+- ✨ Beneficios post-refactorización
+
+**Leer primero si quieres**:
+- Entender qué mejorar en arquitectura → ARCHITECTURE_ANALYSIS.md
+- Implementar mejoras → REFACTORING_GUIDE.md
 
 ---
 
