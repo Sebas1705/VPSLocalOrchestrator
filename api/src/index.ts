@@ -3,6 +3,17 @@ import { localhostOnly, requestLogger, errorHandler } from './middleware/securit
 import commandRoutes from './routes/command.routes.js';
 import resourceRoutes from './routes/resources.routes.js';
 import servicesRoutes from './routes/services.routes.js';
+import auditRoutes from './routes/audit.routes.js';
+import fileRoutes from './routes/file.routes.js';
+import webhookRoutes from './routes/webhook.routes.js';
+import secretsRoutes from './routes/secrets.routes.js';
+import backupRoutes from './routes/backup.routes.js';
+import workflowRoutes from './routes/workflow.routes.js';
+import metricsRoutes from './routes/metrics.routes.js';
+import dockerRoutes from './routes/docker.routes.js';
+import databaseRoutes from './routes/database.routes.js';
+import loadBalancerRoutes from './routes/loadbalancer.routes.js';
+import analyticsRoutes from './routes/analytics.routes.js';
 import { getConfig, Logger } from './config/index.js';
 
 const config = getConfig();
@@ -31,13 +42,24 @@ app.get('/health', (req: Request, res: Response) => {
 app.use('/api/command', commandRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/services', servicesRoutes);
+app.use('/api/logs', auditRoutes);
+app.use('/api/files', fileRoutes);
+app.use('/api/webhooks', webhookRoutes);
+app.use('/api/secrets', secretsRoutes);
+app.use('/api/backups', backupRoutes);
+app.use('/api/workflows', workflowRoutes);
+app.use('/api/metrics', metricsRoutes);
+app.use('/api/docker', dockerRoutes);
+app.use('/api/databases', databaseRoutes);
+app.use('/api/loadbalancer', loadBalancerRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Ruta por defecto
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '1.0.3',
-    description: 'API para orquestar recursos y ejecutar comandos localmente',
+    version: '4.0.0',
+    description: 'API para orquestar recursos y ejecutar comandos localmente - v4.0.0 con Testing Completo',
     endpoints: {
       health: 'GET /health',
       executeCommand: 'POST /api/command/execute',
@@ -50,6 +72,50 @@ app.get('/', (req: Request, res: Response) => {
       killProcess: 'DELETE /api/resources/process/:pid',
       services: 'GET /api/services',
       serviceHealth: 'GET /api/services/:name/health',
+      auditLogs: 'GET /api/logs',
+      searchLogs: 'POST /api/logs/search',
+      fileRead: 'GET /api/files?path=<path>',
+      fileWrite: 'POST /api/files',
+      fileDelete: 'DELETE /api/files?path=<path>',
+      mkdir: 'POST /api/files/mkdir',
+      rmdir: 'DELETE /api/files/rmdir?path=<path>',
+      webhooksList: 'GET /api/webhooks',
+      webhooksRegister: 'POST /api/webhooks',
+      webhooksDelete: 'DELETE /api/webhooks/:id',
+      webhooksTest: 'POST /api/webhooks/:id/test',
+      secretsList: 'GET /api/secrets',
+      secretsCreate: 'POST /api/secrets',
+      secretsGet: 'GET /api/secrets/:id',
+      secretsUpdate: 'PATCH /api/secrets/:id',
+      secretsDelete: 'DELETE /api/secrets/:id',
+      backupsList: 'GET /api/backups',
+      backupsCreate: 'POST /api/backups',
+      backupsGet: 'GET /api/backups/:name',
+      backupsDelete: 'DELETE /api/backups/:name',
+      backupsRestore: 'POST /api/backups/:name/restore',
+      workflowsList: 'GET /api/workflows',
+      workflowsCreate: 'POST /api/workflows',
+      workflowsGet: 'GET /api/workflows/:id',
+      workflowsUpdate: 'PATCH /api/workflows/:id',
+      workflowsDelete: 'DELETE /api/workflows/:id',
+      workflowsRun: 'POST /api/workflows/:id/run',
+      workflowsHistory: 'GET /api/workflows/:id/history',
+      metricsCreate: 'POST /api/metrics/custom',
+      metricsList: 'GET /api/metrics',
+      dockerContainers: 'GET /api/docker/containers',
+      dockerImages: 'GET /api/docker/images',
+      dockerStart: 'POST /api/docker/containers/:id/start',
+      dockerStop: 'POST /api/docker/containers/:id/stop',
+      databaseStatus: 'GET /api/databases/status',
+      databaseBackup: 'POST /api/databases/backup',
+      lbList: 'GET /api/loadbalancer/backends',
+      lbCreate: 'POST /api/loadbalancer/backends',
+      lbDrain: 'POST /api/loadbalancer/backends/:id/drain',
+      lbEnable: 'POST /api/loadbalancer/backends/:id/enable',
+      lbDelete: 'DELETE /api/loadbalancer/backends/:id',
+      analyticsSnapshot: 'GET /api/analytics/snapshot',
+      analyticsAggregate: 'GET /api/analytics/aggregate',
+      analyticsTrend: 'GET /api/analytics/trend',
     },
   });
 });

@@ -39,6 +39,19 @@ tmp/
 temp/
 .tmp/
 
+# Testing
+coverage/
+*.lcov
+.nyc_output/
+
+# Directorios generados en runtime (testing)
+api/workflows/
+api/metrics/
+api/databases/
+api/loadbalancer/
+api/backups/
+api/webhooks/
+
 # Secretos y credenciales
 secrets/
 .aws/

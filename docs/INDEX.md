@@ -1,6 +1,6 @@
 # 📚 Índice de Documentación
 
-Bienvenido a la documentación interna del **VPS Local Orchestrator API**. Esta es la guía de navegación completa de todos los recursos disponibles.
+Bienvenido a la documentación interna del **VPS Local Orchestrator API v4.0.0**. Esta es la guía de navegación completa de todos los recursos disponibles.
 
 > 👉 **Nota**: Para una introducción general y características principales, ve al [`README.md`](../README.md) en la raíz del repositorio.
 
@@ -24,7 +24,8 @@ Bienvenido a la documentación interna del **VPS Local Orchestrator API**. Esta 
 ### 📡 **API & Referencia Técnica**
 | Archivo | Contenido |
 |---------|----------|
-| [`ENDPOINTS.md`](ENDPOINTS.md) | Documentación completa de todos los endpoints (v1.0.1) |
+| [`ENDPOINTS.md`](ENDPOINTS.md) | Documentación completa de todos los endpoints (v4.0.0) |
+| [`TESTING.md`](TESTING.md) | 🆕 Suite de testing, Jest, 50+ tests con cobertura |
 
 ### 💻 **Ejemplos Prácticos**
 | Archivo | Contenido |
@@ -39,7 +40,7 @@ Bienvenido a la documentación interna del **VPS Local Orchestrator API**. Esta 
 ### 🗺️ **Análisis, Roadmap & Release**
 | Archivo | Contenido |
 |---------|----------|
-| [`FEATURE_ROADMAP.md`](FEATURE_ROADMAP.md) | 12 categorías de features futuras (v1.2.0 → v2.0.0) |
+| [`FEATURE_ROADMAP.md`](FEATURE_ROADMAP.md) | Roadmap completado hasta Fase 4 (v4.0.0) |
 | [`ANALYSIS_SUMMARY.md`](ANALYSIS_SUMMARY.md) | Análisis de seguridad pre-merge e mejoras |
 | [`MERGE_INSTRUCTIONS.md`](MERGE_INSTRUCTIONS.md) | Instrucciones paso a paso para merge a main |
 
