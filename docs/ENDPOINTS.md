@@ -2,7 +2,7 @@
 
 Guía completa de todos los endpoints disponibles en la VPS Local Orchestrator API.
 
-**Versión actual**: v3.2.0
+**Versión actual**: v4.0.0 ✅ Limpieza, Testing y Documentación Completa
 
 ---
 
