@@ -2,7 +2,7 @@
 
 Guía completa de todos los endpoints disponibles en la VPS Local Orchestrator API.
 
-**Versión actual**: v3.0.0
+**Versión actual**: v3.1.0
 
 ---
 
@@ -1234,6 +1234,36 @@ Crea un dump lógico con `pg_dump` en un directorio permitido.
 
 ---
 
+## ⚖️ Control de Load Balancer
+
+Requiere autenticación. Mantiene un registro simple de backends en disco (`api/loadbalancer/backends.json`). Pensado para orquestar cambios y luego aplicarlos a tu LB real o scripts externos.
+
+### GET /api/loadbalancer/backends
+Lista los backends registrados.
+
+### POST /api/loadbalancer/backends
+Crea un backend con estado `enabled`.
+
+**Body**:
+```json
+{ "address": "web-1:8080" }
+```
+
+### POST /api/loadbalancer/backends/:id/drain
+Marca un backend como `draining` (útil para retirar tráfico gradualmente).
+
+### POST /api/loadbalancer/backends/:id/enable
+Devuelve el backend a estado `enabled`.
+
+### DELETE /api/loadbalancer/backends/:id
+Elimina un backend del registro.
+
+**Notas**:
+- `address` acepta formato `host:port` o URL.
+- Este registro no aplica cambios a HAProxy/Nginx automáticamente; úsalo como fuente de verdad ligera para automatizaciones.
+
+---
+
 ## 🔗 Webhooks y Eventos
 
 ### GET /api/webhooks
@@ -1561,6 +1591,7 @@ curl -X POST http://localhost:3000/api/command/batch \
 - **v2.0.3**: Métricas personalizadas (POST /api/metrics/custom, GET /api/metrics)
 - **v2.0.4**: Integración Docker (listar contenedores/imágenes, start/stop contenedores)
 - **v3.0.0**: Integración de bases de datos (PostgreSQL status/backup)
+- **v3.1.0**: Control de load balancer (registro de backends, drain/enable/delete)
 
 ---
 
