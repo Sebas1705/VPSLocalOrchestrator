@@ -2,7 +2,7 @@
 
 Guía completa de todos los endpoints disponibles en la VPS Local Orchestrator API.
 
-**Versión actual**: v1.4.0
+**Versión actual**: v2.0.0
 
 ---
 
@@ -941,6 +941,33 @@ Elimina un backup.
 }
 ```
 
+### POST /api/backups/:name/restore
+Restaura un backup `.tar.gz` a un destino permitido. **NEW en v2.0.0**
+
+**Body**:
+```json
+{
+  "destination": "/tmp/restore-target"
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "name": "backup-2025-12-07T00-18-07-524Z.tar.gz",
+    "destination": "/tmp/restore-target",
+    "restoredAt": "2025-12-07T01:05:00.000Z"
+  }
+}
+```
+
+**Notas**:
+- Valida rutas igual que backups: solo `/home`, `/tmp`, `/var/log`, `/var/tmp`.
+- Crea el directorio destino si no existe.
+- Usa `tar -xzf` para extraer; requiere binario `tar` disponible.
+
 ---
 
 ## 🔗 Webhooks y Eventos
@@ -1264,6 +1291,7 @@ curl -X POST http://localhost:3000/api/command/batch \
 - **v1.2.0**: Webhooks y eventos (GET/POST/DELETE /api/webhooks, test)
  - **v1.3.0**: Gestión de secretos (CRUD cifrado con AES-256-GCM)
  - **v1.4.0**: Backup básico (tar.gz de rutas permitidas)
+- **v2.0.0**: Backup avanzado (restore a destino validado)
 - **v2.0.0**: Fase 3 completada
 
 ---

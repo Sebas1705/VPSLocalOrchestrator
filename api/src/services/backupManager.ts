@@ -14,6 +14,12 @@ export interface BackupMetadata {
   createdAt: string;
 }
 
+export interface RestoreResult {
+  name: string;
+  destination: string;
+  restoredAt: string;
+}
+
 function validatePath(targetPath: string): boolean {
   try {
     const resolved = path.resolve(targetPath);
@@ -28,6 +34,10 @@ function validatePath(targetPath: string): boolean {
   } catch {
     return false;
   }
+}
+
+async function ensureDirectory(targetDir: string): Promise<void> {
+  await fs.mkdir(targetDir, { recursive: true });
 }
 
 function sanitizeName(name: string): string {
@@ -145,4 +155,37 @@ export async function deleteBackup(name: string): Promise<boolean> {
   const backupPath = await getBackupPath(name);
   await fs.unlink(backupPath);
   return true;
+}
+
+export async function restoreBackup(name: string, destination: string): Promise<RestoreResult> {
+  if (!destination || typeof destination !== 'string') {
+    throw new Error('destination is required');
+  }
+
+  if (!validatePath(destination)) {
+    throw new Error('Destination access denied: must be in /home, /tmp, or /var/log');
+  }
+
+  const destResolved = path.resolve(destination);
+  await ensureDirectory(destResolved);
+
+  const backupPath = await getBackupPath(name);
+
+  await new Promise<void>((resolve, reject) => {
+    const tar = spawn('tar', ['-xzf', backupPath, '-C', destResolved], {
+      stdio: 'inherit',
+    });
+
+    tar.on('error', (err) => reject(new Error(`tar execution failed: ${err.message}`)));
+    tar.on('close', (code) => {
+      if (code === 0) resolve();
+      else reject(new Error(`tar exited with code ${code}`));
+    });
+  });
+
+  return {
+    name: path.basename(backupPath),
+    destination: destResolved,
+    restoredAt: new Date().toISOString(),
+  };
 }

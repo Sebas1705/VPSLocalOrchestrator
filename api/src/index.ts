@@ -46,7 +46,7 @@ app.use('/api/backups', backupRoutes);
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '1.4.0',
+    version: '2.0.0',
     description: 'API para orquestar recursos y ejecutar comandos localmente',
     endpoints: {
       health: 'GET /health',
@@ -80,6 +80,7 @@ app.get('/', (req: Request, res: Response) => {
       backupsCreate: 'POST /api/backups',
       backupsGet: 'GET /api/backups/:name',
       backupsDelete: 'DELETE /api/backups/:name',
+      backupsRestore: 'POST /api/backups/:name/restore',
     },
   });
 });

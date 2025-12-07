@@ -6,6 +6,7 @@ import {
   getBackupPath,
   getBackupMeta,
   deleteBackup,
+  restoreBackup,
 } from '../services/backupManager.js';
 import path from 'path';
 
@@ -34,6 +35,25 @@ router.post('/', async (req: Request, res: Response) => {
     res.status(201).json({ success: true, data: backup });
   } catch (error: any) {
     const status = error.message.includes('Path access denied') || error.message.includes('not found')
+      ? 400
+      : 500;
+    res.status(status).json({ success: false, error: error.message });
+  }
+});
+
+router.post('/:name/restore', async (req: Request, res: Response) => {
+  try {
+    const name = req.params.name as string;
+    const { destination } = req.body;
+
+    if (!destination) {
+      return res.status(400).json({ success: false, error: 'destination is required' });
+    }
+
+    const result = await restoreBackup(name, destination);
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    const status = error.message.includes('denied') || error.message.includes('required') || error.message.includes('not found')
       ? 400
       : 500;
     res.status(status).json({ success: false, error: error.message });

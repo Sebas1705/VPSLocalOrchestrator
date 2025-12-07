@@ -560,10 +560,10 @@ Tier 3 (Avanzado):
 - [x] Basic backup (v1.4.0)
 
 ### Fase 3 (v2.0.0 - 2-3 meses)
-- Workflow engine
-- Advanced backup/restore
-- Custom metrics
-- Docker integration
+- [x] Advanced backup/restore (v2.0.0)
+- [ ] Workflow engine
+- [ ] Custom metrics
+- [ ] Docker integration
 
 ### Fase 4 (v2.1.0+ - Futuro)
 - Database integration
