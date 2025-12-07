@@ -1,591 +1,353 @@
-# 🔮 Funcionalidades Sugeridas para Evolución del Proyecto
+# 🔮 Future Features Roadmap
 
-**Versión Actual**: v4.0.0 ✅ Limpieza, Testing y Documentación Completados
+**Current Version**: v4.0.0 ✅ Complete testing, cleanup and documentation
 
-Basado en análisis de orquestadores empresariales (Kubernetes, Ansible, Terraform, systemd, etc.), aquí están las funciones que podrían mejorar significativamente el proyecto.
+Based on analysis of enterprise orchestrators (Kubernetes, Ansible, Terraform, systemd, etc.), here are features that could significantly enhance the project.
 
 ---
 
-## 🎯 Categorías de Funcionalidades
+## ✅ Completed Implementation Status
 
-### 1. **Monitoreo Avanzado de Recursos** 🔍
+### ✅ Phase 1-4: Core & Advanced Features (v1.0.0 - v4.0.0)
 
-#### Actualmente Tienes
-- ✅ CPU, memoria, disco
-- ✅ Listado de procesos
-- ✅ Uptime del sistema
+All foundational features have been successfully implemented:
 
-#### Sugerencias Nuevas
+- ✅ Command execution and batch processing
+- ✅ Service management
+- ✅ Authentication and security
+- ✅ File operations
+- ✅ Webhooks and event system
+- ✅ Secrets management
+- ✅ Backup and restore functionality
+- ✅ Workflow engine with history
+- ✅ Metrics collection and storage
+- ✅ Docker integration
+- ✅ Database integration (PostgreSQL)
+- ✅ Load balancer control
+- ✅ Advanced analytics (aggregations, snapshots, trends)
+- ✅ Complete test suite (50+ tests)
+- ✅ Comprehensive documentation
 
-```typescript
-// 1. Monitoreo de Red
-interface NetworkStats {
-  interfaces: {
-    name: string;
-    ipv4: string;
-    ipv6?: string;
-    bytesIn: number;
-    bytesOut: number;
-    packetsIn: number;
-    packetsOut: number;
-    errors: number;
-    dropped: number;
-  }[];
-  connections: {
-    established: number;
-    timeWait: number;
-    listening: number;
-  };
-}
+---
 
-GET /api/resources/network
+## 🚀 Phase 5+: Future Enhancement Roadmap
 
-// 2. Monitoreo de I/O (Disco)
-interface IOStats {
-  disks: {
-    device: string;
-    readOps: number;
-    writeOps: number;
-    readBytes: number;
-    writeBytes: number;
-    avgQueueSize: number;
-    avgServiceTime: number;
-  }[];
-}
+### 1. **CI/CD Integration & Automation** 📦
 
-GET /api/resources/io
+Automate testing, building, and deployment processes.
 
-// 3. Temperature y Hardware
-interface HardwareStats {
-  temperature: {
-    cpu: number;
-    disk?: number[];
-    battery?: number;
-  };
-  powerUsage: number; // watts
-  batteryStatus?: {
-    percentage: number;
-    isCharging: boolean;
-    timeRemaining?: number;
-  };
-}
-
-GET /api/resources/hardware
-
-// 4. Historial de Métricas (Time Series)
-interface MetricsHistory {
-  timestamp: Date;
-  cpu: number;
-  memory: number;
-  disk: number;
-  networkIn: number;
-  networkOut: number;
-}
-
-GET /api/resources/history?period=1h|24h|7d
-POST /api/resources/history (almacenar histórico)
+#### GitHub Actions
+```yaml
+Workflows:
+- Run tests on every push
+- Code quality checks (ESLint, Prettier)
+- Security scanning (SAST/DAST)
+- Dependency vulnerability scanning
+- Automated version bumping
+- Automatic changelog generation
 ```
 
----
-
-### 2. **Gestión de Procesos Mejorada** 🔄
-
-#### Actualmente Tienes
-- ✅ Listar procesos
-- ✅ Terminar proceso
-
-#### Sugerencias Nuevas
-
-```typescript
-// 1. Control Avanzado de Procesos
-interface ProcessControl {
-  pid: number;
-  command: string;
-  priority: 'low' | 'normal' | 'high' | 'realtime';
-  cpuAffinity: number[]; // cores específicos
-}
-
-// Endpoints
-POST /api/processes/set-priority/:pid?priority=high
-POST /api/processes/set-affinity/:pid?cores=0,1,2
-POST /api/processes/pause/:pid  # SIGSTOP
-POST /api/processes/resume/:pid # SIGCONT
-POST /api/processes/dump/:pid   # Core dump
-
-// 2. Process Groups / Namespaces
-GET /api/processes/group/:gid
-POST /api/processes/group/:gid/kill
-
-// 3. Monitoreo por Proceso
-GET /api/processes/:pid/stats
-{
-  pid: 1234,
-  name: "node",
-  memory: { rss: 100MB, heap: 50MB },
-  cpu: 15.5,
-  files: 42,
-  threads: 5,
-  childProcesses: 2,
-  environment: { USER: "ubuntu", ... }
-}
-
-// 4. Process Recovery (auto-restart)
-POST /api/processes/monitor/:pid?autoRestart=true&maxRetries=3
-GET /api/processes/:pid/health
-```
+#### Features
+- Automated deployment to staging/production
+- Release automation with tag creation
+- Artifact storage and management
 
 ---
 
-### 3. **Gestión de Archivos y Sistemas de Archivos** 📁
+### 2. **End-to-End Testing (E2E)** 🧑‍🔬
 
-```typescript
-// 1. File Operations
-interface FileOperation {
-  path: string;
-  size: number;
-  modified: Date;
-  owner: string;
-  permissions: string;
-}
+Comprehensive workflow testing beyond unit tests.
 
-GET /api/files?path=/home&recursive=true
-GET /api/files/:path/stats
-POST /api/files/upload?destination=/tmp
-POST /api/files/delete?path=/tmp/old.log&permanent=true
-POST /api/files/move?from=/tmp/a&to=/tmp/b
-POST /api/files/backup?path=/app&format=tar.gz&destination=/backups
+#### Technology
+- Cypress or Playwright
+- API integration testing
+- Performance testing
+- Screenshot/video recording on failures
 
-// 2. Filesystem Monitoring
-GET /api/filesystem/usage
-{
-  filesystems: [{
-    device: "/dev/sda1",
-    mount: "/",
-    size: 100GB,
-    used: 60GB,
-    available: 40GB,
-    percentage: 60,
-    inodes: { used: 1000000, available: 500000 }
-  }]
-}
-
-// 3. File Watcher
-POST /api/filesystem/watch?path=/app&events=create,modify,delete
-GET /api/filesystem/watch/events?since=2025-12-06T10:00:00Z
-
-// 4. Disk Cleanup
-POST /api/filesystem/cleanup
-{
-  targets: ['oldLogs', 'tempFiles', 'cache'],
-  dryRun: true,
-  maxAge: 30  // días
-}
-Returns: { freed: 50GB, files: 10000 }
-```
+#### Coverage
+- Authentication workflows
+- CRUD operations across all features
+- Error scenarios
+- Edge cases and boundary conditions
 
 ---
 
-### 4. **Gestión de Servicios Mejorada** 🚀
+### 3. **Performance & Scalability** 🚄
 
-#### Actualmente Tienes
-- ✅ systemctl básico (start, stop, restart)
+Optimize response times and handle higher loads.
 
-#### Sugerencias Nuevas
+#### Monitoring
+- Response time tracking
+- Request rate limiting
+- Memory profiling
+- Database query optimization
 
-```typescript
-// 1. Gestión Avanzada de Servicios
-GET /api/services              # listar todos
-GET /api/services/:name/status # estado detallado
-GET /api/services/:name/logs   # últimos logs
-POST /api/services/:name/reload # reloadconfig sin parar
+#### Caching Strategy
+- Redis integration for session caching
+- HTTP caching headers
+- Database query result caching
+- Distributed caching for multi-instance setup
 
-// 2. Service Dependencies
-GET /api/services/:name/dependencies
-POST /api/services/restart-chain?start=web-app
-// Reinicia web-app y sus dependencias en orden correcto
-
-// 3. Service Health Checks
-interface ServiceHealth {
-  name: string;
-  isRunning: boolean;
-  uptime: number;
-  restartCount: number;
-  lastRestart: Date;
-  cpuUsage: number;
-  memoryUsage: number;
-  errorRate: number;
-  lastError?: string;
-}
-
-GET /api/services/:name/health
-
-// 4. Service Scheduling
-POST /api/services/:name/schedule-restart?time=02:00&frequency=daily
-GET /api/services/scheduled-tasks
-DELETE /api/services/scheduled-tasks/:id
-```
+#### Load Testing
+- JMeter or Artillery setup
+- Stress testing scenarios
+- Capacity planning reports
+- Performance benchmarking
 
 ---
 
-### 5. **Gestión de Usuarios y Permisos** 👥
+### 4. **Advanced Security** 🔒
 
-```typescript
-// 1. User Management
-GET /api/users                 # listar usuarios
-GET /api/users/:username/info
-POST /api/users?username=john&group=sudo
-DELETE /api/users/:username
-POST /api/users/:username/password-reset
+Enhanced authentication and authorization mechanisms.
 
-// 2. Group Management
-GET /api/groups
-POST /api/groups?name=developers
-POST /api/users/:username/add-group?group=sudo
+#### Authentication
+- OAuth2/OIDC support
+- Multi-factor authentication (MFA)
+- JWT token management improvements
 
-// 3. File Permissions (ACL)
-GET /api/files/:path/permissions
-POST /api/files/:path/chmod?mode=755
-POST /api/files/:path/chown?user=ubuntu&group=ubuntu
+#### Authorization
+- Role-based access control (RBAC)
+- Fine-grained permissions
+- API key management
 
-// 4. Sudo Management
-GET /api/sudo/rules
-POST /api/sudo/rules?user=ubuntu&command=systemctl
-```
+#### Compliance & Scanning
+- DAST (Dynamic Application Security Testing)
+- OWASP dependency checking
+- Secrets scanning in code
+- Compliance reporting (GDPR, SOC2)
+- Audit logging enhancements
 
 ---
 
-### 6. **Logging y Auditoria** 📊
+### 5. **Container Orchestration** 🐳
 
-```typescript
-// 1. Centralized Logging
-interface LogEntry {
-  timestamp: Date;
-  level: 'debug' | 'info' | 'warn' | 'error';
-  service: string;
-  message: string;
-  context?: object;
-  user?: string;
-}
+Kubernetes and advanced Docker support.
 
-GET /api/logs?service=nginx&level=error&limit=100
-GET /api/logs/stream?follow=true  # realtime logs
-POST /api/logs/search?query=connection+timeout
+#### Kubernetes Integration
+- Helm charts for deployment
+- Pod health checks
+- Resource limiting and requests
+- Auto-scaling policies
+- Service mesh support
 
-// 2. Audit Trail
-GET /api/audit/events
-{
-  events: [{
-    timestamp: Date,
-    action: 'process_killed',
-    user: 'ubuntu',
-    target: 'pid_1234',
-    status: 'success',
-    details: {}
-  }]
-}
-
-// 3. Log Rotation
-POST /api/logs/rotate?service=nginx&backups=7
-
-// 4. Alert Rules
-POST /api/alerts/rules
-{
-  name: "high_cpu",
-  condition: "cpu > 80",
-  duration: 300,
-  action: "webhook",
-  webhook: "https://n8n.local/webhook/alerts"
-}
-```
+#### Docker Enhancements
+- Image registry support (Docker Hub, ECR, GCR)
+- Container health monitoring
+- Automatic image cleanup
+- Container resource tracking
+- Container log aggregation
 
 ---
 
-### 7. **Backup y Recuperación** 💾
+### 6. **Advanced Monitoring & Observability** 📊
 
-```typescript
-// 1. Backup Management
-interface BackupJob {
-  id: string;
-  name: string;
-  source: string;
-  destination: string;
-  schedule: string;  // cron
-  compression: boolean;
-  retention: number; // días
-}
+Comprehensive system monitoring and visualization.
 
-POST /api/backups/create
-{
-  name: "app-backup",
-  source: "/app",
-  destination: "/backups",
-  compress: true,
-  exclude: ["node_modules", ".git"]
-}
+#### Metrics Export
+- Prometheus metrics endpoint
+- Grafana dashboard templates
+- Distributed tracing (Jaeger)
+- Centralized logging (ELK stack)
 
-GET /api/backups          # listar
-GET /api/backups/:id      # detalles
-DELETE /api/backups/:id
+#### Alerting System
+- Threshold-based alerts
+- Alert routing and escalation
+- Notification channels (Email, Slack, PagerDuty, OpsGenie)
+- Alert aggregation and deduplication
+- Alert history and analytics
 
-// 2. Scheduled Backups
-POST /api/backups/:id/schedule?cron="0 2 * * *"  # 2am daily
-GET /api/backups/scheduled
-
-// 3. Restore
-POST /api/backups/:id/restore?targetPath=/restore
-
-// 4. Incremental Backups
-POST /api/backups/incremental?basePath=/backups/full-2025-12-01
-```
+#### Custom Dashboards
+- Real-time system visualization
+- Workflow execution dashboards
+- Performance metrics dashboards
+- SLA tracking dashboards
 
 ---
 
-### 8. **Configuración y Secretos** 🔐
+### 7. **GraphQL API** 📡
 
-```typescript
-// 1. Configuration Management
-GET /api/config
-GET /api/config/:key
-POST /api/config?key=API_TIMEOUT&value=30000
-DELETE /api/config/:key
+Modern API query language alongside REST.
 
-// 2. Secrets Manager
-POST /api/secrets
-{
-  name: "db_password",
-  value: "secret123",
-  ttl: 2592000,  // 30 días
-  permissions: ["read", "rotate"]
-}
+#### Features
+- GraphQL endpoint alongside REST API
+- Query optimization (field selection, batching)
+- Subscription support for real-time updates
+- Automatic API documentation
+- GraphQL federation support
 
-GET /api/secrets/:name
-POST /api/secrets/:name/rotate
-DELETE /api/secrets/:name
-
-// 3. Config Versioning
-GET /api/config/history
-POST /api/config/rollback?version=v2
-```
+#### Benefits
+- Reduce over-fetching of data
+- Improved developer experience
+- Flexible querying
 
 ---
 
-### 9. **Eventos y Webhooks** 🔗
+### 8. **Multi-Database Support** 💾
 
-```typescript
-// 1. Event System
-interface Event {
-  type: 'process_started' | 'process_crashed' | 'disk_full' | etc;
-  timestamp: Date;
-  data: object;
-}
+Support for various database engines.
 
-POST /api/events/subscribe
-{
-  events: ['process_crashed', 'service_stopped'],
-  webhook: 'https://n8n.local/webhook/events',
-  filters: { service: 'nginx' }
-}
+#### Supported Databases
+- MySQL/MariaDB support
+- MongoDB support
+- SQLite support for lightweight deployments
+- Oracle Database support (enterprise)
 
-GET /api/events/subscriptions
-DELETE /api/events/subscriptions/:id
-
-// 2. Event Replay
-GET /api/events?since=2025-12-01&type=error
-POST /api/events/:eventId/replay
-
-// 3. Custom Events
-POST /api/events/emit
-{
-  type: "custom_event",
-  data: { message: "Deploy completed" }
-}
-```
+#### Features
+- Database migration tools
+- Backup automation and scheduling
+- Database replication setup assistance
+- Query performance analysis
+- Database health monitoring
 
 ---
 
-### 10. **Orquestación Avanzada** 🎼
+### 9. **Advanced Workflow Features** 🔄
 
-```typescript
-// 1. Workflow Execution
-interface Workflow {
-  id: string;
-  name: string;
-  steps: WorkflowStep[];
-  triggers: Trigger[];
-  parallelism: number;
-}
+Enhanced workflow capabilities.
 
-POST /api/workflows
-{
-  name: "deploy-app",
-  steps: [
-    { action: "backup", target: "/app" },
-    { action: "git-pull" },
-    { action: "npm-install" },
-    { action: "restart", service: "app" },
-    { action: "health-check", url: "http://localhost:3000/health" }
-  ]
-}
+#### Workflow Enhancements
+- Conditional branching (if/else logic)
+- Loop support (for, while, foreach)
+- Error handling and retry logic
+- Workflow versioning and rollback
+- Workflow scheduling (cron support)
 
-GET /api/workflows
-POST /api/workflows/:id/execute
-GET /api/workflows/:id/history
+#### Workflow Monitoring
+- Real-time execution tracking
+- Step-by-step debugging
+- Execution timeline visualization
+- Performance metrics per step
+- Workflow analytics
 
-// 2. Conditional Execution
-{
-  steps: [
-    { action: "test", if: "env.NODE_ENV === 'production'" },
-    { action: "notify", if: "previous_step.success === false" }
-  ]
-}
-
-// 3. Retry Logic
-{
-  action: "api-call",
-  url: "https://api.example.com/deploy",
-  retry: { max: 3, backoff: "exponential" },
-  timeout: 30000
-}
-```
+#### Workflow Marketplace
+- Shared workflow templates
+- Community workflows
+- Workflow validation and testing
+- Workflow documentation
 
 ---
 
-### 11. **Métricas y Observabilidad** 📈
+### 10. **Multi-Tenancy & SaaS** 👥
 
-```typescript
-// 1. Custom Metrics
-interface Metric {
-  name: string;
-  value: number;
-  timestamp: Date;
-  tags: { [key: string]: string };
-}
+Support for multiple independent tenants.
 
-POST /api/metrics/custom
-{
-  name: "app.requests_per_second",
-  value: 150,
-  tags: { service: "api", endpoint: "/users" }
-}
+#### Tenant Management
+- Tenant isolation and separation
+- Per-tenant API keys and tokens
+- Resource quotas and limits per tenant
+- Billing and usage tracking
 
-GET /api/metrics?name=cpu&from=2025-12-06T00:00:00Z&to=2025-12-06T23:59:59Z
-
-// 2. Alerting with Thresholds
-POST /api/alerts/thresholds
-{
-  metric: "cpu",
-  threshold: 80,
-  comparison: "greater_than",
-  duration: 300,
-  action: "webhook"
-}
-
-// 3. SLA Monitoring
-GET /api/sla/:serviceName
-{
-  uptime: 99.95,
-  averageResponseTime: 45,
-  errorRate: 0.01,
-  breaches: 1
-}
-```
+#### Features
+- Separate databases per tenant
+- Custom domain support
+- Tenant-specific configurations
+- White-label capabilities
+- Tenant analytics and reporting
 
 ---
 
-### 12. **Integración con Herramientas Externas** 🔌
+### 11. **Mobile Application** 📱
 
-```typescript
-// 1. Docker Integration
-GET /api/docker/containers
-POST /api/docker/containers/:id/start
-POST /api/docker/containers/:id/stop
-GET /api/docker/images
+Native and web mobile support.
 
-// 2. Database Management
-POST /api/databases/backup?type=postgresql&name=app_db
-GET /api/databases/status
+#### Mobile Apps
+- Native iOS/Android applications
+- Mobile-optimized API endpoints
+- Push notifications
+- Offline support with data sync
 
-// 3. Load Balancer Control
-POST /api/loadbalancer/backends/:id/drain
-POST /api/loadbalancer/backends/:id/enable
-
-// 4. Git Integration
-POST /api/git/pull?repo=/app
-POST /api/git/deploy?branch=main&target=/app
-
-// 5. Notification Services
-POST /api/notifications/slack
-POST /api/notifications/email
-POST /api/notifications/telegram
-```
+#### Web UI Improvements
+- Responsive design enhancements
+- Mobile-first design approach
+- PWA (Progressive Web App) support
+- Offline functionality
+- Mobile gesture support
 
 ---
 
-## 📊 Matriz de Priorización
+### 12. **Backup & Disaster Recovery** 🆘
 
-```
-IMPACTO vs COMPLEJIDAD
-(Alto impacto, baja complejidad = prioridad alta)
+Enhanced backup and recovery capabilities.
 
-Tier 1 (Empezar por estos):
-  [x] Network Monitoring         [Alto impacto, Media complejidad]
-  [x] Process Priority Control   [Medio impacto, Baja complejidad]
-  [x] Service Health Checks      [Alto impacto, Media complejidad]
-  [x] Basic Logging/Audit        [Alto impacto, Media complejidad]
+#### Advanced Backups
+- Incremental and differential backups
+- Backup encryption
+- Backup verification and integrity checks
+- Cloud storage support (AWS S3, GCS, Azure Blob)
+- Automated backup retention policies
 
-Tier 2 (Después):
-  [ ] File Operations            [Medio impacto, Media complejidad]
-  [ ] Backup/Restore             [Alto impacto, Alta complejidad]
-  [ ] Secrets Management         [Alto impacto, Media complejidad]
-  [ ] Webhooks/Events            [Medio impacto, Media complejidad]
-
-Tier 3 (Avanzado):
-  [x] Workflows                  [Alto impacto, Alta complejidad]
-  [x] Docker Integration         [Medio impacto, Media complejidad]
-  [x] Custom Metrics             [Medio impacto, Baja complejidad]
-```
+#### Disaster Recovery
+- RTO/RPO (Recovery Time/Point Objective) tracking
+- Automated backup restoration testing
+- Runbook automation
+- Multi-region replication
+- Failover automation
+- Disaster recovery drills
 
 ---
 
-## 🚀 Roadmap Sugerido
+## 📅 Implementation Timeline
 
-### Fase 1 (v1.2.0 - 1 mes)
-- [x] Network monitoring
-- [x] Enhanced service status
-- [x] Basic audit logging
-- [x] Process priority control
-
-### Fase 2 (v1.3.0 - 1-2 meses)
-- [x] File operations (v1.1.0)
-- [x] Webhooks/events (v1.2.0)
-- [x] Secrets management (v1.3.0)
-- [x] Basic backup (v1.4.0)
-
-### Fase 3 (v2.0.0 - 2-3 meses)
-- [x] Advanced backup/restore (v2.0.0)
-- [x] Workflow engine (v2.0.1)
-- [x] Custom metrics (v2.0.3)
-- [x] Docker integration (v2.0.4)
-
-### Fase 4 (v2.1.0+ - Futuro)
-- [x] Database integration (v3.0.0)
-- [x] Load balancer control (v3.1.0)
-- [x] Advanced analytics (v3.2.0)
+| Phase | Features | Target | Priority |
+|-------|----------|--------|----------|
+| 4 | Testing & Documentation | ✅ Done | - |
+| 5 | CI/CD, E2E, Performance | Q1 2026 | High |
+| 6 | Security, Monitoring | Q2 2026 | High |
+| 7 | Container, Multi-DB | Q2-Q3 2026 | Medium |
+| 8+ | GraphQL, Mobile, SaaS | Q3+ 2026 | Medium |
 
 ---
 
-## 💡 Recomendación Personal
+## 🎯 Priority Matrix
 
-Para un orquestador de recursos local que sea útil con n8n, enfócate primero en:
+### High Priority (Next Quarter)
+- CI/CD Integration with GitHub Actions
+- End-to-End Testing Suite
+- Security Enhancements (OAuth2, RBAC)
+- API Documentation (OpenAPI/Swagger)
+- Performance Optimization
 
-1. **Network Monitoring** - Es fundamental
-2. **Service Health Checks** - Para detectar problemas rápidamente
-3. **Logging/Audit** - Para debugging y compliance
-4. **File Backup** - Protege datos críticos
-5. **Webhooks** - Para mejor integración con n8n
+### Medium Priority (Next 6 Months)
+- Multi-Database Support
+- Container Orchestration (Kubernetes)
+- Enhanced Monitoring (Prometheus, Grafana)
+- Advanced Alerting System
+- Workflow Marketplace
 
-Estas 5 funcionalidades aumentarían significativamente el valor del proyecto sin complejidad excesiva.
+### Lower Priority (Future Consideration)
+- GraphQL API
+- Multi-Tenancy
+- Mobile Native Apps
+- Advanced Disaster Recovery
+- ML-based Anomaly Detection
 
 ---
 
-**¿Cuál de estas funcionalidades te gustaría implementar primero?**
+## 🤝 Contributing
+
+To implement features from this roadmap:
+
+1. Check the [CONTRIBUTING.md](CONTRIBUTING.md) guide
+2. Open a [GitHub Discussion](https://github.com/Sebas1705/VPSLocalOrchestrator/discussions) for major features
+3. Create a feature branch: `feature/your-feature`
+4. Write tests for your implementation
+5. Ensure all tests pass: `npm test`
+6. Submit a Pull Request with detailed description
+
+---
+
+## 📞 Feedback & Suggestions
+
+Have ideas for additional features or improvements?
+
+- [Open a GitHub Discussion](https://github.com/Sebas1705/VPSLocalOrchestrator/discussions)
+- [Open a GitHub Issue](https://github.com/Sebas1705/VPSLocalOrchestrator/issues)
+- [Start a Discussion](https://github.com/Sebas1705/VPSLocalOrchestrator/discussions/new)
+
+Your feedback helps shape the future of this project!
+
+---
+
+**Last Updated**: December 7, 2025  
+**Maintainer**: Sebas1705  
+**Repository**: [GitHub](https://github.com/Sebas1705/VPSLocalOrchestrator)

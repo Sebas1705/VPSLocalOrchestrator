@@ -1,37 +1,37 @@
 # 🧪 Testing Documentation
 
-Documentación completa sobre la estrategia de testing, ejecución y cobertura del proyecto VPS Local Orchestrator.
+Complete documentation on testing strategy, execution and coverage of the VPS Local Orchestrator project.
 
-## 📋 Índice
+## 📋 Table of Contents
 
-- [Descripción General](#descripción-general)
-- [Configuración de Testing](#configuración-de-testing)
-- [Estructura de Tests](#estructura-de-tests)
-- [Ejecutar Tests](#ejecutar-tests)
-- [Escribir Nuevos Tests](#escribir-nuevos-tests)
-- [Limpieza Post-Tests](#limpieza-post-tests)
-- [Cobertura](#cobertura)
+- [Overview](#overview)
+- [Testing Setup](#testing-setup)
+- [Test Structure](#test-structure)
+- [Running Tests](#running-tests)
+- [Writing New Tests](#writing-new-tests)
+- [Post-Test Cleanup](#post-test-cleanup)
+- [Coverage](#coverage)
 
 ---
 
-## 📖 Descripción General
+## 📖 Overview
 
-La suite de testing utiliza **Jest** como framework principal con soporte para **TypeScript** mediante **ts-jest**.
+The testing suite uses **Jest** as the main framework with **TypeScript** support via **ts-jest**.
 
-### Stack de Testing
+### Testing Stack
 
-- **Jest 30.x** - Test runner y assertion library
-- **ts-jest 29.x** - Transformer para TypeScript
-- **Supertest 7.x** - HTTP assertion library (disponible para tests de integración futuros)
-- **@types/jest** - Type definitions para Jest
+- **Jest 30.x** - Test runner and assertion library
+- **ts-jest 29.x** - TypeScript transformer
+- **Supertest 7.x** - HTTP assertion library (available for integration tests)
+- **@types/jest** - Type definitions for Jest
 
-### Características
+### Features
 
-- ✅ **50+ tests unitarios e integración**
-- ✅ **100% pasados al compilar**
-- ✅ **Limpieza automática post-tests**
-- ✅ **Soporte ESM (ES Modules)**
-- ✅ **Type-safe con TypeScript**
+- ✅ **50+ unit and integration tests**
+- ✅ **100% passing on compile**
+- ✅ **Automatic post-test cleanup**
+- ✅ **Full ESM (ES Modules) support**
+- ✅ **Type-safe with TypeScript**
 
 ---
 

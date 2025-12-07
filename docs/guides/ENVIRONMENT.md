@@ -1,162 +1,162 @@
-# Guía Completa de Variables de Entorno
+# Complete Environment Variables Guide
 
-## 📋 Todas las Variables Disponibles
+## 📋 All Available Variables
 
-### Requeridas ⚠️
+### Required ⚠️
 
 #### `API_TOKEN`
-Token Bearer para endpoints privilegiados.
+Bearer token for privileged endpoints.
 
 ```bash
-# Generar token seguro (64 caracteres)
+# Generate secure token (64 characters)
 openssl rand -hex 32
 
-# Copiar en .env
+# Copy to .env
 API_TOKEN=a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2
 ```
 
-**Validación**:
-- Mínimo 32 caracteres
-- No puede estar vacío
-- Se valida con timing-safe comparison
+**Validation**:
+- Minimum 32 characters
+- Cannot be empty
+- Validated with timing-safe comparison
 
 #### `PORT`
-Puerto en el que escucha la API.
+Port on which the API listens.
 
 ```bash
-# Default (si no se especifica)
+# Default (if not specified)
 PORT=3000
 
-# Otro puerto
+# Another port
 PORT=5000
 ```
 
-**Validación**:
-- Debe ser número entre 1 y 65535
-- Si no disponible, el servidor fallará
+**Validation**:
+- Must be number between 1 and 65535
+- If unavailable, server will fail
 
-### Opcionales 📌
+### Optional 📌
 
 #### `LOG_LEVEL`
-Nivel de logs en la consola.
+Log level in console.
 
 ```bash
-# Opciones
-LOG_LEVEL=debug    # Muestra todo (desarrollo)
+# Options
+LOG_LEVEL=debug    # Shows everything (development)
 LOG_LEVEL=info     # Info, warn, error (default)
 LOG_LEVEL=warn     # Warn, error
-LOG_LEVEL=error    # Solo errores (producción)
+LOG_LEVEL=error    # Errors only (production)
 ```
 
-**Valores**:
+**Values**:
 ```
 debug > info > warn > error
 ```
 
 #### `SUDO_PASSWORD`
-Contraseña de sudo para comandos privilegiados.
+Sudo password for privileged commands.
 
 ```bash
 SUDO_PASSWORD=my-super-secure-password
 ```
 
-**Nota**: Es mejor usar sudoers sin contraseña si es posible.
+**Note**: Better to use passwordless sudoers if possible.
 
 #### `ENABLE_PRIVILEGED_ENDPOINTS`
-Habilitar/deshabilitar endpoints privilegiados.
+Enable/disable privileged endpoints.
 
 ```bash
-# Habilitar (default)
+# Enable (default)
 ENABLE_PRIVILEGED_ENDPOINTS=true
 
-# Deshabilitar (no expone /api/privileged/*)
+# Disable (doesn't expose /api/privileged/*)
 ENABLE_PRIVILEGED_ENDPOINTS=false
 ```
 
 #### `ALLOW_SUDO_COMMANDS`
-Permitir/bloquear comandos con sudo.
+Allow/block commands with sudo.
 
 ```bash
-# Permitir sudo
+# Allow sudo
 ALLOW_SUDO_COMMANDS=true
 
-# Bloquear sudo (más seguro)
+# Block sudo (more secure)
 ALLOW_SUDO_COMMANDS=false
 ```
 
 #### `MAX_COMMAND_TIMEOUT`
-Timeout máximo para comandos (en milisegundos).
+Maximum timeout for commands (in milliseconds).
 
 ```bash
-# 30 segundos (default)
+# 30 seconds (default)
 MAX_COMMAND_TIMEOUT=30000
 
-# 5 minutos
+# 5 minutes
 MAX_COMMAND_TIMEOUT=300000
 
-# 10 minutos
+# 10 minutes
 MAX_COMMAND_TIMEOUT=600000
 ```
 
 #### `ALLOWED_SCRIPT_PATHS`
-Rutas permitidas para ejecutar scripts.
+Allowed paths to execute scripts.
 
 ```bash
-# Una ruta
+# Single path
 ALLOWED_SCRIPT_PATHS=/scripts
 
-# Múltiples rutas (separadas por coma)
+# Multiple paths (comma-separated)
 ALLOWED_SCRIPT_PATHS=/scripts,/usr/local/scripts,/app/scripts
 
-# Todas las rutas (no recomendado)
+# All paths (not recommended)
 ALLOWED_SCRIPT_PATHS=/
 ```
 
 #### `ALERT_EMAIL`
-Email para alertas del sistema.
+Email for system alerts.
 
 ```bash
 ALERT_EMAIL=admin@example.com
 ```
 
 #### `WEBHOOK_LOG_URL`
-URL webhook para enviar logs.
+Webhook URL to send logs.
 
 ```bash
 WEBHOOK_LOG_URL=https://webhook.site/xxx-yyy-zzz
 ```
 
 #### `NODE_ENV`
-Ambiente de ejecución.
+Execution environment.
 
 ```bash
-NODE_ENV=development   # Desarrollo (más verbose)
+NODE_ENV=development   # Development (more verbose)
 NODE_ENV=staging       # Staging
-NODE_ENV=production    # Producción (menos verbose)
+NODE_ENV=production    # Production (less verbose)
 ```
 
-## 🔧 Archivo `.env` Completo
+## 🔧 Complete `.env` File
 
-### Desarrollo
+### Development
 ```bash
 # Tokens
 API_TOKEN=dev-token-1234567890abcdef1234567890abcdef12345678
 
-# Servidor
+# Server
 PORT=3000
 LOG_LEVEL=debug
 NODE_ENV=development
 
-# Seguridad
+# Security
 ENABLE_PRIVILEGED_ENDPOINTS=true
 ALLOW_SUDO_COMMANDS=true
 SUDO_PASSWORD=dev-password
 
-# Comandos
+# Commands
 MAX_COMMAND_TIMEOUT=30000
 ALLOWED_SCRIPT_PATHS=/scripts,./api/scripts
 
-# Notificaciones
+# Notifications
 ALERT_EMAIL=dev@example.com
 WEBHOOK_LOG_URL=https://webhook.site/test
 ```
@@ -166,172 +166,198 @@ WEBHOOK_LOG_URL=https://webhook.site/test
 # Tokens
 API_TOKEN=staging-token-abcdef1234567890abcdef1234567890abcdef12
 
-# Servidor
+# Server
 PORT=3000
 LOG_LEVEL=info
 NODE_ENV=staging
 
-# Seguridad
+# Security
 ENABLE_PRIVILEGED_ENDPOINTS=true
 ALLOW_SUDO_COMMANDS=true
 SUDO_PASSWORD=staging-password
 
-# Comandos
+# Commands
 MAX_COMMAND_TIMEOUT=60000
 ALLOWED_SCRIPT_PATHS=/scripts
 
-# Notificaciones
-ALERT_EMAIL=ops@example.com
+# Notifications
+ALERT_EMAIL=staging-admin@example.com
 WEBHOOK_LOG_URL=https://webhook.site/staging
 ```
 
-### Producción
+### Production
 ```bash
 # Tokens
-API_TOKEN=prod-token-1234567890abcdef1234567890abcdef123456
+API_TOKEN=prod-token-prod1234567890abcdefabcdefabcdefabcdefabcd
 
-# Servidor
+# Server
 PORT=3000
 LOG_LEVEL=warn
 NODE_ENV=production
 
-# Seguridad
+# Security
 ENABLE_PRIVILEGED_ENDPOINTS=false
 ALLOW_SUDO_COMMANDS=false
-SUDO_PASSWORD=
+SUDO_PASSWORD=prod-password
 
-# Comandos
-MAX_COMMAND_TIMEOUT=300000
+# Commands
+MAX_COMMAND_TIMEOUT=120000
 ALLOWED_SCRIPT_PATHS=/scripts
 
-# Notificaciones
-ALERT_EMAIL=alerts@example.com
+# Notifications
+ALERT_EMAIL=prod-admin@example.com
 WEBHOOK_LOG_URL=https://webhook.site/prod
 ```
 
-## 🔐 Validación de Variables
+## 📝 Environment Variable Reference Table
 
-El servidor valida al iniciar:
+| Variable | Type | Required | Default | Min | Max | Notes |
+|----------|------|----------|---------|-----|-----|-------|
+| `API_TOKEN` | string | ✅ | - | 32 | 256 | Bearer token |
+| `PORT` | number | ✅ | - | 1 | 65535 | Server port |
+| `LOG_LEVEL` | enum | ❌ | `info` | - | - | debug, info, warn, error |
+| `SUDO_PASSWORD` | string | ❌ | - | 0 | 256 | Password for sudo |
+| `ENABLE_PRIVILEGED_ENDPOINTS` | boolean | ❌ | `true` | - | - | true or false |
+| `ALLOW_SUDO_COMMANDS` | boolean | ❌ | `true` | - | - | true or false |
+| `MAX_COMMAND_TIMEOUT` | number | ❌ | `30000` | 1000 | 600000 | Milliseconds |
+| `ALLOWED_SCRIPT_PATHS` | string | ❌ | `/scripts` | - | - | Comma-separated |
+| `ALERT_EMAIL` | string | ❌ | - | - | 256 | Email address |
+| `WEBHOOK_LOG_URL` | string | ❌ | - | - | 2048 | HTTPS URL |
+| `NODE_ENV` | enum | ❌ | `development` | - | - | development, staging, production |
 
+## 🔍 Validation Examples
+
+### Invalid API_TOKEN
 ```bash
+# ❌ Too short
+API_TOKEN=short
+
+# ✅ Valid
+API_TOKEN=a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2
+```
+
+### Invalid PORT
+```bash
+# ❌ Outside range
+PORT=99999
+
+# ✅ Valid
+PORT=3000
+```
+
+### Invalid LOG_LEVEL
+```bash
+# ❌ Unknown level
+LOG_LEVEL=verbose
+
+# ✅ Valid
+LOG_LEVEL=info
+```
+
+### Invalid TIMEOUT
+```bash
+# ❌ Too small
+MAX_COMMAND_TIMEOUT=100
+
+# ✅ Valid
+MAX_COMMAND_TIMEOUT=30000
+```
+
+## 🚀 Loading Variables
+
+### From `.env` file
+```bash
+# Automatically loaded by dotenv
 npm run dev
 ```
 
-Salida:
-```
-Validando variables de entorno:
-✅ API_TOKEN presente
-✅ PORT presente
+### From command line
+```bash
+# Override .env
+API_TOKEN=custom-token npm run dev
 
-🔑 API Configuration loaded:
-   - API Token: a1b2c3d4...
-   - Privileged endpoints: ✅ Enabled
-   - Sudo commands: ✅ Allowed
-   - Log level: DEBUG
+# Multiple variables
+API_TOKEN=custom PORT=5000 npm run dev
 ```
 
-Si falta algo requerido:
+### From system environment
+```bash
+# Linux/Mac
+export API_TOKEN=my-token
+npm run dev
+
+# Windows
+set API_TOKEN=my-token
+npm run dev
 ```
-❌ Variables de entorno requeridas no encontradas:
-   - API_TOKEN
-   - PORT
 
-Copia .env.example a .env y configura los valores:
-   cp api/.env.example api/.env
+## 🔐 Security Notes
+
+### Never Do This
+```bash
+# ❌ Commit .env
+git add .env
+
+# ❌ Show token in logs
+console.log(process.env.API_TOKEN)
+
+# ❌ Hardcode values
+const token = "my-secret";
+
+# ❌ Use same token everywhere
+# (dev and prod should be different)
 ```
 
-## 📊 Tabla de Referencia Rápida
+### Always Do This
+```bash
+# ✅ Use .env in .gitignore
+echo ".env" >> .gitignore
 
-| Variable | Tipo | Requerida | Default | Rango |
-|----------|------|-----------|---------|-------|
-| `API_TOKEN` | string | ✅ | - | 32-128 chars |
-| `PORT` | number | ✅ | - | 1-65535 |
-| `LOG_LEVEL` | enum | ❌ | `info` | debug\|info\|warn\|error |
-| `NODE_ENV` | enum | ❌ | `development` | dev\|staging\|prod |
-| `SUDO_PASSWORD` | string | ❌ | - | any |
-| `ENABLE_PRIVILEGED_ENDPOINTS` | boolean | ❌ | `true` | true\|false |
-| `ALLOW_SUDO_COMMANDS` | boolean | ❌ | `true` | true\|false |
-| `MAX_COMMAND_TIMEOUT` | number | ❌ | `30000` | 1000-3600000 |
-| `ALLOWED_SCRIPT_PATHS` | string | ❌ | `/scripts` | paths CSV |
-| `ALERT_EMAIL` | string | ❌ | - | valid email |
-| `WEBHOOK_LOG_URL` | string | ❌ | - | valid URL |
+# ✅ Generate secure tokens
+openssl rand -hex 32
+
+# ✅ Rotate credentials regularly
+# Change tokens every 3-6 months
+
+# ✅ Different tokens per environment
+# dev-token != staging-token != prod-token
+```
 
 ## 🆘 Troubleshooting
 
-### "Variable `API_TOKEN` no encontrada"
+### Variables not loading
 ```bash
-# Solución
-cat api/.env | grep API_TOKEN
-
-# Si no existe
-openssl rand -hex 32  # Generar
-echo "API_TOKEN=<pegar-aquí>" >> api/.env
-```
-
-### "PORT already in use"
-```bash
-# Ver qué proceso usa el puerto
-lsof -i :3000
-
-# Cambiar puerto en .env
-echo "PORT=3001" >> api/.env
-```
-
-### "LOG_LEVEL no reconocido"
-```bash
-# Valores válidos: debug, info, warn, error
-LOG_LEVEL=debug    # Correcto ✅
-LOG_LEVEL=verbose  # Incorrecto ❌
-```
-
-### Las variables no se cargan
-```bash
-# Reiniciar servidor
-npm run dev
-
-# Verificar que .env está en la carpeta correcta
+# Check if .env exists
 ls -la api/.env
 
-# Limpieza
-rm -rf node_modules/.cache
+# Check content
+cat api/.env
+
+# Try restarting
 npm run dev
 ```
 
-## 🔒 Mejores Prácticas
-
-### ✅ Hacer
+### Token validation error
 ```bash
-# Usar variables requeridas
-API_TOKEN=$(openssl rand -hex 32)
-echo "API_TOKEN=$API_TOKEN" > api/.env
+# Verify token is valid (32+ characters)
+grep API_TOKEN api/.env | wc -c
 
-# Usar diferentes valores por entorno
-NODE_ENV=production npm start
-
-# Rotar tokens regularmente
-openssl rand -hex 32  # cada 3-6 meses
-
-# Documentar todas las variables
-# Ver .env.example
+# Should be at least 32 characters
+# Generate new if needed
+openssl rand -hex 32
 ```
 
-### ❌ No Hacer
+### Port already in use
 ```bash
-# No loguear credenciales
-console.log(process.env.API_TOKEN)  # ❌
+# Check what's using the port
+lsof -i :3000
 
-# No hardcodear en código
-const API_TOKEN = "secret123"  # ❌
-
-# No commitear .env
-git add api/.env  # ❌
-
-# No reusar tokens
-API_TOKEN=same-token-everywhere  # ❌
+# Use different port
+PORT=3001 npm run dev
 ```
 
-## 📚 Relacionado
+## 📚 Related Documentation
 
-- [`docs/guides/CONFIGURATION.md`](CONFIGURATION.md) - Sistema de configuración
-- [`docs/guides/AUTHENTICATION.md`](AUTHENTICATION.md) - Autenticación con token
-- [`docs/setup/INSTALLATION.md`](../setup/INSTALLATION.md) - Instalación
+- See [`docs/guides/CONFIGURATION.md`](CONFIGURATION.md) for configuration details
+- See [`docs/guides/AUTHENTICATION.md`](AUTHENTICATION.md) for token usage
+- See [`docs/setup/INSTALLATION.md`](../setup/INSTALLATION.md) for installation

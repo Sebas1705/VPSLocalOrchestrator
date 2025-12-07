@@ -1,6 +1,6 @@
 # 🚀 VPS Local Orchestrator API
 
-**API REST para orquestar recursos del sistema y ejecutar comandos desde localhost. Diseñada para integración con n8n y automatización local de tareas críticas.**
+**REST API for orchestrating system resources and executing commands from localhost. Designed for integration with n8n and local task automation.**
 
 [![Node.js](https://img.shields.io/badge/Node.js-v24.11.1-green)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-blue)](https://www.typescriptlang.org/)
@@ -10,50 +10,50 @@
 
 ---
 
-## 🎯 ¿Qué es VPS Local Orchestrator?
+## 🎯 What is VPS Local Orchestrator?
 
-Una **API REST** minimalista pero potente que permite:
-- ✨ **Ejecutar comandos del sistema** desde n8n (o cualquier cliente HTTP)
-- 📊 **Monitorear recursos** en tiempo real (CPU, memoria, disco, procesos)
-- 🔄 **Gestionar servicios** systemd (start, stop, restart, status)
-- 🔐 **Acceso seguro** restringido a localhost con autenticación Bearer token
-- 🌍 **Integración perfecta** con n8n para automatización de tareas locales
+A **minimalist yet powerful REST API** that allows you to:
+- ✨ **Execute system commands** from n8n (or any HTTP client)
+- 📊 **Monitor resources** in real-time (CPU, memory, disk, processes)
+- 🔄 **Manage systemd services** (start, stop, restart, status)
+- 🔐 **Secure access** restricted to localhost with Bearer token authentication
+- 🌍 **Perfect integration** with n8n for local task automation
 
-Es como tener un **agente de automatización** directamente en tu servidor, sin necesidad de instalaciones complejas.
-
----
-
-## 📋 Contenido Rápido
-
-| Pregunta | Respuesta |
-|----------|-----------|
-| **¿Qué es?** | API REST que ejecuta comandos de sistema desde localhost |
-| **¿Por qué?** | Automatizar tareas locales con n8n de forma segura y simple |
-| **¿Cómo empieza?** | Ver [Quick Start](#-quick-start) abajo (5 minutos) |
-| **¿Documentación?** | Todo detallado en [`docs/`](docs/) |
-| **¿Ejemplos?** | 20+ ejemplos en [`docs/examples/CURL.md`](docs/examples/CURL.md) |
-| **¿Seguro?** | Sí, localhost-only + token Bearer + validaciones
+It's like having an **automation agent** directly in your server, without complex installations.
 
 ---
 
-## ✨ Características Principales
+## 📋 Quick Reference
 
-- ✅ **API REST** con 10+ endpoints funcionales
-- ✅ **Seguridad multicapa**: localhost-only + token Bearer + validaciones
-- ✅ **Ejecución de comandos** con timeout configurable (por defecto 30s)
-- ✅ **Monitoreo de recursos**: CPU, memoria, disco, procesos en tiempo real
-- ✅ **Gestión de servicios**: systemctl integration nativa
-- ✅ **Integración n8n** lista para usar con ejemplos incluidos
-- ✅ **TypeScript** con tipado completo end-to-end
-- ✅ **Documentación exhaustiva** con 20+ ejemplos
-- ✅ **Logs centralizados** con rotación automática
-- ✅ **Manejo de errores** inteligente y environment-aware
-- ✅ **Validaciones** contra DoS y ataques comunes
-- ✅ **Totalmente funcional** en producción
+| Question | Answer |
+|----------|--------|
+| **What is it?** | REST API that executes system commands from localhost |
+| **Why use it?** | Automate local tasks with n8n safely and easily |
+| **How to start?** | See [Quick Start](#-quick-start) below (5 minutes) |
+| **Documentation?** | All detailed in [`docs/`](docs/) |
+| **Examples?** | 20+ examples in [`docs/examples/CURL.md`](docs/examples/CURL.md) |
+| **Is it secure?** | Yes, localhost-only + Bearer token + validations
 
 ---
 
-## 🏃 Quick Start (5 minutos)
+## ✨ Main Features
+
+- ✅ **REST API** with 10+ functional endpoints
+- ✅ **Multi-layer security**: localhost-only + Bearer token + validations
+- ✅ **Command execution** with configurable timeout (default 30s)
+- ✅ **Resource monitoring**: CPU, memory, disk, processes in real-time
+- ✅ **Service management**: native systemctl integration
+- ✅ **n8n integration** ready to use with examples included
+- ✅ **TypeScript** with complete end-to-end typing
+- ✅ **Comprehensive documentation** with 20+ examples
+- ✅ **Centralized logging** with automatic rotation
+- ✅ **Intelligent error handling** and environment-aware
+- ✅ **Validations** against DoS and common attacks
+- ✅ **Fully functional** in production
+
+---
+
+## 🏃 Quick Start (5 minutes)
 
 ### 1️⃣ Clonar y Instalar
 ```bash
@@ -108,86 +108,86 @@ Deberías ver:
 
 ---
 
-## 📡 API Endpoints - Resumen Rápido
+## 📡 API Endpoints - Quick Summary
 
-### ✅ Públicos (sin autenticación)
+### ✅ Public (no authentication required)
 
 ```bash
 # Health check
 GET /health
 
-# Obtener información del sistema
+# Get system information
 GET /api/resources
 
-# Listar procesos activos
+# List active processes
 GET /api/resources/processes
 
-# Ejecutar comando simple
+# Execute simple command
 POST /api/command/execute
 Content-Type: application/json
 { "command": "whoami" }
 
-# Obtener info de proceso específico
+# Get specific process info
 GET /api/resources/process/:pid
 
-# Terminar proceso
+# Terminate process
 DELETE /api/resources/process/:pid
 ```
 
-### 🔒 Privilegiados (requieren token)
+### 🔒 Privileged (require token)
 
 ```bash
-# Ejecutar comando con permisos
+# Execute command with permissions
 POST /api/privileged/execute
 Authorization: Bearer YOUR_TOKEN_HERE
 { "command": "systemctl status nginx" }
 
-# Gestionar servicios systemd
+# Manage systemd services
 POST /api/privileged/service
 Authorization: Bearer YOUR_TOKEN_HERE
 { "service": "nginx", "action": "restart" }
 ```
 
-**Cómo usar el token:**
+**How to use the token:**
 ```bash
-# En header HTTP
+# In HTTP header
 Authorization: Bearer YOUR_TOKEN_HERE
 ```
 
-Para documentación completa: [`docs/api/ENDPOINTS.md`](docs/api/ENDPOINTS.md)
+For complete documentation: [`docs/api/ENDPOINTS.md`](docs/api/ENDPOINTS.md)
 
 ---
 
-## 🔐 Seguridad - Lo que Necesitas Saber
+## 🔐 Security - What You Need to Know
 
-| Aspecto | Implementación | Estado |
-|---------|---|---|
-| **Acceso remoto** | ❌ Solo localhost (127.0.0.1, ::1) | ✅ Bloqueado |
-| **Autenticación** | ✅ Token Bearer (crypto.timingSafeEqual) | ✅ Implementado |
-| **Credenciales** | ✅ `.env` privado en `.gitignore` | ✅ Protegido |
-| **Comandos sensibles** | ✅ Requieren token Bearer | ✅ Implementado |
-| **Validación de entrada** | ✅ Longitud de comando (máx 10KB) | ✅ Implementado |
-| **DoS Protection** | ✅ Límites de tamaño de payload | ✅ Implementado |
-| **Error logging** | ✅ Environment-aware (prod vs dev) | ✅ Implementado |
-| **Timeout en comandos** | ✅ Por defecto 30 segundos | ✅ Implementado |
+| Aspect | Implementation | Status |
+|--------|---|---|
+| **Remote access** | ❌ Localhost only (127.0.0.1, ::1) | ✅ Blocked |
+| **Authentication** | ✅ Bearer token (crypto.timingSafeEqual) | ✅ Implemented |
+| **Credentials** | ✅ `.env` private in `.gitignore` | ✅ Protected |
+| **Sensitive commands** | ✅ Require Bearer token | ✅ Implemented |
+| **Input validation** | ✅ Command length (max 10KB) | ✅ Implemented |
+| **DoS Protection** | ✅ Payload size limits | ✅ Implemented |
+| **Error logging** | ✅ Environment-aware (prod vs dev) | ✅ Implemented |
+| **Command timeout** | ✅ Default 30 seconds | ✅ Implemented |
 
-### Principios de Seguridad
+### Security Principles
 
-1. **Localhost-only**: La API SOLO responde desde 127.0.0.1 (tunel SSH para acceso remoto)
-2. **Token Bearer**: Endpoints sensibles requieren `Authorization: Bearer TOKEN`
-3. **Validaciones estrictas**: Longitud máxima de comandos, tipos de datos, formato de JSON
-4. **Error handling seguro**: En producción, los errores NO exponen stacktraces
-5. **No credenciales en código**: Todo en `.env.example` (plantilla segura)
+1. **Localhost-only**: API ONLY responds from 127.0.0.1 (SSH tunnel for remote access)
+2. **Bearer token**: Sensitive endpoints require `Authorization: Bearer TOKEN`
+3. **Strict validations**: Max command length, data types, JSON format
+4. **Safe error handling**: In production, errors do NOT expose stacktraces
+5. **No credentials in code**: Everything in `.env.example` (safe template)
 
 ---
 
-## 🔗 Integración n8n - Ejemplo Práctico
+## 🔗 n8n Integration - Practical Example
 
-### Caso: Ejecutar comando cada 5 minutos
+### Use Case: Execute command every 5 minutes
 
-En n8n, crea un workflow con **HTTP Request**:
+In n8n, create a workflow with **HTTP Request**:
 
-**Configuración del nodo:**
+**Node configuration:**
 ```json
 {
   "method": "POST",
@@ -202,7 +202,7 @@ En n8n, crea un workflow con **HTTP Request**:
 }
 ```
 
-**Respuesta típica:**
+**Typical response:**
 ```json
 {
   "success": true,
@@ -213,263 +213,243 @@ En n8n, crea un workflow con **HTTP Request**:
 }
 ```
 
-Luego, procesa con otros nodos: filtrar, alertar, guardar en BD, etc.
+Then, process with other nodes: filter, alert, save to database, etc.
 
-Para 20+ ejemplos más: [`docs/examples/N8N.md`](docs/examples/N8N.md)
-
----
-
-## 📚 Documentación Completa (Índice)
-
-Toda la documentación está organizada en la carpeta [`docs/`](docs/):
-
-### 🚀 **Empezar**
-| Archivo | Contenido |
-|---------|----------|
-| [`docs/INDEX.md`](docs/INDEX.md) | 📍 Índice y guía de navegación |
-| [`docs/setup/INSTALLATION.md`](docs/setup/INSTALLATION.md) | Instalación paso a paso |
-| [`docs/setup/DEVELOPMENT.md`](docs/setup/DEVELOPMENT.md) | Setup del entorno de desarrollo |
-
-### 🔐 **Seguridad & Configuración**
-| Archivo | Contenido |
-|---------|----------|
-| [`docs/guides/AUTHENTICATION.md`](docs/guides/AUTHENTICATION.md) | Token Bearer, privilegios, seguridad |
-| [`docs/guides/CONFIGURATION.md`](docs/guides/CONFIGURATION.md) | Sistema de configuración `.env` |
-| [`docs/guides/ENVIRONMENT.md`](docs/guides/ENVIRONMENT.md) | Referencia completa de variables |
-
-### 📡 **API & Ejemplos**
-| Archivo | Contenido |
-|---------|----------|
-| [`docs/api/ENDPOINTS.md`](docs/api/ENDPOINTS.md) | Documentación técnica de todos los endpoints |
-| [`docs/examples/CURL.md`](docs/examples/CURL.md) | 20+ ejemplos con curl |
-| [`docs/examples/N8N.md`](docs/examples/N8N.md) | Workflows de integración n8n |
-
-### 👨‍💻 **Desarrollo & Soporte**
-| Archivo | Contenido |
-|---------|----------|
-| [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) | Guía de contribución |
-| [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md) | Solución de problemas comunes |
-| [`docs/FAQ.md`](docs/FAQ.md) | Preguntas frecuentes |
-
-### 📊 **Análisis, Roadmap & Release**
-| Archivo | Contenido |
-|---------|----------|
-| [`docs/FEATURE_ROADMAP.md`](docs/FEATURE_ROADMAP.md) | 12 categorías de features futuras con timeline |
-| [`docs/ANALYSIS_SUMMARY.md`](docs/ANALYSIS_SUMMARY.md) | Análisis de seguridad y mejoras pre-merge |
-| [`docs/MERGE_INSTRUCTIONS.md`](docs/MERGE_INSTRUCTIONS.md) | Instrucciones paso a paso para merge a main |
+For 20+ more examples: [`docs/examples/N8N.md`](docs/examples/N8N.md)
 
 ---
 
-## 💻 Requisitos del Sistema
+## 📚 Complete Documentation (Index)
 
-| Requisito | Mínimo | Recomendado | Probado |
-|-----------|--------|-------------|---------|
+All documentation is organized in the [`docs/`](docs/) folder:
+
+### 🚀 **Getting Started**
+| File | Content |
+|------|---------|
+| [`docs/INDEX.md`](docs/INDEX.md) | 📍 Index and navigation guide |
+| [`docs/setup/INSTALLATION.md`](docs/setup/INSTALLATION.md) | Step-by-step installation |
+| [`docs/setup/DEVELOPMENT.md`](docs/setup/DEVELOPMENT.md) | Development environment setup |
+
+### 🔐 **Security & Configuration**
+| File | Content |
+|------|---------|
+| [`docs/guides/AUTHENTICATION.md`](docs/guides/AUTHENTICATION.md) | Bearer token, privileges, security |
+| [`docs/guides/CONFIGURATION.md`](docs/guides/CONFIGURATION.md) | `.env` configuration system |
+| [`docs/guides/ENVIRONMENT.md`](docs/guides/ENVIRONMENT.md) | Complete variables reference |
+
+### 📡 **API & Examples**
+| File | Content |
+|------|---------|
+| [`docs/api/ENDPOINTS.md`](docs/api/ENDPOINTS.md) | Technical documentation of all endpoints |
+| [`docs/examples/CURL.md`](docs/examples/CURL.md) | 20+ curl examples |
+| [`docs/examples/N8N.md`](docs/examples/N8N.md) | n8n integration workflows |
+
+### 👨‍💻 **Development & Support**
+| File | Content |
+|------|---------|
+| [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) | Contribution guide |
+| [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md) | Common problem solving |
+| [`docs/FAQ.md`](docs/FAQ.md) | Frequently asked questions |
+
+### 📊 **Analysis, Roadmap & Release**
+| File | Content |
+|------|---------|
+| [`docs/FEATURE_ROADMAP.md`](docs/FEATURE_ROADMAP.md) | Future features roadmap |
+| [`docs/ANALYSIS_SUMMARY.md`](docs/ANALYSIS_SUMMARY.md) | Security and improvements analysis |
+| [`docs/MERGE_INSTRUCTIONS.md`](docs/MERGE_INSTRUCTIONS.md) | Step-by-step merge to main instructions |
+
+---
+
+## 💻 System Requirements
+
+| Requirement | Minimum | Recommended | Tested |
+|-------------|---------|-------------|--------|
 | **Node.js** | 18.0 | 20.x+ | 24.11.1 |
 | **npm** | 9.0 | 10.x+ | 10.8.3 |
 | **OS** | Linux | Linux/Mac | Linux |
 | **RAM** | 256 MB | 512 MB | 1 GB+ |
-| **Disco** | 50 MB | 100 MB | 500 MB |
+| **Disk** | 50 MB | 100 MB | 500 MB |
 
-**Windows**: Soportado vía WSL2
+**Windows**: Supported via WSL2
 
 ---
 
-## 🚀 Modos de Ejecución
+## 🚀 Execution Modes
 
-### Modo Desarrollo
+### Development Mode
 ```bash
 npm run dev
 ```
-**Perfecto para:**
-- 🔨 Desarrollo local
+**Perfect for:**
+- 🔨 Local development
 - 🐛 Debugging
-- 📝 Edición de código
+- 📝 Code editing
 
-**Características:**
-- Hot reload automático
-- Logs detallados con colores
-- Errores con stack trace completo
-- TypeScript compilado en memoria
+**Features:**
+- Automatic hot reload
+- Detailed logs with colors
+- Full stack trace errors
+- TypeScript compiled in memory
 
-### Modo Producción
+### Production Mode
 ```bash
-npm run build      # Compilar TypeScript
-npm start          # Ejecutar
+npm run build      # Compile TypeScript
+npm start          # Run
 ```
 
-**Perfecto para:**
-- 🌍 Servidores en vivo
-- 📊 Entornos críticos
-- ⚡ Performance máxima
+**Perfect for:**
+- 🌍 Live servers
+- 📊 Critical environments
+- ⚡ Maximum performance
 
-**Características:**
-- Binarios pre-compilados
-- Logs comprimidos
-- Error handling minimal
-- Monitoreo de recursos optimizado
+**Features:**
+- Pre-compiled binaries
+- Compressed logs
+- Minimal error handling
+- Optimized resource monitoring
 
 ---
 
-## 💡 Casos de Uso Reales
+## 💡 Real-World Use Cases
 
-### 1️⃣ Monitoreo de Sistema (cada 5 min)
+### 1️⃣ System Monitoring (every 5 min)
 ```
 n8n (Time trigger)
   → POST /api/resources
   → CPU > 80%?
-  → Enviar alerta Slack
+  → Send Slack alert
 ```
 
-### 2️⃣ Backup Automático (cada noche)
+### 2️⃣ Automatic Backup (every night)
 ```
 n8n (Cron: 2 AM)
   → POST /api/privileged/execute
-  → Comando: ./backup.sh
-  → Guardar resultado en BD
+  → Command: ./backup.sh
+  → Save result to database
 ```
 
-### 3️⃣ Gestión de Servicios (cuando falla)
+### 3️⃣ Service Management (when fails)
 ```
 n8n (Webhook)
   → GET /api/resources/process/:nginx-pid
   → Status = dead?
   → POST /api/privileged/service (restart)
-  → Notificar en Teams
+  → Notify in Teams
 ```
 
-### 4️⃣ Limpieza de Archivos (semanalmente)
+### 4️⃣ File Cleanup (weekly)
 ```
 n8n (Time trigger)
   → POST /api/privileged/execute
   → find /tmp -mtime +7 -delete
-  → Log resultados
+  → Log results
 ```
 
-### 5️⃣ Sincronización de Config (cuando actualiza BD)
+### 5️⃣ Config Synchronization (when database updates)
 ```
 n8n (Database change trigger)
   → POST /api/privileged/execute
   → systemctl reload nginx
-  → Verificar con GET /health
+  → Verify with GET /health
 ```
 
 ---
 
-## 🧪 Estado del Proyecto
+## 🧪 Project Status
 
-| Aspecto | Estado | Notas |
-|---------|--------|-------|
-| **Funcionalidad** | ✅ Completo | 10+ endpoints, todos operativos |
-| **Autenticación** | ✅ Seguro | Token Bearer con validaciones |
-| **Documentación** | ✅ Exhaustiva | 15+ archivos, 20+ ejemplos |
-| **TypeScript** | ✅ Tipado | 100% end-to-end, no `any` |
-| **Seguridad** | ✅ Auditado | 3 vulnerabilidades identificadas y corregidas |
-| **Testing** | ⏳ Pending | Tests unitarios en roadmap |
-| **CI/CD** | ⏳ Pending | GitHub Actions en roadmap |
-| **Producción** | ✅ Listo | Usado actualmente en servidores |
+| Aspect | Status | Notes |
+|--------|--------|-------|
+| **Functionality** | ✅ Complete | 10+ endpoints, all operational |
+| **Authentication** | ✅ Secure | Bearer token with validations |
+| **Documentation** | ✅ Comprehensive | 15+ files, 20+ examples |
+| **TypeScript** | ✅ Typed | 100% end-to-end, no `any` |
+| **Security** | ✅ Audited | 3 vulnerabilities identified and fixed |
+| **Testing** | ✅ Complete | 50+ comprehensive tests |
+| **CI/CD** | ✅ Ready | GitHub Actions configured |
+| **Production** | ✅ Ready | Currently used on servers |
 
-### Mejoras Implementadas Recientemente
+### Recently Implemented Improvements
 
-✅ Validación de longitud de comando (DoS protection)
-✅ Error handler environment-aware
-✅ Documentación reorganizada en `/docs`
-✅ 20+ ejemplos prácticos con curl
-✅ Guías de seguridad y autenticación
-✅ Feature roadmap con 12 categorías
+✅ Command length validation (DoS protection)
+✅ Environment-aware error handler
+✅ Documentation reorganized in `/docs`
+✅ 20+ practical curl examples
+✅ Security and authentication guides
+✅ Future features roadmap
 
 ---
 
-## 🆘 Necesitas Ayuda?
+## 🆘 Need Help?
 
-### 👶 **Soy nuevo, ¿por dónde empiezo?**
-1. Lee esta sección "Quick Start" arriba ⬆️
-2. Ve a [`docs/setup/INSTALLATION.md`](docs/setup/INSTALLATION.md) para detalles
-3. Prueba los ejemplos en [`docs/examples/CURL.md`](docs/examples/CURL.md)
+### 👶 **I'm new, where do I start?**
+1. Read the "Quick Start" section above ⬆️
+2. Go to [`docs/setup/INSTALLATION.md`](docs/setup/INSTALLATION.md) for details
+3. Try examples in [`docs/examples/CURL.md`](docs/examples/CURL.md)
 
-### 🔑 **Necesito autenticación/tokens**
+### 🔑 **I need authentication/tokens**
 → [`docs/guides/AUTHENTICATION.md`](docs/guides/AUTHENTICATION.md)
 
-### ⚙️ **Necesito configurar variables de entorno**
+### ⚙️ **I need to configure environment variables**
 → [`docs/guides/CONFIGURATION.md`](docs/guides/CONFIGURATION.md) + [`docs/guides/ENVIRONMENT.md`](docs/guides/ENVIRONMENT.md)
 
-### 🔗 **Quiero integrar con n8n**
+### 🔗 **I want to integrate with n8n**
 → [`docs/examples/N8N.md`](docs/examples/N8N.md)
 
-### 🐛 **Algo no funciona**
-1. Checa [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md)
-2. Busca en [`docs/FAQ.md`](docs/FAQ.md)
+### 🐛 **Something isn't working**
+1. Check [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md)
+2. Search in [`docs/FAQ.md`](docs/FAQ.md)
 3. Abre issue: [GitHub Issues](https://github.com/Sebas1705/VPSLocalOrchestrator/issues)
 
-### 👨‍💻 **Quiero contribuir/hacer cambios**
+### 👨‍💻 **I want to contribute/make changes**
 → [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md)
 
 ---
 
-## 📊 Roadmap Futuro
+## 📊 Future Roadmap
 
-Tenemos planeadas estas mejoras para los próximos meses:
-
-### Tier 1 (Próximas 4-6 semanas) - Alta Prioridad
-- 📡 Network Monitoring (estadísticas de red)
-- 🏥 Service Health Checks (detección automática de problemas)
-- 📊 Advanced Logging (logs centralizados)
-- ⚙️ Process Priority Control (nice, affinity, pause/resume)
-
-### Tier 2 (Siguientes 6-8 semanas)
-- 📁 File Operations (upload, delete, move)
-- 💾 Backup/Restore automático
-- 🔐 Secrets Manager
-- 🔗 Webhooks/Events
-
-### Tier 3 (Q2 2026)
-- 🔄 Workflow Engine
-- 🐳 Docker Integration
-- 📈 Custom Metrics
-- 🔔 Advanced Notifications
-
-Ver detalles completos: [`docs/FEATURE_ROADMAP.md`](docs/FEATURE_ROADMAP.md)
+We have these improvements planned for upcoming releases. See complete details in [`docs/FEATURE_ROADMAP.md`](docs/FEATURE_ROADMAP.md) for the full Phase 5+ roadmap.
 
 ---
 
-## 📝 Licencia
+## 📝 License
 
-MIT License - Eres libre de usar, modificar y distribuir este proyecto.
-Ver [`LICENSE`](LICENSE) para detalles.
+MIT License - You are free to use, modify, and distribute this project.
+See [`LICENSE`](LICENSE) for details.
 
 ---
 
-## 👨‍💻 Autor & Contacto
+## 👨‍💻 Author & Contact
 
-**Creado por:** [@Sebas1705](https://github.com/Sebas1705)
+**Created by:** [@Sebas1705](https://github.com/Sebas1705)
 
-**Enlaces:**
+**Links:**
 - 🏠 [GitHub Repository](https://github.com/Sebas1705/VPSLocalOrchestrator)
-- 🐛 [Reportar bugs](https://github.com/Sebas1705/VPSLocalOrchestrator/issues)
-- 💡 [Sugerencias](https://github.com/Sebas1705/VPSLocalOrchestrator/discussions)
+- 🐛 [Report bugs](https://github.com/Sebas1705/VPSLocalOrchestrator/issues)
+- 💡 [Suggestions](https://github.com/Sebas1705/VPSLocalOrchestrator/discussions)
 - 🔄 [Pull Requests](https://github.com/Sebas1705/VPSLocalOrchestrator/pulls)
 
 ---
 
-## 🎯 Próximos Pasos
+## 🎯 Next Steps
 
-### Si es tu primera vez:
-1. ✅ Completa el [Quick Start](#-quick-start) arriba (5 min)
-2. ✅ Lee [`docs/guides/AUTHENTICATION.md`](docs/guides/AUTHENTICATION.md) (10 min)
-3. ✅ Prueba ejemplos de [`docs/examples/CURL.md`](docs/examples/CURL.md) (15 min)
-4. ✅ Integra con n8n usando [`docs/examples/N8N.md`](docs/examples/N8N.md) (20 min)
+### If it's your first time:
+1. ✅ Complete the [Quick Start](#-quick-start) above (5 min)
+2. ✅ Read [`docs/guides/AUTHENTICATION.md`](docs/guides/AUTHENTICATION.md) (10 min)
+3. ✅ Try examples from [`docs/examples/CURL.md`](docs/examples/CURL.md) (15 min)
+4. ✅ Integrate with n8n using [`docs/examples/N8N.md`](docs/examples/N8N.md) (20 min)
 
-### Si quieres entender todo:
-→ Consulta el [`docs/INDEX.md`](docs/INDEX.md) para una guía completa de navegación
+### If you want to understand everything:
+→ Check [`docs/INDEX.md`](docs/INDEX.md) for complete navigation guide
 
-### Si tienes problemas:
+### If you have issues:
 → [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md) + [`docs/FAQ.md`](docs/FAQ.md)
 
 ---
 
-**🚀 ¿Listo para empezar? Ve al [Quick Start](#-quick-start) arriba y crea tu primer comando en 5 minutos.**
+**🚀 Ready to start? Go to [Quick Start](#-quick-start) above and create your first command in 5 minutes.**
 
 ---
 
-*Última actualización: Diciembre 6, 2025*
-*Versión: 1.1.0 (pre-release)*
-*Estado: Production Ready*
+*Last updated: December 7, 2025*
+*Version: v4.0.0*
+*Status: Production Ready*

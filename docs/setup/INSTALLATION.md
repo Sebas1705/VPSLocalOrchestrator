@@ -1,409 +1,338 @@
-# 🚀 Instalación Completa
+# 🚀 Complete Installation
 
-Guía paso a paso para instalar y configurar VPS Local Orchestrator API.
+Step-by-step guide to install and configure VPS Local Orchestrator API.
 
-## 📋 Requisitos Previos
+## 📋 Prerequisites
 
-- **Node.js** 18+ (recomendado 24.11.1)
+- **Node.js** 18+ (recommended 24.11.1)
 - **npm** 9+
 - **Git**
-- Acceso a terminal/shell
-- Opcional: **openssl** para generar tokens
+- Terminal/shell access
+- Optional: **openssl** to generate tokens
 
-Verificar versiones:
+Verify versions:
 ```bash
 node --version   # v24.11.1+
 npm --version    # 9+
 git --version    # 2.30+
 ```
 
-## 🔧 Instalación Paso a Paso
+## 🔧 Installation Step by Step
 
-### Paso 1: Clonar Repositorio
+### Step 1: Clone Repository
 
 ```bash
-# Clonar
+# Clone
 git clone https://github.com/Sebas1705/VPSLocalOrchestrator.git
 
-# Entrar en directorio
+# Enter directory
 cd VPSLocalOrchestrator
 ```
 
-### Paso 2: Instalar Dependencias
+### Step 2: Install Dependencies
 
 ```bash
-# Entrar en directorio de API
+# Enter API directory
 cd api
 
-# Instalar dependencias
+# Install dependencies
 npm install
 ```
 
-Esto instalará:
+This will install:
 - Express.js 5.2.1
 - TypeScript 5.9.3
-- tsx (ejecutor TypeScript)
-- dotenv (manejo de variables)
-- y más...
+- tsx (TypeScript executor)
+- dotenv (variable management)
+- and more...
 
-### Paso 3: Configurar Variables de Entorno
+### Step 3: Configure Environment Variables
 
 ```bash
-# Copiar plantilla
+# Copy template
 cp .env.example .env
 
-# Editar con tu editor favorito
-nano .env   # o vi, vim, code, etc.
+# Edit with your favorite editor
+nano .env   # or vi, vim, code, etc.
 ```
 
-#### Generar Token Seguro
+#### Generate Secure Token
 
 ```bash
-# Generar token aleatorio de 64 caracteres
+# Generate random 64-character token
 openssl rand -hex 32
 ```
 
-Resultado: `a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2`
+Result: `a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2`
 
-#### Editar `.env`
+#### Edit `.env`
 
 ```bash
 nano api/.env
 ```
 
-Contenido mínimo:
+Minimum content:
 ```bash
-# Requerido: Token para endpoints privilegiados
+# Required: Token for privileged endpoints
 API_TOKEN=a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2
 
-# Requerido: Puerto de escucha
+# Required: Listening port
 PORT=3000
 
-# Opcional: Nivel de logs (debug, info, warn, error)
+# Optional: Log level (debug, info, warn, error)
 LOG_LEVEL=info
 
-# Opcional: Otros
-SUDO_PASSWORD=tu-contraseña
+# Optional: Others
+SUDO_PASSWORD=your-password
 ENABLE_PRIVILEGED_ENDPOINTS=true
 ```
 
-Guardar y cerrar (Ctrl+X si usas nano).
+Save and close (Ctrl+X if using nano).
 
-### Paso 4: Verificar Configuración
+### Step 4: Verify Configuration
 
 ```bash
-# Verificar que .env fue creado
+# Verify .env was created
 cat api/.env | head -5
 ```
 
-Deberías ver algo como:
+You should see something like:
 ```
 API_TOKEN=a1b2c3d4...
 PORT=3000
 LOG_LEVEL=info
 ```
 
-## ▶️ Ejecutar la API
-
-### Modo Desarrollo (Recomendado para empezar)
+### Step 5: Compile TypeScript (Optional for Development)
 
 ```bash
-# Desde carpeta api/
+# One-time compilation
+npm run build
+
+# Or run with tsx (hot reload in development)
 npm run dev
 ```
 
-Verás output como:
-```
-==================================================
-🚀 VPS Local Orchestrator API
-==================================================
-📍 Server running at: http://127.0.0.1:3000
-🔒 Access restricted to: localhost only
-⏰ Started at: 2025-12-06T...
-...
-```
+### Step 6: Test the Installation
 
-**Detener**: Presiona `Ctrl+C`
-
-### Modo Producción
+#### Start API in Development Mode
 
 ```bash
-# Compilar TypeScript
-npm run build
-
-# Iniciar
-npm start
+# Run from api/ directory
+npm run dev
 ```
 
-Esto genera archivos optimizados en `dist/`.
+Expected output:
+```
+🚀 API running on http://127.0.0.1:3000
+```
 
-## ✅ Verificar Instalación
-
-### Test 1: Health Check
+#### Test Health Endpoint (New Terminal)
 
 ```bash
-# Abrir otra terminal y ejecutar
+# Check if API is responding
 curl http://127.0.0.1:3000/health
 ```
 
-Respuesta esperada:
+Expected response:
 ```json
 {
   "status": "ok",
-  "timestamp": "2025-12-06T10:30:00.000Z",
-  "uptime": 5.23
+  "timestamp": "2025-12-07T10:30:45.123Z",
+  "uptime": 5.234
 }
 ```
 
-### Test 2: Comando Simple
+#### Test Simple Command
 
 ```bash
+# Execute simple public command
 curl -X POST http://127.0.0.1:3000/api/command/execute \
   -H "Content-Type: application/json" \
   -d '{"command": "whoami"}'
 ```
 
-Respuesta:
+Expected response:
 ```json
 {
   "success": true,
   "result": {
-    "stdout": "your_username",
+    "stdout": "username",
     "stderr": "",
     "exitCode": 0,
-    "duration": 45
+    "duration": 42
   }
 }
 ```
 
-### Test 3: Recursos del Sistema
+#### Test Privileged Command
 
 ```bash
-curl http://127.0.0.1:3000/api/resources
-```
-
-Verás información de CPU, memoria, disco.
-
-### Test 4: Con Token (Privilegiado)
-
-```bash
-# Reemplaza YOUR_TOKEN con el valor de .env
+# Execute command with token
 curl -X POST http://127.0.0.1:3000/api/privileged/execute \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
   -H "Content-Type: application/json" \
-  -d '{"command": "date"}'
+  -d '{"command": "systemctl status ssh"}'
 ```
 
-Si todo funciona, verás:
+Replace `YOUR_TOKEN_HERE` with your API_TOKEN from `.env`.
+
+Expected response:
 ```json
 {
   "success": true,
-  "result": { ... }
+  "result": {
+    "stdout": "● ssh.service - OpenBSD Secure Shell server\n...",
+    "stderr": "",
+    "exitCode": 0,
+    "duration": 125
+  }
 }
 ```
 
-Si falla token:
-```json
-{
-  "success": false,
-  "error": "Unauthorized",
-  "message": "Valid API token required..."
-}
-```
+## 🐳 Production Deployment
 
-## 📦 Scripts npm Disponibles
+### Option 1: Direct Execution
 
 ```bash
-npm run dev       # Desarrollo con reload automático
-npm run build     # Compilar TypeScript → dist/
-npm start         # Ejecutar versión compilada
-npm run clean     # Limpiar directorios
-npm run check     # Verificar TypeScript
-```
-
-## 🆘 Problemas Comunes
-
-### Error: "Variables de entorno requeridas no encontradas"
-
-**Problema**: Falta `.env`
-
-**Solución**:
-```bash
-cp api/.env.example api/.env
-# Editar y agregar API_TOKEN
-```
-
-### Error: "EADDRINUSE: address already in use :::3000"
-
-**Problema**: Puerto 3000 está siendo usado
-
-**Solución 1**: Liberar puerto
-```bash
-# Ver qué usa el puerto
-lsof -i :3000
-
-# Matar proceso (si es seguro)
-kill -9 <PID>
-```
-
-**Solución 2**: Usar otro puerto
-```bash
-# Editar .env
-echo "PORT=3001" >> api/.env
-
-npm run dev
-```
-
-### Error: "command not found: npm"
-
-**Problema**: npm no está instalado
-
-**Solución**: Instalar Node.js desde [nodejs.org](https://nodejs.org/)
-
-### Error: "403 Forbidden"
-
-**Problema**: Intentas acceder desde IP externa
-
-**Solución**: API solo funciona desde localhost (127.0.0.1)
-
-Si necesitas acceso externo, ver [`docs/guides/CONFIGURATION.md`](../guides/CONFIGURATION.md)
-
-### Error: "Token inválido"
-
-**Problema**: Token en request no coincide con `.env`
-
-**Solución**:
-```bash
-# Verificar token en .env
-cat api/.env | grep API_TOKEN
-
-# Usar ese token en Authorization header
-Authorization: Bearer <valor-exacto>
-```
-
-## 🔒 Configuración de Seguridad
-
-### 1. Generar Token Fuerte
-
-```bash
-# NO: Token débil ❌
-API_TOKEN=123456
-
-# SI: Token fuerte ✅
-openssl rand -hex 32
-```
-
-### 2. Proteger .env
-
-```bash
-# Asegurar que .env está en .gitignore
-grep "^\.env$" ../.gitignore
-# Debe devolver: .env
-
-# Cambiar permisos (solo lectura para owner)
-chmod 600 api/.env
-```
-
-### 3. Cambiar Token por Entorno
-
-```bash
-# Desarrollo
-API_TOKEN=dev-token-123...
-
-# Staging
-API_TOKEN=staging-token-456...
-
-# Producción
-API_TOKEN=prod-token-789...
-```
-
-## 🌍 Diferentes Entornos
-
-### Desarrollo Local
-
-```bash
-# .env
-PORT=3000
-LOG_LEVEL=debug
-ENABLE_PRIVILEGED_ENDPOINTS=true
-```
-
-```bash
-npm run dev
-```
-
-### Staging Server
-
-```bash
-# .env
-PORT=3000
-LOG_LEVEL=info
-ENABLE_PRIVILEGED_ENDPOINTS=true
-ALERT_EMAIL=ops@example.com
-```
-
-```bash
+# Build TypeScript
 npm run build
+
+# Run compiled version
 npm start
 ```
 
-### Producción
+### Option 2: Using systemd
 
-```bash
-# .env
-PORT=3000
-LOG_LEVEL=warn
-ENABLE_PRIVILEGED_ENDPOINTS=false
-ALLOW_SUDO_COMMANDS=false
+Create `/etc/systemd/system/vps-orchestrator.service`:
+
+```ini
+[Unit]
+Description=VPS Local Orchestrator API
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/user/VPSLocalOrchestrator/api
+EnvironmentFile=/home/user/VPSLocalOrchestrator/api/.env
+ExecStart=/usr/bin/npm start
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
 ```
 
+Then:
+
 ```bash
-# Usando systemd (recomendado)
-# Ver documentación de deploy
-npm run build
-npm start
+# Enable service
+sudo systemctl enable vps-orchestrator
+
+# Start service
+sudo systemctl start vps-orchestrator
+
+# Check status
+sudo systemctl status vps-orchestrator
+
+# View logs
+sudo journalctl -u vps-orchestrator -f
 ```
 
-## 📊 Verificar Estado
-
-Después de instalar, ejecutar:
+### Option 3: Using PM2
 
 ```bash
-# Verificar compilación
+# Install PM2 globally
+npm install -g pm2
+
+# Start with PM2
+pm2 start "npm start" --name "vps-orchestrator"
+
+# Save configuration
+pm2 save
+
+# Restart on reboot
+pm2 startup
+```
+
+### Option 4: Using Docker
+
+Create `Dockerfile`:
+
+```dockerfile
+FROM node:24-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci --only=production
+
+COPY . .
+
+RUN npm run build
+
+EXPOSE 3000
+
+ENV NODE_ENV=production
+
+CMD ["npm", "start"]
+```
+
+Build and run:
+
+```bash
+# Build image
+docker build -t vps-orchestrator .
+
+# Run container
+docker run -d \
+  --name vps-orchestrator \
+  -p 3000:3000 \
+  --env-file .env \
+  vps-orchestrator
+```
+
+## 📊 Verify Status
+
+After installing, run:
+
+```bash
+# Verify compilation
 npm run check
 
-# Listar archivos de configuración
+# List configuration files
 ls -la api/.env*
 
-# Ver procesos node
+# See node processes
 ps aux | grep node
 
-# Verificar puerto
+# Check port
 lsof -i :3000
 ```
 
-## 🎯 Próximos Pasos
+## 🎯 Next Steps
 
-1. **Verificar que funciona**: Sigue tests arriba ✅
-2. **Leer documentación**: Ver [`docs/README.md`](../README.md)
-3. **Configurar completamente**: [`docs/guides/CONFIGURATION.md`](../guides/CONFIGURATION.md)
-4. **Aprender endpoints**: [`docs/api/ENDPOINTS.md`](../api/ENDPOINTS.md)
-5. **Integrar con n8n**: [`docs/examples/N8N.md`](../examples/N8N.md)
+1. **Verify it works**: Follow tests above ✅
+2. **Read documentation**: See [`docs/README.md`](../README.md)
+3. **Configure completely**: [`docs/guides/CONFIGURATION.md`](../guides/CONFIGURATION.md)
+4. **Learn endpoints**: [`docs/api/ENDPOINTS.md`](../api/ENDPOINTS.md)
+5. **Integrate with n8n**: [`docs/examples/N8N.md`](../examples/N8N.md)
 
-## ✅ Checklist de Instalación
+## ✅ Installation Checklist
 
-- [ ] Node.js 18+ instalado
-- [ ] Repositorio clonado
-- [ ] Dependencias instaladas (`npm install`)
-- [ ] `.env` creado con `API_TOKEN`
-- [ ] Token generado con `openssl rand -hex 32`
-- [ ] API ejecutándose (`npm run dev`)
-- [ ] Health check funciona (`curl /health`)
-- [ ] Comando simple ejecuta (`curl /api/command/execute`)
-- [ ] Token privilegiado funciona
-- [ ] `.env` está en `.gitignore`
-- [ ] Documentación leída
+- [ ] Node.js 18+ installed
+- [ ] Repository cloned
+- [ ] Dependencies installed (`npm install`)
+- [ ] `.env` created with `API_TOKEN`
+- [ ] Token generated with `openssl rand -hex 32`
+- [ ] API running (`npm run dev`)
+- [ ] Health check works (`curl /health`)
+- [ ] Simple command executes (`curl /api/command/execute`)
+- [ ] Privileged token works
+- [ ] `.env` is in `.gitignore`
+- [ ] Documentation read
 
 ---
 
-¡Instalación completada! 🎉 Ahora revisa [`docs/examples/CURL.md`](../examples/CURL.md) para ver ejemplos prácticos.
+Installation completed! 🎉 Now check [`docs/examples/CURL.md`](../examples/CURL.md) for practical examples.

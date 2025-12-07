@@ -1,17 +1,17 @@
 # 📝 Release Notes - v4.0.0
 
-**Fecha**: Diciembre 7, 2025  
-**Status**: ✅ Lanzamiento Estable
+**Date**: December 7, 2025  
+**Status**: ✅ Stable Release
 
 ---
 
-## 🎯 Objetivo de la Versión
+## 🎯 Version Objective
 
-v4.0.0 marca un **hito importante** en la maduración del proyecto: implementación completa de testing, limpieza del código, y documentación integral. Esta versión es el **resultado de todas las fases anteriores** (Fase 1-4) consolidadas en un producto estable y bien documentado.
+v4.0.0 marks an **important milestone** in the project's maturation: complete implementation of testing, code cleanup, and comprehensive documentation. This version is the **result of all previous phases** (Phase 1-4) consolidated into a stable and well-documented product.
 
 ---
 
-## ✨ Cambios Principales
+## ✨ Main Changes
 
 ### 1. 🧪 Suite de Testing Completa
 

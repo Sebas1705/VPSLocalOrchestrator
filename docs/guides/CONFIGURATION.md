@@ -1,24 +1,24 @@
-# Configuración Privada del Sistema
+# Private System Configuration
 
-## 📋 Resumen
+## 📋 Overview
 
-Se ha implementado un sistema seguro de configuración que:
-- ✅ Almacena credenciales sensibles en `.env` (privado)
-- ✅ Proporciona plantilla en `.env.example` (público)
-- ✅ Previene commits accidentales con `.gitignore`
-- ✅ Valida variables de entorno al iniciar
-- ✅ Centraliza configuración en TypeScript
+A secure configuration system has been implemented that:
+- ✅ Stores sensitive credentials in `.env` (private)
+- ✅ Provides template in `.env.example` (public)
+- ✅ Prevents accidental commits with `.gitignore`
+- ✅ Validates environment variables on startup
+- ✅ Centralizes configuration in TypeScript
 
-## 🔐 Archivos Clave
+## 🔐 Key Files
 
-### 1. `.env` (Privado - Nunca Commitear)
-Archivo con credenciales reales. **NUNCA debe ser commiteado**.
+### 1. `.env` (Private - Never Commit)
+File with real credentials. **MUST NEVER be committed**.
 
 ```bash
 API_TOKEN=a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2
 PORT=3000
 LOG_LEVEL=info
-SUDO_PASSWORD=tu-contraseña-de-sudo
+SUDO_PASSWORD=your-sudo-password
 ENABLE_PRIVILEGED_ENDPOINTS=true
 MAX_COMMAND_TIMEOUT=300000
 ALLOWED_SCRIPT_PATHS=/scripts,/usr/local/scripts
@@ -26,8 +26,8 @@ ALERT_EMAIL=admin@example.com
 WEBHOOK_LOG_URL=https://webhook.site/xxx
 ```
 
-### 2. `.env.example` (Público - Seguro Commitear)
-Plantilla para nuevo setup. Segura para el repositorio.
+### 2. `.env.example` (Public - Safe to Commit)
+Template for new setup. Safe for the repository.
 
 ```bash
 API_TOKEN=your-secret-token-here
@@ -41,8 +41,8 @@ ALERT_EMAIL=admin@example.com
 WEBHOOK_LOG_URL=https://webhook.site/xxx
 ```
 
-### 3. `.gitignore` (Protección)
-Previene que archivos sensibles sean commiteados.
+### 3. `.gitignore` (Protection)
+Prevents sensitive files from being committed.
 
 ```
 .env
@@ -58,9 +58,9 @@ build/
 .idea/
 ```
 
-## 🔧 Sistema de Configuración
+## 🔧 Configuration System
 
-### Estructura en TypeScript
+### TypeScript Structure
 ```typescript
 // api/src/config/index.ts
 export interface Config {
@@ -86,12 +86,12 @@ export interface Config {
 }
 ```
 
-### Carga de Configuración
+### Loading Configuration
 ```typescript
 import 'dotenv/config';
 
 export function getConfig(): Config {
-  validateEnv();  // Valida variables requeridas
+  validateEnv();  // Validates required variables
   
   return {
     api: {
@@ -105,101 +105,101 @@ export function getConfig(): Config {
       allowSudoCommands: process.env.ALLOW_SUDO_COMMANDS === 'true',
       sudoPassword: process.env.SUDO_PASSWORD || ''
     },
-    // ... más campos
+    // ... more fields
   };
 }
 ```
 
-## 🚀 Setup Inicial
+## 🚀 Initial Setup
 
-### 1. Primera Instalación
+### 1. First Installation
 ```bash
 cd api
 npm install
 cp .env.example .env
 ```
 
-### 2. Generar Token Seguro
+### 2. Generate Secure Token
 ```bash
 openssl rand -hex 32
 ```
 
-### 3. Editar `.env`
+### 3. Edit `.env`
 ```bash
 nano .env
 ```
 
-Copiar el token generado:
+Copy the generated token:
 ```bash
 API_TOKEN=a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2
 ```
 
-### 4. Iniciar Servidor
+### 4. Start Server
 ```bash
 npm run dev
 ```
 
-## 📝 Validación de Variables
+## 📝 Variable Validation
 
-Al iniciar, el servidor verifica variables requeridas:
+On startup, the server verifies required variables:
 
 ```
-Validando variables de entorno:
+Validating environment variables:
   ✅ API_TOKEN
   ✅ PORT
 ```
 
-Si falta alguna variable requerida:
+If a required variable is missing:
 ```
-❌ Variables de entorno requeridas no encontradas:
+❌ Required environment variables not found:
    - API_TOKEN
    - PORT
 
-Copia .env.example a .env y configura los valores:
+Copy .env.example to .env and configure the values:
    cp api/.env.example api/.env
 ```
 
-## 🔐 Seguridad de Credenciales
+## 🔐 Credential Security
 
-### Nunca Hacer
+### Never Do This
 ```bash
-# ❌ NO: Exponer token en línea de comandos
+# ❌ NO: Expose token in command line
 export API_TOKEN=secret123
 npm run dev
 
-# ❌ NO: Commitear .env
+# ❌ NO: Commit .env
 git add .env
 git commit -m "Add env file"
 
-# ❌ NO: Loguear credenciales
+# ❌ NO: Log credentials
 console.log(`Token: ${config.security.apiToken}`);
 
-# ❌ NO: Hardcodear en código
+# ❌ NO: Hardcode in code
 const API_TOKEN = "secret123";
 ```
 
-### Siempre Hacer
+### Always Do This
 ```bash
-# ✅ SI: Usar .env con .gitignore
+# ✅ YES: Use .env with .gitignore
 cp .env.example .env
-# Editar .env de forma privada
+# Edit .env privately
 nano .env
 
-# ✅ SI: Generar tokens seguros
+# ✅ YES: Generate secure tokens
 openssl rand -hex 32
 
-# ✅ SI: Usar variables de entorno
+# ✅ YES: Use environment variables
 const token = process.env.API_TOKEN;
 
-# ✅ SI: Proteger .env en .gitignore
+# ✅ YES: Protect .env in .gitignore
 echo ".env" >> .gitignore
 git add .gitignore
 ```
 
-## 📋 Variables de Entorno Completas
+## 📋 Complete Environment Variables
 
-| Variable | Tipo | Requerida | Default | Ejemplo |
-|----------|------|-----------|---------|---------|
+| Variable | Type | Required | Default | Example |
+|----------|------|----------|---------|---------|
 | `API_TOKEN` | string | ✅ | - | `a1b2c3...` |
 | `PORT` | number | ✅ | - | `3000` |
 | `LOG_LEVEL` | enum | ❌ | `info` | `debug\|info\|warn\|error` |
@@ -211,34 +211,34 @@ git add .gitignore
 | `ALERT_EMAIL` | string | ❌ | - | `admin@example.com` |
 | `WEBHOOK_LOG_URL` | string | ❌ | - | `https://webhook.site/xxx` |
 
-## 🔄 Rotación de Credenciales
+## 🔄 Credential Rotation
 
-### Cambiar Token
+### Change Token
 ```bash
-# 1. Generar nuevo token
+# 1. Generate new token
 openssl rand -hex 32
 
-# 2. Actualizar .env
+# 2. Update .env
 nano api/.env
-# Copiar nuevo token en API_TOKEN
+# Copy new token in API_TOKEN
 
-# 3. Reiniciar servidor
+# 3. Restart server
 npm run dev
 ```
 
-### Cambiar Contraseña Sudo
+### Change Sudo Password
 ```bash
-# 1. Actualizar .env
+# 1. Update .env
 nano api/.env
-SUDO_PASSWORD=nueva-contraseña
+SUDO_PASSWORD=new-password
 
-# 2. Reiniciar servidor
+# 2. Restart server
 npm run dev
 ```
 
-## 🌍 Diferentes Entornos
+## 🌍 Different Environments
 
-### Desarrollo
+### Development
 ```bash
 # api/.env.development
 API_TOKEN=dev-token-123
@@ -254,7 +254,7 @@ LOG_LEVEL=info
 ENABLE_PRIVILEGED_ENDPOINTS=true
 ```
 
-### Producción
+### Production
 ```bash
 # api/.env.production
 API_TOKEN=prod-token-789
@@ -262,56 +262,56 @@ LOG_LEVEL=warn
 ENABLE_PRIVILEGED_ENDPOINTS=false
 ```
 
-Cargar según entorno:
+Load by environment:
 ```bash
 NODE_ENV=production npm start
 ```
 
-## ✅ Checklist de Seguridad
+## ✅ Security Checklist
 
-- [ ] `.env.example` creado con valores dummy
-- [ ] `.env` en `.gitignore`
-- [ ] Token generado con `openssl rand -hex 32`
-- [ ] `.env` nunca commiteado
-- [ ] Validación de variables al iniciar
-- [ ] Diferentes tokens por entorno
-- [ ] Contraseña sudo en `.env` (no hardcoded)
-- [ ] Logs no exponen credenciales
-- [ ] Acceso a `.env` restringido (chmod 600)
+- [ ] `.env.example` created with dummy values
+- [ ] `.env` in `.gitignore`
+- [ ] Token generated with `openssl rand -hex 32`
+- [ ] `.env` never committed
+- [ ] Variable validation on startup
+- [ ] Different tokens per environment
+- [ ] Sudo password in `.env` (not hardcoded)
+- [ ] Logs don't expose credentials
+- [ ] `.env` access restricted (chmod 600)
 
 ## 🆘 Troubleshooting
 
-**Error: "Variables de entorno requeridas no encontradas"**
+**Error: "Required environment variables not found"**
 ```bash
-# Solución
+# Solution
 cp api/.env.example api/.env
 nano api/.env
-# Completar valores necesarios
+# Fill in necessary values
 ```
 
 **Error: "API token required"**
 ```bash
-# Verificar que .env tiene API_TOKEN
+# Verify that .env has API_TOKEN
 grep API_TOKEN api/.env
 
-# Verificar que está definido
+# Verify it's defined
 cat api/.env
 ```
 
-**Token expirado/comprometido**
+**Token expired/compromised**
 ```bash
-# Generar nuevo
+# Generate new
 openssl rand -hex 32
 
-# Actualizar
+# Update
 nano api/.env
 
-# Reiniciar
+# Restart
 npm run dev
 ```
 
-## 📚 Relacionado
+## 📚 Related
 
-- Ver [`docs/guides/ENVIRONMENT.md`](ENVIRONMENT.md) para detalles de variables
-- Ver [`docs/guides/AUTHENTICATION.md`](AUTHENTICATION.md) para uso de tokens
-- Ver [`docs/setup/INSTALLATION.md`](../setup/INSTALLATION.md) para instalación completa
+- See [`docs/guides/ENVIRONMENT.md`](ENVIRONMENT.md) for variable details
+- See [`docs/guides/AUTHENTICATION.md`](AUTHENTICATION.md) for token usage
+- See [`docs/setup/INSTALLATION.md`](../setup/INSTALLATION.md) for complete installation

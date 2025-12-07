@@ -1,20 +1,20 @@
-# 📡 Documentación de Endpoints
+# 📡 API Endpoints Documentation
 
-Guía completa de todos los endpoints disponibles en la VPS Local Orchestrator API.
+Complete guide of all available endpoints in the VPS Local Orchestrator API.
 
-**Versión actual**: v4.0.0 ✅ Limpieza, Testing y Documentación Completa
+**Current Version**: v4.0.0 ✅ Testing, Cleanup and Complete Documentation
 
 ---
 
-## 🔐 Autenticación
+## 🔐 Authentication
 
-Todos los endpoints de **comando** requieren un token Bearer en el header:
+All **command** endpoints require a Bearer token in the header:
 
 ```bash
-Authorization: Bearer tu-token-secreto-aqui
+Authorization: Bearer your-secret-token-here
 ```
 
-**Endpoints públicos** (sin autenticación):
+**Public endpoints** (no authentication required):
 - `GET /health`
 - `GET /`
 - `GET /api/resources`
