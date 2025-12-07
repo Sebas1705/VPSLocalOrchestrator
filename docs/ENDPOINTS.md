@@ -2,7 +2,7 @@
 
 Guía completa de todos los endpoints disponibles en la VPS Local Orchestrator API.
 
-**Versión actual**: v2.0.4
+**Versión actual**: v3.0.0
 
 ---
 
@@ -1077,6 +1077,34 @@ Registra una métrica puntual.
 }
 ```
 
+**Response**: métrica persistida con `id` y `timestamp` ISO.
+
+### GET /api/metrics
+Consulta métricas con filtros opcionales.
+
+**Query params**:
+- `name` (opcional): filtra por nombre exacto.
+- `from` (opcional): ISO date desde.
+- `to` (opcional): ISO date hasta.
+- `limit` (opcional): 1-500 resultados. Default 100.
+
+**Response (ejemplo)**:
+```json
+{
+  "success": true,
+  "count": 2,
+  "data": [
+    {
+      "id": "01JDN4T2W76S7HKMHYN5",
+      "name": "app.requests_per_second",
+      "value": 150,
+      "tags": { "service": "api", "endpoint": "/users" },
+      "timestamp": "2025-12-07T01:30:00.000Z"
+    }
+  ]
+}
+```
+
 ---
 
 ## 🐳 Integración Docker
@@ -1146,33 +1174,63 @@ Detiene un contenedor (`docker stop`).
 - Requiere que Docker esté instalado y accesible por el usuario que ejecuta la API.
 - Errores de permisos (ej: falta de grupo docker) se devuelven como `error`.
 
-**Response**: métrica persistida con `id` y `timestamp` ISO.
+---
 
-### GET /api/metrics
-Consulta métricas con filtros opcionales.
+## 🗄️ Integración de Bases de Datos (PostgreSQL)
+
+Requiere autenticación. Usa utilidades locales `pg_dump` y `pg_isready`; asegúrate de que estén instaladas y que el usuario de la API tenga permisos/variables de entorno apropiadas.
+
+### GET /api/databases/status
+Chequea el estado de conexión usando `pg_isready`.
 
 **Query params**:
-- `name` (opcional): filtra por nombre exacto.
-- `from` (opcional): ISO date desde.
-- `to` (opcional): ISO date hasta.
-- `limit` (opcional): 1-500 resultados. Default 100.
+- `type` (opcional): solo `postgresql` soportado. Default: `postgresql`.
+- `name` (opcional): nombre de la base. Default: `postgres`.
 
 **Response (ejemplo)**:
 ```json
 {
   "success": true,
-  "count": 2,
-  "data": [
-    {
-      "id": "01JDN4T2W76S7HKMHYN5",
-      "name": "app.requests_per_second",
-      "value": 150,
-      "tags": { "service": "api", "endpoint": "/users" },
-      "timestamp": "2025-12-07T01:30:00.000Z"
-    }
-  ]
+  "data": {
+    "type": "postgresql",
+    "name": "postgres",
+    "status": "ready",
+    "exitCode": 0,
+    "output": "localhost:5432 - accepting connections"
+  }
 }
 ```
+
+### POST /api/databases/backup
+Crea un dump lógico con `pg_dump` en un directorio permitido.
+
+**Body**:
+```json
+{
+  "type": "postgresql",
+  "name": "app_db",
+  "destination": "/tmp/db-backups" // opcional, default /tmp/db-backups
+}
+```
+
+**Response (ejemplo)**:
+```json
+{
+  "success": true,
+  "data": {
+    "type": "postgresql",
+    "name": "app_db",
+    "path": "/tmp/db-backups/app_db-2025-12-07T11-05-00-000Z.sql",
+    "createdAt": "2025-12-07T11:05:00.000Z",
+    "durationMs": 1200,
+    "command": "pg_dump app_db -f /tmp/db-backups/app_db-2025-12-07T11-05-00-000Z.sql"
+  }
+}
+```
+
+**Notas**:
+- Destino permitido: home del usuario, `/tmp`, `/var/tmp`.
+- Si `pg_dump` falla (credenciales/rol/host), se devuelve el stderr del comando.
 
 ---
 
@@ -1502,6 +1560,7 @@ curl -X POST http://localhost:3000/api/command/batch \
 - **v2.0.2**: Historial de ejecuciones de workflows (GET /api/workflows/:id/history, runId)
 - **v2.0.3**: Métricas personalizadas (POST /api/metrics/custom, GET /api/metrics)
 - **v2.0.4**: Integración Docker (listar contenedores/imágenes, start/stop contenedores)
+- **v3.0.0**: Integración de bases de datos (PostgreSQL status/backup)
 
 ---
 

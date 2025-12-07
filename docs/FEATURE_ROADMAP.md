@@ -539,7 +539,7 @@ Tier 2 (Después):
 
 Tier 3 (Avanzado):
   [x] Workflows                  [Alto impacto, Alta complejidad]
-  [ ] Docker Integration         [Medio impacto, Media complejidad]
+  [x] Docker Integration         [Medio impacto, Media complejidad]
   [x] Custom Metrics             [Medio impacto, Baja complejidad]
 ```
 
@@ -566,10 +566,9 @@ Tier 3 (Avanzado):
 - [x] Docker integration (v2.0.4)
 
 ### Fase 4 (v2.1.0+ - Futuro)
-- Database integration
+- Database integration (v3.0.0)
 - Load balancer control
 - Advanced analytics
-- Machine learning alerts
 
 ---
 
