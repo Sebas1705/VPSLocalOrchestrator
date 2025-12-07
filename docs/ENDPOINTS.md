@@ -2,7 +2,7 @@
 
 Guía completa de todos los endpoints disponibles en la VPS Local Orchestrator API.
 
-**Versión actual**: v2.0.3
+**Versión actual**: v2.0.4
 
 ---
 
@@ -1077,6 +1077,75 @@ Registra una métrica puntual.
 }
 ```
 
+---
+
+## 🐳 Integración Docker
+
+Requiere autenticación. Usa el binario `docker` local, por lo que debes tener permisos para ejecutarlo (ej: en el grupo `docker`). Errores del CLI se devuelven en `error`.
+
+### GET /api/docker/containers
+Lista contenedores en ejecución (`docker ps`).
+
+**Response (ejemplo)**:
+```json
+{
+  "success": true,
+  "count": 1,
+  "data": [
+    {
+      "id": "4d2f3c6d1b1e",
+      "image": "nginx:latest",
+      "command": "\"nginx -g 'daemon off;'\"",
+      "createdAt": "2025-12-07 10:00:00 +0000 UTC",
+      "runningFor": "2 hours",
+      "status": "Up 2 hours",
+      "ports": "0.0.0.0:80->80/tcp",
+      "names": "web"
+    }
+  ]
+}
+```
+
+### GET /api/docker/images
+Lista imágenes locales (`docker images`).
+
+**Response (ejemplo)**:
+```json
+{
+  "success": true,
+  "count": 1,
+  "data": [
+    {
+      "id": "sha256:abcd...",
+      "repository": "nginx",
+      "tag": "latest",
+      "createdSince": "2 weeks ago",
+      "size": "142MB"
+    }
+  ]
+}
+```
+
+### POST /api/docker/containers/:id/start
+Inicia un contenedor por ID o nombre (`docker start`).
+
+**Response**:
+```json
+{ "success": true, "data": { "id": "web", "action": "start", "output": "web" } }
+```
+
+### POST /api/docker/containers/:id/stop
+Detiene un contenedor (`docker stop`).
+
+**Response**:
+```json
+{ "success": true, "data": { "id": "web", "action": "stop", "output": "web" } }
+```
+
+**Notas**:
+- Requiere que Docker esté instalado y accesible por el usuario que ejecuta la API.
+- Errores de permisos (ej: falta de grupo docker) se devuelven como `error`.
+
 **Response**: métrica persistida con `id` y `timestamp` ISO.
 
 ### GET /api/metrics
@@ -1432,6 +1501,7 @@ curl -X POST http://localhost:3000/api/command/batch \
 - **v2.0.1**: Workflow engine (MVP comandos/wait/webhook)
 - **v2.0.2**: Historial de ejecuciones de workflows (GET /api/workflows/:id/history, runId)
 - **v2.0.3**: Métricas personalizadas (POST /api/metrics/custom, GET /api/metrics)
+- **v2.0.4**: Integración Docker (listar contenedores/imágenes, start/stop contenedores)
 
 ---
 
