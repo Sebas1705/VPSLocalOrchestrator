@@ -8,6 +8,8 @@ import fileRoutes from './routes/file.routes.js';
 import webhookRoutes from './routes/webhook.routes.js';
 import secretsRoutes from './routes/secrets.routes.js';
 import backupRoutes from './routes/backup.routes.js';
+import workflowRoutes from './routes/workflow.routes.js';
+import metricsRoutes from './routes/metrics.routes.js';
 import { getConfig, Logger } from './config/index.js';
 
 const config = getConfig();
@@ -41,12 +43,14 @@ app.use('/api/files', fileRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/secrets', secretsRoutes);
 app.use('/api/backups', backupRoutes);
+app.use('/api/workflows', workflowRoutes);
+app.use('/api/metrics', metricsRoutes);
 
 // Ruta por defecto
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '2.0.0',
+    version: '2.0.3',
     description: 'API para orquestar recursos y ejecutar comandos localmente',
     endpoints: {
       health: 'GET /health',
@@ -81,6 +85,15 @@ app.get('/', (req: Request, res: Response) => {
       backupsGet: 'GET /api/backups/:name',
       backupsDelete: 'DELETE /api/backups/:name',
       backupsRestore: 'POST /api/backups/:name/restore',
+      workflowsList: 'GET /api/workflows',
+      workflowsCreate: 'POST /api/workflows',
+      workflowsGet: 'GET /api/workflows/:id',
+      workflowsUpdate: 'PATCH /api/workflows/:id',
+      workflowsDelete: 'DELETE /api/workflows/:id',
+      workflowsRun: 'POST /api/workflows/:id/run',
+      workflowsHistory: 'GET /api/workflows/:id/history',
+      metricsCreate: 'POST /api/metrics/custom',
+      metricsList: 'GET /api/metrics',
     },
   });
 });

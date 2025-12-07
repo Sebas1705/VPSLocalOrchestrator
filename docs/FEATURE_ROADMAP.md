@@ -538,9 +538,9 @@ Tier 2 (Después):
   [ ] Webhooks/Events            [Medio impacto, Media complejidad]
 
 Tier 3 (Avanzado):
-  [ ] Workflows                  [Alto impacto, Alta complejidad]
+  [x] Workflows                  [Alto impacto, Alta complejidad]
   [ ] Docker Integration         [Medio impacto, Media complejidad]
-  [ ] Custom Metrics             [Medio impacto, Baja complejidad]
+  [x] Custom Metrics             [Medio impacto, Baja complejidad]
 ```
 
 ---
@@ -561,8 +561,8 @@ Tier 3 (Avanzado):
 
 ### Fase 3 (v2.0.0 - 2-3 meses)
 - [x] Advanced backup/restore (v2.0.0)
-- [ ] Workflow engine
-- [ ] Custom metrics
+- [x] Workflow engine (v2.0.1)
+- [x] Custom metrics (v2.0.3)
 - [ ] Docker integration
 
 ### Fase 4 (v2.1.0+ - Futuro)

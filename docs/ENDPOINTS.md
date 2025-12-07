@@ -2,7 +2,7 @@
 
 Guía completa de todos los endpoints disponibles en la VPS Local Orchestrator API.
 
-**Versión actual**: v2.0.0
+**Versión actual**: v2.0.3
 
 ---
 
@@ -970,6 +970,143 @@ Restaura un backup `.tar.gz` a un destino permitido. **NEW en v2.0.0**
 
 ---
 
+## ⚙️ Workflow Engine (MVP)
+
+Requiere autenticación. Workflows se almacenan en disco (`api/workflows/workflows.json`) y los historiales de ejecución en `api/workflows/workflow-runs.json` (se conservan los últimos 50 por workflow). Tipos de paso soportados: `command`, `wait`, `webhook`.
+
+### POST /api/workflows
+Crea un workflow. **NEW en v2.0.1**
+
+**Body**:
+```json
+{
+  "name": "deploy-sequence",
+  "steps": [
+    { "type": "command", "command": "echo step1" },
+    { "type": "wait", "waitMs": 2000 },
+    { "type": "webhook", "url": "http://example.com/hook", "method": "POST", "body": { "ok": true } }
+  ]
+}
+```
+
+**Response**: workflow con `id`, `steps` con `id` asignado, `active` por defecto `true`.
+
+### GET /api/workflows
+Lista workflows.
+
+### GET /api/workflows/:id
+Obtiene detalle de un workflow.
+
+### PATCH /api/workflows/:id
+Actualiza `name`, `active` y/o `steps`.
+
+### DELETE /api/workflows/:id
+Elimina un workflow.
+
+### POST /api/workflows/:id/run
+Ejecuta secuencialmente los pasos. Detiene en el primer fallo.
+
+**Response (ejemplo)**:
+```json
+{
+  "success": true,
+  "data": {
+    "runId": "01JDN4K9R0HHD20W9F1Z",
+    "workflowId": "abc123",
+    "startedAt": "2025-12-07T01:25:00.000Z",
+    "finishedAt": "2025-12-07T01:25:02.100Z",
+    "status": "success",
+    "steps": [
+      { "stepId": "s1", "type": "command", "status": "success", "durationMs": 10, "output": { "exitCode": 0, "stdout": "ok", "stderr": "" } },
+      { "stepId": "s2", "type": "wait", "status": "success", "durationMs": 2000 },
+      { "stepId": "s3", "type": "webhook", "status": "success", "durationMs": 50, "output": { "status": 200, "body": "OK" } }
+    ]
+  }
+}
+```
+
+**Notas**:
+- `command`: usa el ejecutor existente; devuelve exitCode/stdout/stderr.
+- `wait`: `waitMs` 0-300000 ms.
+- `webhook`: se envía JSON con `fetch`; `method` default `POST`; retorna status/body.
+- Corte en primer fallo: `status` global será `partial` si hubo pasos previos exitosos.
+
+### GET /api/workflows/:id/history
+Obtiene el historial de ejecuciones (más reciente primero). Máximo 50 entradas por workflow.
+
+**Query params**:
+- `limit` (opcional): número de resultados a devolver (1-50). Default: `20`.
+
+**Response (ejemplo)**:
+```json
+{
+  "success": true,
+  "count": 2,
+  "data": [
+    {
+      "runId": "01JDN4K9R0HHD20W9F1Z",
+      "workflowId": "abc123",
+      "startedAt": "2025-12-07T01:25:00.000Z",
+      "finishedAt": "2025-12-07T01:25:02.100Z",
+      "status": "success",
+      "steps": [
+        { "stepId": "s1", "type": "command", "status": "success", "durationMs": 10 },
+        { "stepId": "s2", "type": "wait", "status": "success", "durationMs": 2000 }
+      ]
+    }
+  ]
+}
+```
+
+---
+
+## 📈 Métricas Personalizadas
+
+Requiere autenticación. Las métricas se almacenan en `api/metrics/metrics.json`. Máximo 500 resultados por consulta, default 100.
+
+### POST /api/metrics/custom
+Registra una métrica puntual.
+
+**Body**:
+```json
+{
+  "name": "app.requests_per_second",
+  "value": 150,
+  "tags": { "service": "api", "endpoint": "/users" },
+  "timestamp": "2025-12-07T01:30:00.000Z" // opcional; default ahora
+}
+```
+
+**Response**: métrica persistida con `id` y `timestamp` ISO.
+
+### GET /api/metrics
+Consulta métricas con filtros opcionales.
+
+**Query params**:
+- `name` (opcional): filtra por nombre exacto.
+- `from` (opcional): ISO date desde.
+- `to` (opcional): ISO date hasta.
+- `limit` (opcional): 1-500 resultados. Default 100.
+
+**Response (ejemplo)**:
+```json
+{
+  "success": true,
+  "count": 2,
+  "data": [
+    {
+      "id": "01JDN4T2W76S7HKMHYN5",
+      "name": "app.requests_per_second",
+      "value": 150,
+      "tags": { "service": "api", "endpoint": "/users" },
+      "timestamp": "2025-12-07T01:30:00.000Z"
+    }
+  ]
+}
+```
+
+---
+
 ## 🔗 Webhooks y Eventos
 
 ### GET /api/webhooks
@@ -1290,11 +1427,13 @@ curl -X POST http://localhost:3000/api/command/batch \
 - **v1.1.0**: Operaciones de archivos (GET/POST/DELETE /api/files, mkdir, rmdir)
 - **v1.2.0**: Webhooks y eventos (GET/POST/DELETE /api/webhooks, test)
  - **v1.3.0**: Gestión de secretos (CRUD cifrado con AES-256-GCM)
- - **v1.4.0**: Backup básico (tar.gz de rutas permitidas)
+- **v1.4.0**: Backup básico (tar.gz de rutas permitidas)
 - **v2.0.0**: Backup avanzado (restore a destino validado)
-- **v2.0.0**: Fase 3 completada
+- **v2.0.1**: Workflow engine (MVP comandos/wait/webhook)
+- **v2.0.2**: Historial de ejecuciones de workflows (GET /api/workflows/:id/history, runId)
+- **v2.0.3**: Métricas personalizadas (POST /api/metrics/custom, GET /api/metrics)
 
 ---
 
-**Última actualización**: 2025-12-06  
+**Última actualización**: 2025-12-07  
 **Mantenido por**: VPS Local Orchestrator Team
