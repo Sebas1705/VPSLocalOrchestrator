@@ -557,7 +557,7 @@ Tier 3 (Avanzado):
 - [x] File operations (v1.1.0)
 - [x] Webhooks/events (v1.2.0)
 - [x] Secrets management (v1.3.0)
-- [ ] Basic backup (v1.4.0)
+- [x] Basic backup (v1.4.0)
 
 ### Fase 3 (v2.0.0 - 2-3 meses)
 - Workflow engine

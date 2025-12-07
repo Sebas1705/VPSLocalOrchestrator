@@ -2,7 +2,7 @@
 
 Guía completa de todos los endpoints disponibles en la VPS Local Orchestrator API.
 
-**Versión actual**: v1.3.0
+**Versión actual**: v1.4.0
 
 ---
 
@@ -869,6 +869,80 @@ Elimina un secreto.
 
 ---
 
+## 💾 Backups Básicos (tar.gz)
+
+Requiere autenticación. Respeta la validación de paths (solo `/home`, `/tmp`, `/var/log`, `/var/tmp`).
+
+### POST /api/backups
+Crea un backup `.tar.gz` a partir de rutas permitidas. **NEW en v1.4.0**
+
+**Body**:
+```json
+{
+  "paths": ["/home/sebss/apps/VPSLocalOrchestrator/logs", "/tmp/test.txt"],
+  "name": "opcional-nombre"
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "name": "backup-2025-12-07T00-20-00-000Z.tar.gz",
+    "path": "/home/sebss/apps/VPSLocalOrchestrator/api/backups/backup-2025-12-07T00-20-00-000Z.tar.gz",
+    "size": 12345,
+    "createdAt": "2025-12-07T00:20:00.000Z"
+  }
+}
+```
+
+### GET /api/backups
+Lista los backups disponibles.
+
+**Response**:
+```json
+{
+  "success": true,
+  "count": 2,
+  "data": [
+    {
+      "name": "backup-2025-12-07T00-20-00-000Z.tar.gz",
+      "path": "/home/sebss/apps/VPSLocalOrchestrator/api/backups/backup-2025-12-07T00-20-00-000Z.tar.gz",
+      "size": 12345,
+      "createdAt": "2025-12-07T00:20:00.000Z"
+    }
+  ]
+}
+```
+
+### GET /api/backups/:name
+Descarga el backup especificado. Si se pasa `?info=true`, devuelve solo metadatos.
+
+**Ejemplos**:
+```bash
+# Descargar
+curl -s -X GET "http://localhost:3000/api/backups/backup-2025-12-07T00-20-00-000Z.tar.gz" \
+  -H "Authorization: Bearer tu-token-secreto-aqui" -o backup.tar.gz
+
+# Solo metadatos
+curl -s -X GET "http://localhost:3000/api/backups/backup-2025-12-07T00-20-00-000Z.tar.gz?info=true" \
+  -H "Authorization: Bearer tu-token-secreto-aqui" | jq .
+```
+
+### DELETE /api/backups/:name
+Elimina un backup.
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": { "deleted": true }
+}
+```
+
+---
+
 ## 🔗 Webhooks y Eventos
 
 ### GET /api/webhooks
@@ -1188,7 +1262,8 @@ curl -X POST http://localhost:3000/api/command/batch \
 - **v1.0.4**: Logging de auditoría básico (GET /api/logs, POST /api/logs/search)
 - **v1.1.0**: Operaciones de archivos (GET/POST/DELETE /api/files, mkdir, rmdir)
 - **v1.2.0**: Webhooks y eventos (GET/POST/DELETE /api/webhooks, test)
-- **v1.3.0**: Gestión de secretos (CRUD cifrado con AES-256-GCM)
+ - **v1.3.0**: Gestión de secretos (CRUD cifrado con AES-256-GCM)
+ - **v1.4.0**: Backup básico (tar.gz de rutas permitidas)
 - **v2.0.0**: Fase 3 completada
 
 ---

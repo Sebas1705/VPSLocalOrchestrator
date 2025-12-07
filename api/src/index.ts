@@ -7,6 +7,7 @@ import auditRoutes from './routes/audit.routes.js';
 import fileRoutes from './routes/file.routes.js';
 import webhookRoutes from './routes/webhook.routes.js';
 import secretsRoutes from './routes/secrets.routes.js';
+import backupRoutes from './routes/backup.routes.js';
 import { getConfig, Logger } from './config/index.js';
 
 const config = getConfig();
@@ -39,12 +40,13 @@ app.use('/api/logs', auditRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/secrets', secretsRoutes);
+app.use('/api/backups', backupRoutes);
 
 // Ruta por defecto
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '1.3.0',
+    version: '1.4.0',
     description: 'API para orquestar recursos y ejecutar comandos localmente',
     endpoints: {
       health: 'GET /health',
@@ -74,6 +76,10 @@ app.get('/', (req: Request, res: Response) => {
       secretsGet: 'GET /api/secrets/:id',
       secretsUpdate: 'PATCH /api/secrets/:id',
       secretsDelete: 'DELETE /api/secrets/:id',
+      backupsList: 'GET /api/backups',
+      backupsCreate: 'POST /api/backups',
+      backupsGet: 'GET /api/backups/:name',
+      backupsDelete: 'DELETE /api/backups/:name',
     },
   });
 });
