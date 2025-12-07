@@ -13,6 +13,7 @@ import metricsRoutes from './routes/metrics.routes.js';
 import dockerRoutes from './routes/docker.routes.js';
 import databaseRoutes from './routes/database.routes.js';
 import loadBalancerRoutes from './routes/loadbalancer.routes.js';
+import analyticsRoutes from './routes/analytics.routes.js';
 import { getConfig, Logger } from './config/index.js';
 
 const config = getConfig();
@@ -51,12 +52,13 @@ app.use('/api/metrics', metricsRoutes);
 app.use('/api/docker', dockerRoutes);
 app.use('/api/databases', databaseRoutes);
 app.use('/api/loadbalancer', loadBalancerRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Ruta por defecto
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '3.1.0',
+    version: '3.2.0',
     description: 'API para orquestar recursos y ejecutar comandos localmente',
     endpoints: {
       health: 'GET /health',
@@ -111,6 +113,9 @@ app.get('/', (req: Request, res: Response) => {
       lbDrain: 'POST /api/loadbalancer/backends/:id/drain',
       lbEnable: 'POST /api/loadbalancer/backends/:id/enable',
       lbDelete: 'DELETE /api/loadbalancer/backends/:id',
+      analyticsSnapshot: 'GET /api/analytics/snapshot',
+      analyticsAggregate: 'GET /api/analytics/aggregate',
+      analyticsTrend: 'GET /api/analytics/trend',
     },
   });
 });

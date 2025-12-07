@@ -2,7 +2,7 @@
 
 Guía completa de todos los endpoints disponibles en la VPS Local Orchestrator API.
 
-**Versión actual**: v3.1.0
+**Versión actual**: v3.2.0
 
 ---
 
@@ -1264,6 +1264,63 @@ Elimina un backend del registro.
 
 ---
 
+## 📊 Analytics Avanzado
+
+Requiere autenticación. Analiza métricas en ventanas de tiempo para detectar tendencias, agregaciones y snapshots.
+
+### GET /api/analytics/snapshot
+Foto actual de todas las métricas (último valor por métrica).
+
+### GET /api/analytics/aggregate
+Agregación de una métrica en ventana de tiempo.
+
+**Query params**:
+- `metric` (requerido): nombre de la métrica.
+- `type` (opcional): `sum|avg|count|min|max`. Default: `avg`.
+- `period` (opcional): `1h|24h|7d`. Default: `1h`.
+
+**Response (ejemplo)**:
+```json
+{
+  "success": true,
+  "data": {
+    "metric": "app.requests_per_second",
+    "type": "avg",
+    "value": 125.5,
+    "periodStart": "2025-12-07T10:00:00.000Z",
+    "periodEnd": "2025-12-07T11:00:00.000Z",
+    "samplesCount": 60
+  }
+}
+```
+
+### GET /api/analytics/trend
+Detecta si una métrica sube/baja/estable en la ventana.
+
+**Query params**:
+- `metric` (requerido): nombre de la métrica.
+- `period` (opcional): `1h|24h|7d`. Default: `1h`.
+
+**Response (ejemplo)**:
+```json
+{
+  "success": true,
+  "data": {
+    "metric": "system.cpu_usage",
+    "direction": "up",
+    "changePercent": 15.5,
+    "periodStart": "2025-12-07T10:00:00.000Z",
+    "periodEnd": "2025-12-07T11:00:00.000Z"
+  }
+}
+```
+
+**Notas**:
+- `direction` es `up` si cambio > 5%, `down` si < -5%, `stable` en otro caso.
+- `changePercent` es relativo al primer valor de la ventana.
+
+---
+
 ## 🔗 Webhooks y Eventos
 
 ### GET /api/webhooks
@@ -1592,6 +1649,7 @@ curl -X POST http://localhost:3000/api/command/batch \
 - **v2.0.4**: Integración Docker (listar contenedores/imágenes, start/stop contenedores)
 - **v3.0.0**: Integración de bases de datos (PostgreSQL status/backup)
 - **v3.1.0**: Control de load balancer (registro de backends, drain/enable/delete)
+- **v3.2.0**: Analytics avanzado (snapshots, agregaciones, detección de tendencias)
 
 ---
 
