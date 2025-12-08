@@ -1,26 +1,26 @@
-# Guía de Autenticación
+# Authentication Guide
 
-## 🔐 Sistema de Seguridad
+## 🔐 Security System
 
-La API incluye endpoints privilegiados que requieren autenticación mediante token Bearer para ejecutarse. Esto añade una capa adicional de seguridad para comandos sensibles.
+The API includes privileged endpoints that require Bearer token authentication to execute. This adds an additional layer of security for sensitive commands.
 
-## 🔑 Configuración del Token
+## 🔑 Token Configuration
 
-### Token Seguro (Recomendado)
-Generar un token aleatorio seguro de 64 caracteres:
+### Secure Token (Recommended)
+Generate a secure random 64-character token:
 
 ```bash
 openssl rand -hex 32
-# Resultado: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2
+# Result: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2
 ```
 
-Copiar en `.env`:
+Copy to `.env`:
 ```bash
 API_TOKEN=a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2
 ```
 
-### Validación de Token
-El servidor valida el token usando `crypto.timingSafeEqual()` para prevenir timing attacks:
+### Token Validation
+The server validates the token using `crypto.timingSafeEqual()` to prevent timing attacks:
 
 ```typescript
 const providedToken = Buffer.from(token, 'utf-8');
@@ -28,9 +28,9 @@ const validToken = Buffer.from(API_TOKEN, 'utf-8');
 crypto.timingSafeEqual(providedToken, validToken);
 ```
 
-## 📡 Usando Token en Requests
+## 📡 Using Token in Requests
 
-### Formato Bearer (Recomendado)
+### Bearer Format (Recommended)
 ```bash
 curl -X POST http://127.0.0.1:3000/api/privileged/execute \
   -H "Authorization: Bearer YOUR_TOKEN_HERE" \
@@ -38,7 +38,7 @@ curl -X POST http://127.0.0.1:3000/api/privileged/execute \
   -d '{"command": "whoami"}'
 ```
 
-### Respuesta Exitosa (200)
+### Successful Response (200)
 ```json
 {
   "success": true,
@@ -51,7 +51,7 @@ curl -X POST http://127.0.0.1:3000/api/privileged/execute \
 }
 ```
 
-### Sin Token (401)
+### Without Token (401)
 ```json
 {
   "success": false,
@@ -60,7 +60,7 @@ curl -X POST http://127.0.0.1:3000/api/privileged/execute \
 }
 ```
 
-### Token Inválido (401)
+### Invalid Token (401)
 ```json
 {
   "success": false,
@@ -69,37 +69,37 @@ curl -X POST http://127.0.0.1:3000/api/privileged/execute \
 }
 ```
 
-## 🔐 Comandos que Requieren Token
+## 🔐 Commands That Require Token
 
-Los siguientes comandos requieren autenticación:
+The following commands require authentication:
 
 ```typescript
 [
-  /^sudo\s+/,           # Cualquier comando con sudo
-  /^systemctl\s+/,      # systemctl (servicios)
-  /^service\s+/,        # service (servicios)
-  /^rm\s+-rf/,          # rm -rf (eliminación recursiva)
+  /^sudo\s+/,           # Any command with sudo
+  /^systemctl\s+/,      # systemctl (services)
+  /^service\s+/,        # service (services)
+  /^rm\s+-rf/,          # rm -rf (recursive deletion)
   /^shutdown/,          # shutdown
   /^reboot/,            # reboot
   /^poweroff/,          # poweroff
   /^halt/,              # halt
-  /^kill\s+-9/,         # kill -9 (fuerza)
+  /^kill\s+-9/,         # kill -9 (force)
   /^pkill/,             # pkill
-  /^dd\s+/,             # dd (bajo nivel)
-  /^mkfs/,              # mkfs (formato)
-  /^fdisk/,             # fdisk (particiones)
-  /^parted/,            # parted (particiones)
-  /^chmod\s+/,          # chmod (permisos)
-  /^chown\s+/,          # chown (propietario)
-  /^passwd/,            # passwd (cambiar contraseña)
-  /^userdel/,           # userdel (eliminar usuario)
-  /^useradd/            # useradd (crear usuario)
+  /^dd\s+/,             # dd (low-level)
+  /^mkfs/,              # mkfs (format)
+  /^fdisk/,             # fdisk (partitions)
+  /^parted/,            # parted (partitions)
+  /^chmod\s+/,          # chmod (permissions)
+  /^chown\s+/,          # chown (owner)
+  /^passwd/,            # passwd (change password)
+  /^userdel/,           # userdel (delete user)
+  /^useradd/            # useradd (create user)
 ]
 ```
 
-## 🚀 Ejemplos Prácticos
+## 🚀 Practical Examples
 
-### Ejecutar comando privilegiado
+### Execute privileged command
 ```bash
 curl -X POST http://127.0.0.1:3000/api/privileged/execute \
   -H "Authorization: Bearer $(cat api/.env | grep API_TOKEN | cut -d'=' -f2)" \
@@ -110,7 +110,7 @@ curl -X POST http://127.0.0.1:3000/api/privileged/execute \
   }'
 ```
 
-### Batch de comandos privilegiados
+### Batch of privileged commands
 ```bash
 curl -X POST http://127.0.0.1:3000/api/privileged/batch \
   -H "Authorization: Bearer YOUR_TOKEN" \
@@ -125,7 +125,7 @@ curl -X POST http://127.0.0.1:3000/api/privileged/batch \
   }'
 ```
 
-### Gestionar servicios
+### Manage services
 ```bash
 curl -X POST http://127.0.0.1:3000/api/privileged/service \
   -H "Authorization: Bearer YOUR_TOKEN" \
@@ -136,19 +136,19 @@ curl -X POST http://127.0.0.1:3000/api/privileged/service \
   }'
 ```
 
-Acciones disponibles: `start`, `stop`, `restart`, `status`, `enable`, `disable`
+Available actions: `start`, `stop`, `restart`, `status`, `enable`, `disable`
 
-## 🛡️ Mejores Prácticas de Seguridad
+## 🛡️ Security Best Practices
 
-1. **Token seguro**: Usar `openssl rand -hex 32` para generar
-2. **Nunca commitear**: El token en `.env` nunca debe ir a git
-3. **Rotar regularmente**: Cambiar el token cada 3-6 meses
-4. **Único por servidor**: No reusar tokens entre servidores
-5. **Environments separados**: Tokens diferentes para dev/staging/prod
-6. **Logs seguros**: Nunca loguear el token completo
-7. **Localhost solo**: La API rechaza IPs externas automáticamente
+1. **Secure token**: Use `openssl rand -hex 32` to generate
+2. **Never commit**: The token in `.env` should never go to git
+3. **Rotate regularly**: Change the token every 3-6 months
+4. **Unique per server**: Don't reuse tokens between servers
+5. **Separate environments**: Different tokens for dev/staging/prod
+6. **Secure logs**: Never log the full token
+7. **Localhost only**: The API automatically rejects external IPs
 
-## 🔒 Node.js Ejemplo Programático
+## 🔒 Node.js Programmatic Example
 
 ```javascript
 const axios = require('axios');
@@ -171,19 +171,19 @@ async function executePrivileged(command) {
     return response.data;
   } catch (error) {
     if (error.response?.status === 401) {
-      console.error('Token inválido o expirado');
+      console.error('Invalid or expired token');
     }
     throw error;
   }
 }
 
-// Uso
+// Usage
 executePrivileged('systemctl restart myapp')
   .then(result => console.log(result))
   .catch(error => console.error(error));
 ```
 
-## 🐍 Python Ejemplo
+## 🐍 Python Example
 
 ```python
 import requests
@@ -205,12 +205,12 @@ def execute_privileged(command):
     )
     
     if response.status_code == 401:
-        raise Exception('Token inválido')
+        raise Exception('Invalid token')
     
     response.raise_for_status()
     return response.json()
 
-# Uso
+# Usage
 result = execute_privileged('systemctl status nginx')
 print(result)
 ```
@@ -218,16 +218,16 @@ print(result)
 ## 🆘 Troubleshooting
 
 **Error: "Valid API token required"**
-- Verificar que el token esté en `.env`
-- Verificar que se está usando `Authorization: Bearer TOKEN`
-- Verificar que el token no tiene espacios extras
+- Verify that the token is in `.env`
+- Verify that you're using `Authorization: Bearer TOKEN`
+- Verify that the token has no extra spaces
 
 **Error: "This API is only accessible from localhost"**
-- El request debe venir desde 127.0.0.1 o localhost
-- Verificar que n8n/aplicación está corriendo en el mismo host
+- The request must come from 127.0.0.1 or localhost
+- Verify that n8n/application is running on the same host
 
-**Token expirado o revelado**
-- Generar nuevo token: `openssl rand -hex 32`
-- Actualizar en `.env`
-- Reiniciar servidor
-- No necesita agregar al repositorio
+**Token expired or revealed**
+- Generate new token: `openssl rand -hex 32`
+- Update in `.env`
+- Restart server
+- No need to add to repository

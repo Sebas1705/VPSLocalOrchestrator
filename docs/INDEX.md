@@ -1,101 +1,97 @@
-# 📚 Índice de Documentación
+# 📚 Documentation Index
 
-Bienvenido a la documentación interna del **VPS Local Orchestrator API v4.0.0**. Esta es la guía de navegación completa de todos los recursos disponibles.
+Welcome to the **VPS Local Orchestrator API v4.0.0** internal documentation. This is the complete navigation guide for all available resources.
 
-> 👉 **Nota**: Para una introducción general y características principales, ve al [`README.md`](../README.md) en la raíz del repositorio.
-
----
-
-## 🗺️ Mapa Completo de Documentación
-
-### 🚀 **Empezar Rápido**
-| Archivo | Contenido |
-|---------|----------|
-| [`setup/INSTALLATION.md`](setup/INSTALLATION.md) | Instalación paso a paso desde cero |
-| [`setup/DEVELOPMENT.md`](setup/DEVELOPMENT.md) | Configurar entorno de desarrollo |
-| [`guides/CONFIGURATION.md`](guides/CONFIGURATION.md) | Sistema de configuración `.env` |
-
-### 🔐 **Seguridad & Autenticación**
-| Archivo | Contenido |
-|---------|----------|
-| [`guides/AUTHENTICATION.md`](guides/AUTHENTICATION.md) | Token Bearer, privilegios, seguridad |
-| [`guides/ENVIRONMENT.md`](guides/ENVIRONMENT.md) | Variables de entorno completas |
-
-### 📡 **API & Referencia Técnica**
-| Archivo | Contenido |
-|---------|----------|
-| [`ENDPOINTS.md`](ENDPOINTS.md) | Documentación completa de todos los endpoints (v4.0.0) |
-| [`TESTING.md`](TESTING.md) | 🆕 Suite de testing, Jest, 50+ tests con cobertura |
-
-### 💻 **Ejemplos Prácticos**
-| Archivo | Contenido |
-|---------|----------|
-| [`examples/`](examples/) | Configuración de ejemplo y workflows de n8n |
-
-### 👨‍💻 **Desarrollo & Contribución**
-| Archivo | Contenido |
-|---------|----------|
-| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Guía de contribución y git workflow |
-
-### 🗺️ **Análisis, Roadmap & Release**
-| Archivo | Contenido |
-|---------|----------|
-| [`FEATURE_ROADMAP.md`](FEATURE_ROADMAP.md) | Roadmap completado hasta Fase 4 (v4.0.0) |
-| [`ANALYSIS_SUMMARY.md`](ANALYSIS_SUMMARY.md) | Análisis de seguridad pre-merge e mejoras |
-| [`MERGE_INSTRUCTIONS.md`](MERGE_INSTRUCTIONS.md) | Instrucciones paso a paso para merge a main |
-
-### 🆘 **Soporte & Referencia**
-| Archivo | Contenido |
-|---------|----------|
-| [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) | Solución de problemas comunes |
-| [`FAQ.md`](FAQ.md) | Preguntas frecuentes con respuestas |
+> 👉 **Note**: For a general introduction and main features, visit the [`README.md`](../README.md) in the root directory.
 
 ---
 
-## 🎯 Guías Rápidas por Caso de Uso
+## 🗺️ Complete Documentation Map
 
-### 👶 **Soy nuevo en el proyecto**
-1. **Lee primero**: [`../README.md`](../README.md) (5 min) - Visión general
-2. **Luego instala**: [`setup/INSTALLATION.md`](setup/INSTALLATION.md) (10 min)
-3. **Prueba**: [`API.md`](API.md) - Primeros comandos (10 min)
+### 🚀 **Quick Start**
+| File | Content |
+|---------|----------|
+| [`setup/INSTALLATION.md`](setup/INSTALLATION.md) | Step-by-step installation from scratch |
+| [`setup/DEVELOPMENT.md`](setup/DEVELOPMENT.md) | Configure development environment |
+| [`guides/CONFIGURATION.md`](guides/CONFIGURATION.md) | `.env` configuration system |
 
-### 🔑 **Necesito entender la autenticación**
-1. [`guides/AUTHENTICATION.md`](guides/AUTHENTICATION.md) - Conceptos y cómo funciona
-2. [`API.md`](API.md) - Ejemplos con token
-3. [`guides/ENVIRONMENT.md`](guides/ENVIRONMENT.md) - Variables API_TOKEN
+### 🔐 **Security & Authentication**
+| File | Content |
+|---------|----------|
+| [`guides/AUTHENTICATION.md`](guides/AUTHENTICATION.md) | Bearer tokens, privileges, security |
+| [`guides/ENVIRONMENT.md`](guides/ENVIRONMENT.md) | Complete environment variables |
 
-### ⚙️ **Necesito configurar la API**
-1. [`guides/CONFIGURATION.md`](guides/CONFIGURATION.md) - Sistema .env
-2. [`guides/ENVIRONMENT.md`](guides/ENVIRONMENT.md) - Todas las variables
-3. [`setup/INSTALLATION.md`](setup/INSTALLATION.md) - Setup inicial
+### 📡 **API & Technical Reference**
+| File | Content |
+|---------|----------|
+| [`ENDPOINTS.md`](ENDPOINTS.md) | Complete documentation of all endpoints (v4.0.0) |
+| [`TESTING.md`](TESTING.md) | Testing suite, Jest, 50+ tests with coverage |
+| [`ARCHITECTURE_ANALYSIS.md`](ARCHITECTURE_ANALYSIS.md) | **[NEW]** In-depth architecture analysis, limitations & improvement proposals |
+| [`REFACTORING_GUIDE.md`](REFACTORING_GUIDE.md) | **[NEW]** Step-by-step refactoring guide for Phase 5+ (Clean Architecture) |
 
-### 🔗 **Quiero integrar con n8n**
-1. [`../README.md`](../README.md) - Ejemplo rápido en la sección "Integración n8n"
-2. [`examples/`](examples/) - Workflows de n8n y configuración
-3. [`API.md`](API.md) - Referencia de endpoints
+### 💻 **Practical Examples**
+| File | Content |
+|---------|----------|
+| [`examples/`](examples/) | Sample configuration and n8n workflows |
 
-### 📡 **Necesito documentación técnica de endpoints**
-→ [`API.md`](API.md)
+### 👨‍💻 **Development & Contribution**
+| File | Content |
+|---------|----------|
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Contribution guide and git workflow |
 
-### 🗺️ **Quiero ver el roadmap futuro**
-1. [`FEATURE_ROADMAP.md`](FEATURE_ROADMAP.md) - 12 categorías, 3 tiers, timeline
-2. [`../README.md`](../README.md) - Sección "Roadmap Futuro"
+### 🗺️ **Roadmap & Release**
+| File | Content |
+|---------|----------|
+| [`FEATURE_ROADMAP.md`](FEATURE_ROADMAP.md) | Future features roadmap (Phase 5+) |
+| [`RELEASE_NOTES.md`](RELEASE_NOTES.md) | v4.0.0 release notes with complete changelog |
 
-### 🔗 **Quiero entender el merge a main y release**
-1. [`MERGE_INSTRUCTIONS.md`](MERGE_INSTRUCTIONS.md) - Paso a paso del merge
-2. [`ANALYSIS_SUMMARY.md`](ANALYSIS_SUMMARY.md) - Por qué estamos listos para merge
+### 🆘 **Support & Reference**
+| File | Content |
+|---------|----------|
+| [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) | Common issues and solutions |
+| [`FAQ.md`](FAQ.md) | Frequently asked questions |
 
-### 🐛 **Algo no funciona / Tengo errores**
-1. [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) - Problemas comunes
-2. [`FAQ.md`](FAQ.md) - Preguntas frecuentes
-3. [Abrir issue en GitHub](https://github.com/Sebas1705/VPSLocalOrchestrator/issues)
+---
 
-### 👨‍💻 **Quiero hacer cambios/contribuir**
-1. [`CONTRIBUTING.md`](CONTRIBUTING.md) - Git workflow y estándares
-2. [`setup/DEVELOPMENT.md`](setup/DEVELOPMENT.md) - Setup para desarrollo
+## 🎯 Quick Guides by Use Case
 
-### 💡 **Quiero ver ejemplos reales**
-→ [`API.md`](API.md)
+### 👶 **I'm new to the project**
+1. **Read first**: [`../README.md`](../README.md) (5 min) - Overview
+2. **Then install**: [`setup/INSTALLATION.md`](setup/INSTALLATION.md) (10 min)
+3. **Try it out**: [`ENDPOINTS.md`](ENDPOINTS.md) - First commands (10 min)
+
+### 🔑 **I need to understand authentication**
+1. [`guides/AUTHENTICATION.md`](guides/AUTHENTICATION.md) - Concepts and how it works
+2. [`ENDPOINTS.md`](ENDPOINTS.md) - Examples with tokens
+3. [`guides/ENVIRONMENT.md`](guides/ENVIRONMENT.md) - API_TOKEN variables
+
+### ⚙️ **I need to configure the API**
+1. [`guides/CONFIGURATION.md`](guides/CONFIGURATION.md) - .env system
+2. [`guides/ENVIRONMENT.md`](guides/ENVIRONMENT.md) - All variables
+3. [`setup/INSTALLATION.md`](setup/INSTALLATION.md) - Initial setup
+
+### 🔗 **I want to integrate with n8n**
+1. [`../README.md`](../README.md) - Quick example in "n8n Integration" section
+2. [`examples/`](examples/) - n8n workflows and configuration
+3. [`ENDPOINTS.md`](ENDPOINTS.md) - Endpoints reference
+
+### 📡 **I need technical endpoint documentation**
+→ [`ENDPOINTS.md`](ENDPOINTS.md)
+
+### 🧪 **I want to run tests**
+→ [`TESTING.md`](TESTING.md)
+
+### 🐛 **Something is not working / I have errors**
+1. [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) - Common issues
+2. [`FAQ.md`](FAQ.md) - Frequently asked questions
+3. [Open an issue on GitHub](https://github.com/Sebas1705/VPSLocalOrchestrator/issues)
+
+### 👨‍💻 **I want to make changes/contribute**
+1. [`CONTRIBUTING.md`](CONTRIBUTING.md) - Git workflow and standards
+2. [`setup/DEVELOPMENT.md`](setup/DEVELOPMENT.md) - Development setup
+
+### 💡 **I want to see real examples**
+→ [`ENDPOINTS.md`](ENDPOINTS.md)
 
 ---
 
@@ -299,6 +295,34 @@ Al terminar, deberías tener:
 - [ ] Ejemplos probados
 - [ ] n8n integrado (si lo necesitas)
 - [ ] Capaz de hacer cambios
+- [ ] Leído análisis de arquitectura (para mejoras futuras)
+
+---
+
+## 🏗️ Arquitectura & Mejoras (NUEVO - December 2025)
+
+**[ARCHITECTURE_ANALYSIS.md](ARCHITECTURE_ANALYSIS.md)** - Análisis técnico profundo de:
+- ✅ Fortalezas actuales de la arquitectura
+- ⚠️ Limitaciones identificadas
+- 💡 Propuestas de mejora con alternativas
+- 🔄 Patrones de diseño subutilizados
+- 💾 Opciones de persistencia (SQLite recomendado)
+- 🏗️ Clean Architecture propuesta
+- 🚀 Roadmap de fases 5-7
+
+**[REFACTORING_GUIDE.md](REFACTORING_GUIDE.md)** - Guía práctica con:
+- 📋 11 pasos de implementación (Phase 5)
+- 💾 SQLite + Drizzle ORM setup
+- ✅ Validación centralizada con Zod
+- 🛠️ Dependency Injection (Tsyringe)
+- ⚠️ Error handling estratificado
+- 🧪 Testing mejorado
+- 🔄 Estrategia de migración gradual
+- ✨ Beneficios post-refactorización
+
+**Leer primero si quieres**:
+- Entender qué mejorar en arquitectura → ARCHITECTURE_ANALYSIS.md
+- Implementar mejoras → REFACTORING_GUIDE.md
 
 ---
 

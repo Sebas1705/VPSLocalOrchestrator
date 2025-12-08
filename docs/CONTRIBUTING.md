@@ -1,53 +1,53 @@
-# Guía de Contribución
+# Contribution Guide
 
-## 📋 Tabla de Contenidos
+## 📋 Table of Contents
 
-- [Setup de Desarrollo](#setup-de-desarrollo)
-- [Workflow de Git](#workflow-de-git)
-- [Estándares de Código](#estándares-de-código)
-- [Commits Semánticos](#commits-semánticos)
+- [Development Setup](#development-setup)
+- [Git Workflow](#git-workflow)
+- [Code Standards](#code-standards)
+- [Semantic Commits](#semantic-commits)
 - [Pull Requests](#pull-requests)
 - [Code Review](#code-review)
 
-## 🚀 Setup de Desarrollo
+## 🚀 Development Setup
 
-### 1. Clonar el Repositorio
+### 1. Clone the Repository
 ```bash
 git clone https://github.com/Sebas1705/VPSLocalOrchestrator.git
 cd VPSLocalOrchestrator
 ```
 
-### 2. Configurar Rama de Desarrollo
+### 2. Configure Development Branch
 ```bash
-# Asegurar estar en develop
+# Make sure you're on develop
 git checkout develop
 
-# Actualizar cambios remotos
+# Update remote changes
 git pull origin develop
 ```
 
-### 3. Crear Rama de Feature
+### 3. Create Feature Branch
 ```bash
-# Crear rama desde develop
-git checkout -b feature/tu-feature develop
+# Create branch from develop
+git checkout -b feature/your-feature develop
 
-# Ejemplos
+# Examples
 git checkout -b feature/add-websockets develop
 git checkout -b bugfix/fix-token-validation develop
 git checkout -b docs/update-readme develop
 ```
 
-### 4. Setup Local
+### 4. Local Setup
 ```bash
 cd api
 npm install
 cp .env.example .env
-nano .env  # Editar con valores locales
+nano .env  # Edit with local values
 
 npm run dev
 ```
 
-## 🔄 Workflow de Git
+## 🔄 Git Workflow
 
 ### Estructura de Ramas
 
