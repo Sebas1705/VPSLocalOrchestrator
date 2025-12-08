@@ -27,6 +27,7 @@ import openapiRoutes from './routes/openapi.routes.js';
 import migrationRoutes from './routes/migration.routes.js';
 import auditEventsRoutes from './routes/audit-events.routes.js';
 import eventsRoutes from './routes/events.routes.js';
+import eventstoreRoutes from './routes/eventstore.routes.js';
 import { getConfig, initializeLogger, getLogger } from './config/index.js';
 import { initializeMappers } from './application/mappers/index.js';
 import { createContainer } from './infrastructure/container.js';
@@ -43,6 +44,7 @@ import { initializeOpenAPI } from './infrastructure/schema/openapi.js';
 import { initializeSchemaMigrations } from './infrastructure/schema/migration.js';
 import { initializeAuditLogger } from './infrastructure/audit/index.js';
 import { initializeEventBus, eventBusMiddleware } from './infrastructure/events/index.js';
+import { initializeEventStore } from './infrastructure/eventstore/index.js';
 import type { ICommandRepository, IResourceRepository, IServiceRepository } from './domain/ports/repository.interfaces.js';
 
 const config = getConfig();
@@ -73,6 +75,9 @@ initializeAuditLogger();
 
 // Initialize event bus
 initializeEventBus(10000);
+
+// Initialize event store
+initializeEventStore(10);
 
 // Initialize job queue
 const jobQueue = initializeJobQueue({
@@ -146,13 +151,14 @@ app.use('/api', openapiRoutes);
 app.use('/api', migrationRoutes);
 app.use('/api/audit', auditEventsRoutes);
 app.use('/api/events', eventsRoutes);
+app.use('/api/eventstore', eventstoreRoutes);
 
 // Ruta por defecto
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '7.1.0',
-    description: 'API para orquestar recursos y ejecutar comandos localmente - v7.1.0 Event Bus Infrastructure',
+    version: '7.2.0',
+    description: 'API para orquestar recursos y ejecutar comandos localmente - v7.2.0 Event Sourcing',
     endpoints: {
       health: 'GET /health',
       healthLiveness: 'GET /health/live',
