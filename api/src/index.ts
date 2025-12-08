@@ -2,6 +2,7 @@ import express, { type Application, type Request, type Response } from 'express'
 import { localhostOnly, requestLogger, errorHandler } from './middleware/security.js';
 import { errorHandlingMiddleware, notFoundHandler } from './middleware/errorHandlingMiddleware.js';
 import { tracingMiddleware } from './middleware/tracing.js';
+import { metricsMiddleware, metricsEndpoint } from './middleware/metrics.js';
 import { createCommandRoutes } from './routes/command.routes.js';
 import { createResourceRoutes } from './routes/resources.routes.js';
 import { createServiceRoutes } from './routes/services.routes.js';
@@ -20,13 +21,15 @@ import { getConfig, initializeLogger, getLogger } from './config/index.js';
 import { initializeMappers } from './application/mappers/index.js';
 import { createContainer } from './infrastructure/container.js';
 import { initializeTracer } from './infrastructure/tracing/index.js';
+import { initializeMetrics } from './infrastructure/metrics/index.js';
 import type { ICommandRepository, IResourceRepository, IServiceRepository } from './domain/ports/repository.interfaces.js';
 
 const config = getConfig();
 const logger = initializeLogger(config);
 
-// Initialize tracer early
+// Initialize observability infrastructure early
 initializeTracer();
+initializeMetrics();
 
 // Initialize mappers early
 initializeMappers();
@@ -45,6 +48,7 @@ const HOST = config.api.host;
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(tracingMiddleware);
+app.use(metricsMiddleware);
 app.use(requestLogger);
 app.use(localhostOnly);
 
@@ -56,6 +60,9 @@ app.get('/health', (req: Request, res: Response) => {
     uptime: process.uptime(),
   });
 });
+
+// Metrics endpoint (Prometheus compatible)
+app.get('/metrics', metricsEndpoint);
 
 // Rutas principales (con inyección de dependencias)
 app.use('/api/command', createCommandRoutes(commandRepository));
@@ -77,8 +84,8 @@ app.use('/api/analytics', analyticsRoutes);
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '5.2.0',
-    description: 'API para orquestar recursos y ejecutar comandos localmente - v5.2.0 Distributed Tracing',
+    version: '5.3.0',
+    description: 'API para orquestar recursos y ejecutar comandos localmente - v5.3.0 Metrics Collection',
     endpoints: {
       health: 'GET /health',
       executeCommand: 'POST /api/command/execute',
