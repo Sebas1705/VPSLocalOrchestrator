@@ -1,54 +1,28 @@
-import express, { type Request, type Response, type Router } from 'express';
-import { getServiceHealth, listActiveServices } from '../services/healthMonitor.js';
+import express, { type Router } from 'express';
+import { ServiceController } from '../application/controllers/services.controller.js';
+import type { IServiceRepository } from '../domain/ports/repository.interfaces.js';
 
 const router: Router = express.Router();
 
 /**
- * GET /api/services
- * Lista servicios activos del sistema
+ * Create route handlers with repository dependency injection
  */
-router.get('/', async (req: Request, res: Response) => {
-  try {
-    const services = await listActiveServices();
-    res.json({
-      success: true,
-      data: services,
-    });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
-  }
-});
+export function createServiceRoutes(serviceRepository: IServiceRepository) {
+  const controller = new ServiceController(serviceRepository);
 
-/**
- * GET /api/services/:name/health
- * Obtiene el estado de salud de un servicio
- */
-router.get('/:name/health', async (req: Request, res: Response) => {
-  try {
-    const serviceName = req.params.name ?? '';
+  /**
+   * GET /api/services
+   * Lista servicios activos del sistema
+   */
+  router.get('/', (req, res) => controller.listServices(req, res));
 
-    if (!serviceName) {
-      return res.status(400).json({
-        success: false,
-        error: 'Service name is required',
-      });
-    }
+  /**
+   * GET /api/services/:name/health
+   * Obtiene el estado de salud de un servicio
+   */
+  router.get('/:name/health', (req, res) => controller.getServiceHealth(req, res));
 
-    const health = await getServiceHealth(serviceName);
-
-    res.json({
-      success: true,
-      data: health,
-    });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
-  }
-});
+  return router;
+}
 
 export default router;

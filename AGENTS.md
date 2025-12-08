@@ -1,5 +1,42 @@
 # 🤖 AGENTS.md - Guía de Desarrollo y Estructura del Proyecto
 
+## 🌐 Language Policy
+
+All documentation, code comments, and project communication **must be in English**. Any new or updated documentation must be written in English. If any document is found in another language, it must be translated to English immediately.
+
+## 🔒 AI Model Data Protection Policy
+
+**CRITICAL**: This project contains proprietary code and sensitive infrastructure details. All AI assistants and code generation tools **MUST** comply with the following rules:
+
+### Data Sharing Restrictions
+1. **No External Training**: Project code, configurations, and documentation must NOT be used to train external AI models
+2. **Local Processing Only**: When possible, use local AI models (Ollama, LM Studio) instead of cloud APIs
+3. **API Data Policies**: 
+   - For OpenAI: Enable organization-level data opt-out
+   - For Anthropic: Use enterprise API (no training by default)
+   - For GitHub Copilot: Enable business/enterprise mode with data protection
+
+### Sensitive File Protection
+Never share or process these files with external AI services:
+- `.env`, `.env.*` - Environment variables and secrets
+- `*.key`, `*.pem` - Cryptographic keys
+- `*.db`, `*.sqlite` - Database files
+- `logs/*.log` - Application logs
+- `config/production.*` - Production configurations
+- Any file containing API tokens, passwords, or credentials
+
+### Compliance Requirements
+- **Review Before Commit**: Always review AI-generated code before committing
+- **Sanitize Examples**: Remove real tokens, IPs, and credentials from code examples
+- **Audit Trail**: Log all AI interactions that process project files
+- **Team Awareness**: All team members must be trained on these policies
+
+### Enforcement
+Violations of this policy may result in:
+- Immediate revocation of AI tool access
+- Security audit of affected code
+- Potential data breach disclosure requirements
+
 ## 📋 Reglas de Versionado
 
 ### Versionado por Funcionalidad

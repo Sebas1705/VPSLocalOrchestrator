@@ -1,134 +1,52 @@
-import express, { type Request, type Response, type Router } from 'express';
-import { getSystemResources, getProcessList, killProcess, setProcessPriority } from '../services/resourceMonitor.js';
-import { getNetworkStats } from '../services/networkMonitor.js';
+import express, { type Router } from 'express';
+import { z } from 'zod';
+import { ResourceController } from '../application/controllers/resources.controller.js';
+import { validateQuery } from '../application/validation-middleware.js';
+import type { IResourceRepository } from '../domain/ports/repository.interfaces.js';
 
 const router: Router = express.Router();
 
 /**
- * GET /api/resources
- * Obtiene los recursos del sistema
+ * Create route handlers with repository dependency injection
  */
-router.get('/', async (req: Request, res: Response) => {
-  try {
-    const resources = await getSystemResources();
-    res.json({
-      success: true,
-      data: resources,
-    });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
-  }
-});
+export function createResourceRoutes(resourceRepository: IResourceRepository) {
+  const controller = new ResourceController(resourceRepository);
 
-/**
- * GET /api/resources/processes
- * Obtiene lista de procesos
- */
-router.get('/processes', async (req: Request, res: Response) => {
-  try {
-    const limit = parseInt(req.query.limit as string) || 10;
-    const processes = await getProcessList(limit);
-    
-    res.json({
-      success: true,
-      data: processes,
-    });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
-  }
-});
+  /**
+   * GET /api/resources
+   * Obtiene los recursos del sistema
+   */
+  router.get('/', (req, res) => controller.getResources(req, res));
 
-/**
- * GET /api/resources/network
- * Obtiene estadísticas de red
- */
-router.get('/network', async (req: Request, res: Response) => {
-  try {
-    const networkStats = await getNetworkStats();
-    res.json({
-      success: true,
-      data: networkStats,
-    });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
-  }
-});
+  /**
+   * GET /api/resources/processes
+   * Obtiene lista de procesos
+   */
+  router.get(
+    '/processes',
+    validateQuery(z.object({ limit: z.coerce.number().int().positive().optional().default(10) })),
+    (req, res) => controller.getProcesses(req, res)
+  );
 
-/**
- * DELETE /api/resources/process/:pid
- * Mata un proceso por PID
- */
-router.delete('/process/:pid', async (req: Request, res: Response) => {
-  try {
-    const pid = parseInt(req.params.pid ?? '');
-    const signal = (req.query.signal as string) || 'TERM';
+  /**
+   * GET /api/resources/network
+   * Obtiene estadísticas de red
+   */
+  router.get('/network', (req, res) => controller.getNetwork(req, res));
 
-    if (isNaN(pid)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid PID',
-      });
-    }
+  /**
+   * DELETE /api/resources/process/:pid
+   * Mata un proceso por PID
+   */
+  router.delete('/process/:pid', (req, res) => controller.killProcess(req, res));
 
-    const success = await killProcess(pid, signal);
-    
-    res.json({
-      success,
-      message: success ? `Process ${pid} killed successfully` : `Failed to kill process ${pid}`,
-    });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
-  }
-});
+  /**
+   * POST /api/resources/process/:pid/priority
+   * Cambia la prioridad (nice value) de un proceso
+   */
+  router.post('/process/:pid/priority', (req, res) => controller.setPriority(req, res));
 
-/**
- * POST /api/resources/process/:pid/priority
- * Cambia la prioridad (nice value) de un proceso
- */
-router.post('/process/:pid/priority', async (req: Request, res: Response) => {
-  try {
-    const pid = parseInt(req.params.pid ?? '');
-    const { priority } = req.body;
-
-    if (isNaN(pid)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid PID',
-      });
-    }
-
-    if (typeof priority !== 'number' || isNaN(priority)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Priority must be a number between -20 and 19',
-      });
-    }
-
-    const result = await setProcessPriority(pid, priority);
-
-    if (result.success) {
-      res.json(result);
-    } else {
-      res.status(400).json(result);
-    }
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
-  }
-});
+  return router;
+}
 
 export default router;
