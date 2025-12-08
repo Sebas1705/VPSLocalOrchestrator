@@ -15,9 +15,13 @@ import databaseRoutes from './routes/database.routes.js';
 import loadBalancerRoutes from './routes/loadbalancer.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
 import { getConfig, Logger } from './config/index.js';
+import { initializeMappers } from './application/mappers/index.js';
 
 const config = getConfig();
 const logger = new Logger(config.api.logLevel);
+
+// Initialize mappers early
+initializeMappers();
 
 const app: Application = express();
 const PORT = config.api.port;
@@ -58,8 +62,8 @@ app.use('/api/analytics', analyticsRoutes);
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '4.5.0',
-    description: 'API para orquestar recursos y ejecutar comandos localmente - v4.5.0 Layered Architecture',
+    version: '4.6.0',
+    description: 'API para orquestar recursos y ejecutar comandos localmente - v4.6.0 DTO Mappers',
     endpoints: {
       health: 'GET /health',
       executeCommand: 'POST /api/command/execute',

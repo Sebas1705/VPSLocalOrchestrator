@@ -9,6 +9,7 @@ import type { Request, Response } from 'express';
 import type { IServiceController } from './controller.interfaces.js';
 import { sendErrorResponse } from '../validation-middleware.js';
 import { getServiceHealth, listActiveServices } from '../../services/healthMonitor.js';
+import { ServiceNormalizer } from '../mappers/services.mappers.js';
 
 export class ServiceController implements IServiceController {
   async listServices(req: Request, res: Response): Promise<void> {
@@ -16,7 +17,7 @@ export class ServiceController implements IServiceController {
       const services = await listActiveServices();
       res.json({
         success: true,
-        data: services,
+        data: services.map((s) => ServiceNormalizer.normalizeStatus(s)),
         timestamp: new Date().toISOString(),
       });
     } catch (error: any) {
@@ -34,10 +35,11 @@ export class ServiceController implements IServiceController {
       }
 
       const health = await getServiceHealth(serviceName);
+      const normalized = ServiceNormalizer.normalizeStatus(health);
 
       res.json({
-        success: true,
-        data: health,
+        success: normalized.status === 'active',
+        data: normalized,
         timestamp: new Date().toISOString(),
       });
     } catch (error: any) {

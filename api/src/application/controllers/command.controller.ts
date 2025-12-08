@@ -10,8 +10,11 @@ import type { ICommandController } from './controller.interfaces.js';
 import { sendValidatedResponse, sendErrorResponse } from '../validation-middleware.js';
 import { CommandResultResponseSchema } from '../validation-schemas.js';
 import { executeCommand } from '../../services/commandExecutor.js';
+import { CommandResultResponseMapper } from '../mappers/command.mappers.js';
 
 export class CommandController implements ICommandController {
+  private resultMapper = new CommandResultResponseMapper();
+
   async executeCommand(req: Request, res: Response): Promise<void> {
     try {
       const { command, timeout, cwd, env } = (req as any).validatedBody;
@@ -22,17 +25,7 @@ export class CommandController implements ICommandController {
         env,
       });
 
-      const response = {
-        success: result.exitCode === 0,
-        result: {
-          stdout: result.stdout,
-          stderr: result.stderr,
-          exitCode: result.exitCode,
-          duration: result.duration,
-        },
-        timestamp: new Date().toISOString(),
-      };
-
+      const response = this.resultMapper.mapTo(result);
       sendValidatedResponse(res, CommandResultResponseSchema, response);
     } catch (error: any) {
       sendErrorResponse(res, 'COMMAND_EXECUTION_ERROR', error.message, 500);

@@ -32,7 +32,14 @@ export class ResourceController implements IResourceController {
 
       res.json({
         success: true,
-        data: processes,
+        data: processes.map((p) => ({
+          pid: p.pid,
+          name: p.name,
+          user: 'unknown',
+          cpuPercent: p.cpu,
+          memoryMb: p.memory,
+          command: p.name,
+        })),
         timestamp: new Date().toISOString(),
       });
     } catch (error: any) {
