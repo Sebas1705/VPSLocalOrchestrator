@@ -1,5 +1,6 @@
 import express, { type Application, type Request, type Response } from 'express';
 import { localhostOnly, requestLogger, errorHandler } from './middleware/security.js';
+import { errorHandlingMiddleware, notFoundHandler } from './middleware/errorHandlingMiddleware.js';
 import { createCommandRoutes } from './routes/command.routes.js';
 import { createResourceRoutes } from './routes/resources.routes.js';
 import { createServiceRoutes } from './routes/services.routes.js';
@@ -70,8 +71,8 @@ app.use('/api/analytics', analyticsRoutes);
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '4.7.0',
-    description: 'API para orquestar recursos y ejecutar comandos localmente - v4.7.0 Repository Pattern',
+    version: '4.8.0',
+    description: 'API para orquestar recursos y ejecutar comandos localmente - v4.8.0 Error Handling',
     endpoints: {
       health: 'GET /health',
       executeCommand: 'POST /api/command/execute',
@@ -132,16 +133,11 @@ app.get('/', (req: Request, res: Response) => {
   });
 });
 
-// Manejador de rutas no encontradas
-app.use((req: Request, res: Response) => {
-  res.status(404).json({
-    error: 'Not Found',
-    message: 'The requested endpoint does not exist',
-  });
-});
+// Manejador de rutas no encontradas (debe estar antes del error handler)
+app.use(notFoundHandler);
 
-// Middleware de manejo de errores
-app.use(errorHandler);
+// Middleware de manejo de errores (DEBE SER EL ÚLTIMO)
+app.use(errorHandlingMiddleware);
 
 // Iniciar servidor
 app.listen(PORT, HOST, () => {
