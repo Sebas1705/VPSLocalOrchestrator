@@ -23,6 +23,7 @@ import healthRoutes from './routes/health.routes.js';
 import jobsRoutes from './routes/jobs.routes.js';
 import ratelimitsRoutes from './routes/ratelimits.routes.js';
 import circuitbreakerRoutes from './routes/circuitbreaker.routes.js';
+import openapiRoutes from './routes/openapi.routes.js';
 import { getConfig, initializeLogger, getLogger } from './config/index.js';
 import { initializeMappers } from './application/mappers/index.js';
 import { createContainer } from './infrastructure/container.js';
@@ -35,6 +36,7 @@ import { initializeCircuitBreakers, initializeBackPressure } from './infrastruct
 import { processCommandJob, processBatchCommandJob } from './services/commandJobProcessor.js';
 import { initializeCache } from './infrastructure/cache/index.js';
 import { initializeDistributedRateLimiter } from './infrastructure/ratelimit/distributed.js';
+import { initializeOpenAPI } from './infrastructure/schema/openapi.js';
 import type { ICommandRepository, IResourceRepository, IServiceRepository } from './domain/ports/repository.interfaces.js';
 
 const config = getConfig();
@@ -53,6 +55,9 @@ initializeBackPressure(100, 50); // max 100 queued, 50 concurrent
 // Initialize distributed cache for horizontal scaling
 initializeCache();
 initializeDistributedRateLimiter();
+
+// Initialize OpenAPI schema generation
+initializeOpenAPI('VPS Local Orchestrator API', '6.1.0');
 
 // Initialize job queue
 const jobQueue = initializeJobQueue({
@@ -121,13 +126,14 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/jobs', jobsRoutes);
 app.use('/api/ratelimits', ratelimitsRoutes);
 app.use('/api/circuitbreakers', circuitbreakerRoutes);
+app.use('/api', openapiRoutes);
 
 // Ruta por defecto
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '5.8.0',
-    description: 'API para orquestar recursos y ejecutar comandos localmente - v5.8.0 Horizontal-readiness',
+    version: '6.1.0',
+    description: 'API para orquestar recursos y ejecutar comandos localmente - v6.1.0 OpenAPI Schema',
     endpoints: {
       health: 'GET /health',
       healthLiveness: 'GET /health/live',
