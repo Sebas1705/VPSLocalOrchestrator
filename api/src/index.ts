@@ -1,8 +1,8 @@
 import express, { type Application, type Request, type Response } from 'express';
 import { localhostOnly, requestLogger, errorHandler } from './middleware/security.js';
-import commandRoutes from './routes/command.routes.js';
-import resourceRoutes from './routes/resources.routes.js';
-import servicesRoutes from './routes/services.routes.js';
+import { createCommandRoutes } from './routes/command.routes.js';
+import { createResourceRoutes } from './routes/resources.routes.js';
+import { createServiceRoutes } from './routes/services.routes.js';
 import auditRoutes from './routes/audit.routes.js';
 import fileRoutes from './routes/file.routes.js';
 import webhookRoutes from './routes/webhook.routes.js';
@@ -16,12 +16,20 @@ import loadBalancerRoutes from './routes/loadbalancer.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
 import { getConfig, Logger } from './config/index.js';
 import { initializeMappers } from './application/mappers/index.js';
+import { createContainer } from './infrastructure/container.js';
+import type { ICommandRepository, IResourceRepository, IServiceRepository } from './domain/ports/repository.interfaces.js';
 
 const config = getConfig();
 const logger = new Logger(config.api.logLevel);
 
 // Initialize mappers early
 initializeMappers();
+
+// Initialize DI container and resolve repositories
+const container = createContainer();
+const commandRepository = container.get<ICommandRepository>('commandRepository');
+const resourceRepository = container.get<IResourceRepository>('resourceRepository');
+const serviceRepository = container.get<IServiceRepository>('serviceRepository');
 
 const app: Application = express();
 const PORT = config.api.port;
@@ -42,10 +50,10 @@ app.get('/health', (req: Request, res: Response) => {
   });
 });
 
-// Rutas principales
-app.use('/api/command', commandRoutes);
-app.use('/api/resources', resourceRoutes);
-app.use('/api/services', servicesRoutes);
+// Rutas principales (con inyección de dependencias)
+app.use('/api/command', createCommandRoutes(commandRepository));
+app.use('/api/resources', createResourceRoutes(resourceRepository));
+app.use('/api/services', createServiceRoutes(serviceRepository));
 app.use('/api/logs', auditRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/webhooks', webhookRoutes);
@@ -62,8 +70,8 @@ app.use('/api/analytics', analyticsRoutes);
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '4.6.0',
-    description: 'API para orquestar recursos y ejecutar comandos localmente - v4.6.0 DTO Mappers',
+    version: '4.7.0',
+    description: 'API para orquestar recursos y ejecutar comandos localmente - v4.7.0 Repository Pattern',
     endpoints: {
       health: 'GET /health',
       executeCommand: 'POST /api/command/execute',

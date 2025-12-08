@@ -2,19 +2,30 @@
  * Resource Controller Implementation
  *
  * Handles HTTP requests for system resource queries.
- * Delegates to application layer use-cases.
+ * Persists resource metrics via repository.
  */
 
 import type { Request, Response } from 'express';
 import type { IResourceController } from './controller.interfaces.js';
+import type { IResourceRepository } from '../../domain/ports/repository.interfaces.js';
 import { sendErrorResponse } from '../validation-middleware.js';
 import { getSystemResources, getProcessList, killProcess, setProcessPriority } from '../../services/resourceMonitor.js';
 import { getNetworkStats } from '../../services/networkMonitor.js';
 
 export class ResourceController implements IResourceController {
+  private resourceRepository: IResourceRepository;
+
+  constructor(resourceRepository: IResourceRepository) {
+    this.resourceRepository = resourceRepository;
+  }
+
   async getResources(req: Request, res: Response): Promise<void> {
     try {
       const resources = await getSystemResources();
+      
+      // Persist metrics snapshot
+      await this.resourceRepository.saveMetrics(Date.now(), resources);
+      
       res.json({
         success: true,
         data: resources,
@@ -30,16 +41,21 @@ export class ResourceController implements IResourceController {
       const limit = (req as any).validatedQuery?.limit || 10;
       const processes = await getProcessList(limit);
 
+      const processData = processes.map((p) => ({
+        pid: p.pid,
+        name: p.name,
+        user: 'unknown',
+        cpuPercent: p.cpu,
+        memoryMb: p.memory,
+        command: p.name,
+      }));
+
+      // Persist process snapshot
+      await this.resourceRepository.saveProcessSnapshot(Date.now(), processData);
+
       res.json({
         success: true,
-        data: processes.map((p) => ({
-          pid: p.pid,
-          name: p.name,
-          user: 'unknown',
-          cpuPercent: p.cpu,
-          memoryMb: p.memory,
-          command: p.name,
-        })),
+        data: processData,
         timestamp: new Date().toISOString(),
       });
     } catch (error: any) {

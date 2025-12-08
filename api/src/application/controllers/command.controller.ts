@@ -2,18 +2,25 @@
  * Command Controller Implementation
  *
  * Handles HTTP requests for command execution.
- * Delegates to application layer use-cases.
+ * Delegates to application layer use-cases and persists via repository.
  */
 
 import type { Request, Response } from 'express';
 import type { ICommandController } from './controller.interfaces.js';
+import type { ICommandRepository } from '../../domain/ports/repository.interfaces.js';
 import { sendValidatedResponse, sendErrorResponse } from '../validation-middleware.js';
 import { CommandResultResponseSchema } from '../validation-schemas.js';
 import { executeCommand } from '../../services/commandExecutor.js';
 import { CommandResultResponseMapper } from '../mappers/command.mappers.js';
+import { Command, CommandExecution } from '../../domain/command/entities.js';
 
 export class CommandController implements ICommandController {
   private resultMapper = new CommandResultResponseMapper();
+  private commandRepository: ICommandRepository;
+
+  constructor(commandRepository: ICommandRepository) {
+    this.commandRepository = commandRepository;
+  }
 
   async executeCommand(req: Request, res: Response): Promise<void> {
     try {
@@ -24,6 +31,14 @@ export class CommandController implements ICommandController {
         cwd,
         env,
       });
+
+      // Create Command entity and CommandExecution record
+      const cmdEntity = Command.create(command, timeout || 30000, cwd || '/tmp');
+      const execution = new CommandExecution('generated', cmdEntity, 'api-user');
+      execution.complete(result.exitCode, result.stdout, result.stderr);
+
+      // Persist execution record in repository
+      await this.commandRepository.create(execution);
 
       const response = this.resultMapper.mapTo(result);
       sendValidatedResponse(res, CommandResultResponseSchema, response);
@@ -40,14 +55,27 @@ export class CommandController implements ICommandController {
       for (const cmd of commands) {
         if (typeof cmd === 'string') {
           const result = await executeCommand(cmd);
-          results.push({ command: cmd, ...result });
+          
+          // Persist each batch execution
+          const cmdEntity = Command.create(cmd, 30000, '/tmp');
+          const execution = new CommandExecution('generated', cmdEntity, 'api-user');
+          execution.complete(result.exitCode, result.stdout, result.stderr);
+          
+          await this.commandRepository.create(execution);
+          results.push({ command: cmd, exitCode: result.exitCode, stdout: result.stdout, stderr: result.stderr });
         } else if (typeof cmd === 'object' && cmd.command) {
           const result = await executeCommand(cmd.command, {
             timeout: cmd.timeout,
             cwd: cmd.cwd,
             env: cmd.env,
           });
-          results.push({ command: cmd.command, ...result });
+          
+          const cmdEntity = Command.create(cmd.command, cmd.timeout || 30000, cmd.cwd || '/tmp');
+          const execution = new CommandExecution('generated', cmdEntity, 'api-user');
+          execution.complete(result.exitCode, result.stdout, result.stderr);
+          
+          await this.commandRepository.create(execution);
+          results.push({ command: cmd.command, exitCode: result.exitCode, stdout: result.stdout, stderr: result.stderr });
         }
       }
 

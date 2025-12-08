@@ -93,8 +93,34 @@ export class Container {
 export function createContainer(): Container {
   const container = new Container();
 
-  // Register core services here (placeholder)
-  // Actual registrations depend on availability of Logger, CommandExecutor, etc.
+  // Register repositories (singletons for in-memory storage)
+  container.register(
+    'commandRepository',
+    () => {
+      // Dynamic import to avoid circular dependencies
+      const { InMemoryCommandRepository } = require('./repositories/index.js') as any;
+      return new InMemoryCommandRepository();
+    },
+    true // singleton
+  );
+
+  container.register(
+    'resourceRepository',
+    () => {
+      const { InMemoryResourceRepository } = require('./repositories/index.js') as any;
+      return new InMemoryResourceRepository();
+    },
+    true // singleton
+  );
+
+  container.register(
+    'serviceRepository',
+    () => {
+      const { InMemoryServiceRepository } = require('./repositories/index.js') as any;
+      return new InMemoryServiceRepository();
+    },
+    true // singleton
+  );
 
   return container;
 }

@@ -5,43 +5,52 @@ import { validateCommandBody } from '../middleware/security.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { validateBody } from '../application/validation-middleware.js';
 import { ExecuteCommandRequestSchema, BatchCommandRequestSchema } from '../application/validation-schemas.js';
+import type { ICommandRepository } from '../domain/ports/repository.interfaces.js';
 
 const router = express.Router();
-const controller = new CommandController();
 
 /**
- * POST /api/command/execute
- * Ejecuta un comando del sistema (requiere autenticación)
+ * Create route handlers with repository dependency injection
  */
-router.post(
-  '/execute',
-  requireAuth,
-  validateCommandBody,
-  validateBody(ExecuteCommandRequestSchema),
-  (req, res) => controller.executeCommand(req, res)
-);
+export function createCommandRoutes(commandRepository: ICommandRepository) {
+  const controller = new CommandController(commandRepository);
 
-/**
- * POST /api/command/batch
- * Ejecuta múltiples comandos secuencialmente (requiere autenticación)
- */
-router.post(
-  '/batch',
-  requireAuth,
-  validateBody(BatchCommandRequestSchema),
-  (req, res) => controller.executeBatch(req, res)
-);
+  /**
+   * POST /api/command/execute
+   * Ejecuta un comando del sistema (requiere autenticación)
+   */
+  router.post(
+    '/execute',
+    requireAuth,
+    validateCommandBody,
+    validateBody(ExecuteCommandRequestSchema),
+    (req, res) => controller.executeCommand(req, res)
+  );
 
-/**
- * POST /api/command/service
- * Gestiona servicios systemd (start, stop, restart, status, enable, disable)
- * Requiere autenticación
- */
-router.post(
-  '/service',
-  requireAuth,
-  validateBody(z.object({ service: z.string(), action: z.enum(['start', 'stop', 'restart', 'status', 'enable', 'disable']) })),
-  (req, res) => controller.manageService(req, res)
-);
+  /**
+   * POST /api/command/batch
+   * Ejecuta múltiples comandos secuencialmente (requiere autenticación)
+   */
+  router.post(
+    '/batch',
+    requireAuth,
+    validateBody(BatchCommandRequestSchema),
+    (req, res) => controller.executeBatch(req, res)
+  );
+
+  /**
+   * POST /api/command/service
+   * Gestiona servicios systemd (start, stop, restart, status, enable, disable)
+   * Requiere autenticación
+   */
+  router.post(
+    '/service',
+    requireAuth,
+    validateBody(z.object({ service: z.string(), action: z.enum(['start', 'stop', 'restart', 'status', 'enable', 'disable']) })),
+    (req, res) => controller.manageService(req, res)
+  );
+
+  return router;
+}
 
 export default router;
