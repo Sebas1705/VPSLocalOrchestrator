@@ -24,6 +24,7 @@ import jobsRoutes from './routes/jobs.routes.js';
 import ratelimitsRoutes from './routes/ratelimits.routes.js';
 import circuitbreakerRoutes from './routes/circuitbreaker.routes.js';
 import openapiRoutes from './routes/openapi.routes.js';
+import migrationRoutes from './routes/migration.routes.js';
 import { getConfig, initializeLogger, getLogger } from './config/index.js';
 import { initializeMappers } from './application/mappers/index.js';
 import { createContainer } from './infrastructure/container.js';
@@ -37,6 +38,7 @@ import { processCommandJob, processBatchCommandJob } from './services/commandJob
 import { initializeCache } from './infrastructure/cache/index.js';
 import { initializeDistributedRateLimiter } from './infrastructure/ratelimit/distributed.js';
 import { initializeOpenAPI } from './infrastructure/schema/openapi.js';
+import { initializeSchemaMigrations } from './infrastructure/schema/migration.js';
 import type { ICommandRepository, IResourceRepository, IServiceRepository } from './domain/ports/repository.interfaces.js';
 
 const config = getConfig();
@@ -57,7 +59,10 @@ initializeCache();
 initializeDistributedRateLimiter();
 
 // Initialize OpenAPI schema generation
-initializeOpenAPI('VPS Local Orchestrator API', '6.1.0');
+initializeOpenAPI('VPS Local Orchestrator API', '6.2.0');
+
+// Initialize schema migration system
+initializeSchemaMigrations('6.2.0', 'header');
 
 // Initialize job queue
 const jobQueue = initializeJobQueue({
@@ -127,13 +132,14 @@ app.use('/api/jobs', jobsRoutes);
 app.use('/api/ratelimits', ratelimitsRoutes);
 app.use('/api/circuitbreakers', circuitbreakerRoutes);
 app.use('/api', openapiRoutes);
+app.use('/api', migrationRoutes);
 
 // Ruta por defecto
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '6.1.0',
-    description: 'API para orquestar recursos y ejecutar comandos localmente - v6.1.0 OpenAPI Schema',
+    version: '6.2.0',
+    description: 'API para orquestar recursos y ejecutar comandos localmente - v6.2.0 Schema Migrations',
     endpoints: {
       health: 'GET /health',
       healthLiveness: 'GET /health/live',
