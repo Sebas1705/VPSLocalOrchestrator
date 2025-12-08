@@ -97,7 +97,7 @@ async function getNetworkInterfaces(): Promise<NetworkInterface[]> {
  */
 async function getNetworkConnections(): Promise<NetworkConnections> {
   try {
-    const output = execSync('ss -tun 2>/dev/null | grep -E "^tcp|^udp" | awk "{print $2}"').toString();
+    const output = execSync('ss -tan | tail -n +2', { timeout: 2000 }).toString();
     const lines = output.split('\n').filter(line => line.trim());
 
     const connections: NetworkConnections = {
@@ -111,7 +111,7 @@ async function getNetworkConnections(): Promise<NetworkConnections> {
       if (line.includes('ESTAB')) connections.established++;
       else if (line.includes('TIME-WAIT')) connections.timeWait++;
       else if (line.includes('LISTEN')) connections.listening++;
-      else connections.other++;
+      else if (line.trim()) connections.other++;
     }
 
     return connections;

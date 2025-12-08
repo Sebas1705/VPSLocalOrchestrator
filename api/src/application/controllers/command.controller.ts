@@ -115,10 +115,18 @@ export class CommandController implements ICommandController {
       throw CommandExecutionError.invalidSyntax(action, 'Invalid service action');
     }
 
-    const command = `sudo -n systemctl ${action} ${service}`;
+    // Read-only operations don't need sudo
+    const readOnlyActions = ['status'];
+    const needsSudo = !readOnlyActions.includes(action);
+    
+    const command = needsSudo 
+      ? `sudo -n systemctl ${action} ${service}`
+      : `systemctl ${action} ${service}`;
+    
     const result = await executeCommand(command, { timeout: 30000 });
 
-    if (result.exitCode !== 0 && /sudo:|permission/i.test(result.stderr)) {
+    // Only check sudo errors for operations that need sudo
+    if (needsSudo && result.exitCode !== 0 && /sudo:|permission/i.test(result.stderr)) {
       throw CommandExecutionError.denied(command, 'Sudo not permitted or password required');
     }
 

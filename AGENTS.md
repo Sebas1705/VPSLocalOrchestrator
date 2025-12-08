@@ -1,4 +1,4 @@
-# 🤖 AGENTS.md - Guía de Desarrollo y Estructura del Proyecto
+# 🤖 AGENTS.md - Development Rules & Project Structure
 
 ## 🌐 Language Policy
 
@@ -37,247 +37,197 @@ Violations of this policy may result in:
 - Security audit of affected code
 - Potential data breach disclosure requirements
 
-## 📋 Reglas de Versionado
+---
 
-### Versionado por Funcionalidad
-Cada vez que se implemente **una funcionalidad concreta** (con su lógica, endpoint y test de endpoint), la versión debe aumentar en **minor**:
+## 📋 Versioning Rules
 
-- **Ejemplo**: `v1.0.0` → `v1.0.1` → `v1.0.2` → `v1.0.3` → ...
+### Version Numbering
+Follow Semantic Versioning (SemVer): `MAJOR.MINOR.PATCH`
 
-### Versionado por Fase Completada
-Cuando se **completen todas las funcionalidades de una fase**, la versión cambiará a la indicada en `FEATURE_ROADMAP.md`:
+- **MAJOR**: Breaking changes or major milestones (e.g., v2.0.0)
+- **MINOR**: New features, phase completions (e.g., v1.2.0)
+- **PATCH**: Bug fixes, improvements, small features (e.g., v1.0.1)
 
-- **Fase 1 completada**: `v1.0.x` → `v1.2.0`
-- **Fase 2 completada**: `v1.2.x` → `v1.3.0`
-- **Fase 3 completada**: `v1.3.x` → `v2.0.0`
-- **Fase 4+**: Según roadmap
+### Version Update Process
 
-### Proceso de Actualización de Versión
-
-1. **En `api/package.json`**: Actualizar `"version"`
-2. **En `api/src/index.ts`**: Actualizar versión en endpoint GET `/`
-3. **Commit**: `git commit -m "bump: version X.X.X - <descripción>"`
-4. **Crear rama release**: `git checkout -b release/vX.X.X`
+1. **Update `api/package.json`**: Change `"version"` field
+2. **Update `api/src/index.ts`**: Update version in GET `/` endpoint
+3. **Commit**: `git commit -m "bump: version X.X.X - <description>"`
+4. **Create release branch**: `git checkout -b release/vX.X.X`
 5. **Tag**: `git tag -a vX.X.X -m "Release vX.X.X"`
-6. **Push rama y tag**: `git push -u origin release/vX.X.X && git push origin vX.X.X`
-7. **Volver a develop**: `git checkout develop && git merge release/vX.X.X`
+6. **Push branch and tag**: `git push -u origin release/vX.X.X && git push origin vX.X.X`
+7. **Merge to develop**: `git checkout develop && git merge release/vX.X.X`
 8. **Push develop**: `git push origin develop`
 
 ---
 
-## 📁 Estructura del Proyecto
+## 📁 Project Structure
 
-### Raíz del Repositorio
+### Root Directory
 ```
 VPSLocalOrchestrator/
-├── README.md                           # Documentación principal
-├── .gitignore                          # Configuración de git
-├── vps-orchestrator.service            # Configuración de systemd
-└── api/                                # Carpeta principal de la API
+├── README.md                           # Main documentation
+├── AGENTS.md                           # Development rules (this file)
+├── .gitignore                          # Git configuration
+├── vps-orchestrator.service            # Systemd service file
+├── api/                                # API application
+└── docs/                               # Documentation
 ```
 
-### Carpeta `/api`
+### `/api` Directory
 ```
 api/
-├── package.json                        # Dependencias y scripts
-├── tsconfig.json                       # Configuración de TypeScript
-├── .env                                # Variables de entorno (NO en git)
-├── .env.example → docs/examples/.env.example (movido)
-│
-├── src/                                # Código fuente TypeScript
-│   ├── index.ts                        # Punto de entrada de la API
-│   ├── globals.ts                      # Utilidades globales
-│   │
-│   ├── config/
-│   │   └── index.ts                    # Configuración y Logger
-│   │
-│   ├── middleware/
-│   │   ├── auth.ts                     # Utilidades de autenticación
-│   │   ├── requireAuth.ts              # Middleware de protección (NEW)
-│   │   └── security.ts                 # Middleware de seguridad
-│   │
-│   ├── routes/
-│   │   ├── command.routes.ts           # POST /api/command/* (requiere auth)
-│   │   ├── privileged.routes.ts        # POST /api/privileged/* (requiere auth)
-│   │   └── resources.routes.ts         # GET /api/resources/* (público)
-│   │
-│   └── services/
-│       ├── commandExecutor.ts          # Ejecución de comandos
-│       └── resourceMonitor.ts          # Monitoreo de recursos
-│
-└── dist/                               # Código compilado (generado por build)
-    ├── index.js
-    ├── config/
-    ├── middleware/
-    ├── routes/
-    └── services/
+├── package.json                        # Dependencies and scripts
+├── tsconfig.json                       # TypeScript configuration
+├── .env                                # Environment variables (NOT in git)
+├── src/                                # TypeScript source code
+│   ├── index.ts                        # Application entry point
+│   ├── config/                         # Configuration
+│   ├── middleware/                     # Express middleware
+│   ├── routes/                         # API routes
+│   ├── services/                       # Business logic services
+│   ├── application/                    # Application layer
+│   ├── domain/                         # Domain layer
+│   └── infrastructure/                 # Infrastructure layer
+├── tests/                              # Test files
+│   ├── unit/                           # Unit tests
+│   └── integration/                    # Integration tests
+└── dist/                               # Compiled JavaScript (generated)
 ```
 
-### Carpeta `/docs`
+### `/docs` Directory
 ```
 docs/
-├── INDEX.md                            # Índice de documentación
-├── FEATURE_ROADMAP.md                  # Roadmap de funcionalidades (ESTE ARCHIVO)
-├── ARCHITECTURE.md                     # Arquitectura del proyecto
-├── API.md                              # Documentación de endpoints
-│
-└── examples/
-    ├── .env.example                    # Ejemplo de configuración
-    ├── n8n-examples.json               # Ejemplos de n8n
-    └── n8n-workflow-monitor.json       # Workflow monitor de n8n
+├── README.md                           # Documentation index
+├── core/                               # Core documentation
+│   ├── ENDPOINTS.md                    # API endpoints reference
+│   ├── FEATURE_ROADMAP.md              # Feature roadmap
+│   └── TESTING.md                      # Testing guide
+├── guides/                             # User guides
+│   ├── INSTALLATION.md                 # Installation guide
+│   ├── CONFIGURATION.md                # Configuration guide
+│   └── SECURITY.md                     # Security guide
+└── examples/                           # Code examples
+    └── ENDPOINT_EXAMPLES.md            # Endpoint usage examples
 ```
 
 ---
 
-## 🔐 Seguridad y Autenticación
+## 🔐 Security & Authentication
 
-### Reglas Actuales
-1. **Todos los endpoints de comando REQUIEREN autenticación**
-   - `POST /api/command/execute` - ✅ Requiere token
-   - `POST /api/command/batch` - ✅ Requiere token
-   - `POST /api/privileged/*` - ✅ Requiere token
+### Authentication Rules
+1. **Protected Endpoints**: All command execution endpoints require Bearer token authentication
+2. **Public Endpoints**: Health checks and read-only resource endpoints are public
+3. **Token Validation**: Use `timingSafeEqual` to prevent timing attacks
+4. **Token Configuration**: Set `API_TOKEN` environment variable in `.env`
 
-2. **Endpoints públicos (sin autenticación requerida)**
-   - `GET /health` - Sin autenticación
-   - `GET /api/resources` - Sin autenticación
-   - `GET /api/resources/processes` - Sin autenticación
-   - `DELETE /api/resources/process/:pid` - Sin autenticación
-
-3. **Token**
-   - Desde: `Authorization: Bearer <token>`
-   - Validación: `timingSafeEqual` (contra timing attacks)
-   - Configuración: Variable `API_TOKEN` en `.env`
+### Token Usage
+```bash
+Authorization: Bearer <your-api-token>
+```
 
 ---
 
-## 🚀 Scripts de Build y Ejecución
+## 🚀 Build & Execution
 
-### Comandos Principales
+### Development Commands
 ```bash
-# Compilar TypeScript a dist/
+# Install dependencies
+npm install
+
+# Compile TypeScript
 npm run build
 
-# Ejecutar servidor compilado
-cd dist && node index.js
+# Run tests
+npm test
 
-# Systemd (requiere sudo)
+# Run in development mode
+npm run dev
+
+# Run compiled server
+cd dist && node index.js
+```
+
+### Production Deployment
+```bash
+# Using systemd
 sudo systemctl start vps-orchestrator
 sudo systemctl status vps-orchestrator
 sudo systemctl restart vps-orchestrator
+
+# View logs
 sudo journalctl -u vps-orchestrator -f
 ```
 
 ---
 
-## 📝 Checklist para Nueva Funcionalidad
+## 📝 Development Checklist
 
-Cuando implementes una nueva funcionalidad en Fase 1 o posterior, asegúrate de:
+When implementing new features:
 
-- [ ] **Crear el servicio** (`api/src/services/<feature>.ts`)
-- [ ] **Crear/actualizar rutas** (`api/src/routes/<feature>.routes.ts`)
-- [ ] **Aplicar middleware de autenticación** si es endpoint de comando
-- [ ] **Implementar validación** de inputs
-- [ ] **Compilar**: `npm run build`
-- [ ] **Probar endpoints** con curl/Postman
-- [ ] **Registrar logs** si aplica
-- [ ] **Actualizar documentación** en `/docs`
-- [ ] **Aumentar versión** en `package.json` (minor bump)
-- [ ] **Hacer commit** con mensaje descriptivo
-- [ ] **Crear tag** `vX.X.X`
+- [ ] Create service logic in `api/src/services/`
+- [ ] Create/update routes in `api/src/routes/`
+- [ ] Apply authentication middleware if needed
+- [ ] Implement input validation
+- [ ] Write unit tests in `api/tests/unit/`
+- [ ] Write integration tests in `api/tests/integration/`
+- [ ] Update API documentation in `docs/core/ENDPOINTS.md`
+- [ ] Compile: `npm run build`
+- [ ] Test endpoints manually
+- [ ] Run test suite: `npm test`
+- [ ] Update version following SemVer
+- [ ] Commit with descriptive message
+- [ ] Create release tag
 
 ---
 
-## 🎯 Endpoints Actuales
+## 🧪 Testing Guidelines
 
-### Health & Status
-```
-GET /health                              # Status del servidor
-GET /                                    # Información de la API
-```
+### Test Structure
+- **Unit Tests**: Test individual functions/classes in isolation
+- **Integration Tests**: Test API endpoints end-to-end
+- **Coverage Goal**: Maintain >80% code coverage
 
-### Command Execution (Requiere Auth)
-```
-POST /api/command/execute                # Ejecutar un comando
-POST /api/command/batch                  # Ejecutar múltiples comandos
-```
+### Running Tests
+```bash
+# Run all tests
+npm test
 
-### Privileged Commands (Requiere Auth)
-```
-POST /api/privileged/execute             # Comando privilegiado
-POST /api/privileged/batch               # Múltiples comandos privilegiados
-POST /api/privileged/service             # Gestión de servicios
-```
+# Run with coverage
+npm run test:coverage
 
-### Resources (Público)
-```
-GET /api/resources                       # CPU, memoria, disco, uptime
-GET /api/resources/processes             # Lista de procesos (top 10)
-DELETE /api/resources/process/:pid       # Terminar proceso
+# Watch mode
+npm run test:watch
 ```
 
 ---
 
-## 📊 Fase 1 - Funcionalidades a Implementar
+## 🏗️ Architecture Principles
 
-**Destino: v1.2.0**
+### Clean Architecture Layers
+1. **Domain Layer**: Core business logic, entities, interfaces
+2. **Application Layer**: Use cases, DTOs, controllers
+3. **Infrastructure Layer**: External dependencies, adapters, repositories
 
-### v1.0.1 - Documentation Consolidation ✅ COMPLETED
-- Consolidated 29 documentation files into 15 organized files (77% redundancy reduction)
-- Created GETTING_STARTED.md: comprehensive setup guide
-- Created ARCHITECTURE.md: system design and patterns
-- Created EXAMPLES.md: API examples and usage patterns
-- Updated README.md: modern consolidated overview
-- Updated docs/README.md: navigation hub
-- Cleaned docs/guides/: kept only SECURITY.md and TROUBLESHOOTING.md
-- Deleted docs/analysis/ and docs/examples/ (consolidated)
-- **Status**: ✅ Released 2025-12-08
-
-### v1.0.2 - Code Review and Cleanup ✅ COMPLETED
-- Removed unused file: api/src/globals.ts (0 references)
-- Added comprehensive JSDoc to 5 middleware functions
-- Improved code documentation with @param, @returns, @example tags
-- Enhanced maintainability and code clarity
-- 100% JSDoc coverage for public middleware APIs
-- All tests passing (50/50)
-- Clean TypeScript compilation
-- **Status**: ✅ Released 2025-12-08
-
-### v1.0.3 - Test Implementation ✅ COMPLETED
-- Added comprehensive controller tests (28 test cases)
-- Added service tests (48 test cases)
-- Implemented 76 new test cases (345% increase)
-- Total: 98 tests (97 passing, 1 skipped)
-- Controller coverage: CommandController, ResourceController
-- Service coverage: ResourceMonitor with full logic testing
-- Edge cases and error handling fully tested
-- **Status**: ✅ Released 2025-12-08
-
-### v1.0.4 - First Phase Features (PENDING)
-1. Network Monitoring → v1.0.4
-   - GET /api/resources/network
-2. Enhanced Service Status → v1.0.5
-   - GET /api/services/:name/health
-3. Basic Audit Logging → v1.0.6
-   - GET /api/logs
-   - POST /api/logs/search
-4. Process Priority Control → v1.0.7
-   - POST /api/processes/set-priority/:pid
-
-**Final Phase 1**: v1.0.7 → v1.2.0 (feature version upgrade)
+### Dependency Rules
+- Dependencies point inward (Infrastructure → Application → Domain)
+- Domain layer has no external dependencies
+- Use dependency injection for loose coupling
 
 ---
 
-## ⚠️ Notas Importantes
+## ⚠️ Important Notes
 
-- **TypeScript**: Usar `import type` para tipos cuando `verbatimModuleSyntax` esté activo
-- **Compilación**: Siempre compilar con `npm run build` antes de probar
-- **Testing**: Probar endpoints con token válido (`Bearer tu-token-secreto-aqui`)
-- **Logs**: Usar console.log para debugging, Logger para producción
-- **Git**: Mantener `develop` como rama principal de desarrollo
-- **Systemd**: El servicio ejecuta desde `api/dist/` con `.env`
+- **TypeScript**: Use `import type` for type-only imports when `verbatimModuleSyntax` is enabled
+- **Compilation**: Always compile with `npm run build` before testing
+- **ES Modules**: Use dynamic `import()` instead of `require()` for runtime imports
+- **Async/Await**: Prefer async/await over callbacks and `.then()` chains
+- **Error Handling**: Always handle errors properly, use try-catch blocks
+- **Logging**: Use structured logging (JSON format) for production
+- **Git**: Keep `develop` as main development branch
+- **Middleware**: Always call `next()` in Express middleware to avoid request hanging
 
 ---
 
-**Última actualización**: 2025-12-08  
-**Versión actual**: v1.0.3 🎉 (Test implementation patch)
-**Versiones completadas**: v1.0.0 (Production), v1.0.1 (Documentation), v1.0.2 (Code cleanup), v1.0.3 (Tests)
+**Last Updated**: 2025-12-08  
+**Current Version**: See `api/package.json`

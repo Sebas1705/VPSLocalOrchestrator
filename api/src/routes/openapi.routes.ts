@@ -29,8 +29,22 @@ openapi
   .addTag('Circuit Breakers', 'Resilience patterns');
 
 /**
+ * GET /api/openapi.json
+ * Get OpenAPI specification as JSON (standard endpoint)
+ */
+router.get('/openapi.json', (req: Request, res: Response) => {
+  try {
+    res.type('application/json');
+    res.json(openapi.getSpec());
+  } catch (error) {
+    logger.error('Failed to get OpenAPI spec', error as Error);
+    res.status(500).json({ error: 'Failed to get OpenAPI spec' });
+  }
+});
+
+/**
  * GET /api/schema
- * Get OpenAPI specification as JSON
+ * Get OpenAPI specification as JSON (alias)
  */
 router.get('/schema', (req: Request, res: Response) => {
   try {
