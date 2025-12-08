@@ -15,13 +15,13 @@ import dockerRoutes from './routes/docker.routes.js';
 import databaseRoutes from './routes/database.routes.js';
 import loadBalancerRoutes from './routes/loadbalancer.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
-import { getConfig, Logger } from './config/index.js';
+import { getConfig, initializeLogger, getLogger } from './config/index.js';
 import { initializeMappers } from './application/mappers/index.js';
 import { createContainer } from './infrastructure/container.js';
 import type { ICommandRepository, IResourceRepository, IServiceRepository } from './domain/ports/repository.interfaces.js';
 
 const config = getConfig();
-const logger = new Logger(config.api.logLevel);
+const logger = initializeLogger(config);
 
 // Initialize mappers early
 initializeMappers();
@@ -71,8 +71,8 @@ app.use('/api/analytics', analyticsRoutes);
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '4.8.0',
-    description: 'API para orquestar recursos y ejecutar comandos localmente - v4.8.0 Error Handling',
+    version: '5.1.0',
+    description: 'API para orquestar recursos y ejecutar comandos localmente - v5.1.0 Observability - Structured Logging',
     endpoints: {
       health: 'GET /health',
       executeCommand: 'POST /api/command/execute',

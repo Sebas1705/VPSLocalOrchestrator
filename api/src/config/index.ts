@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { ConsoleLogger, LogLevel, LoggerFactory, type ILogger } from '../infrastructure/logging/index.js';
 
 export interface Config {
   api: {
@@ -80,41 +81,24 @@ export function getConfig(): Config {
 }
 
 /**
- * Logger configurable
+ * Create and initialize logger based on configuration
  */
-export class Logger {
-  private logLevel: string;
+export function initializeLogger(config: Config): ILogger {
+  const logLevelMap: Record<string, LogLevel> = {
+    debug: LogLevel.DEBUG,
+    info: LogLevel.INFO,
+    warn: LogLevel.WARN,
+    error: LogLevel.ERROR,
+  };
 
-  constructor(level: string = 'info') {
-    this.logLevel = level;
-  }
+  const logger = new ConsoleLogger(logLevelMap[config.api.logLevel] || LogLevel.INFO);
+  LoggerFactory.initialize(logger);
+  return logger;
+}
 
-  private getLevelNumber(level: string): number {
-    const levels: { [key: string]: number } = { debug: 0, info: 1, warn: 2, error: 3 };
-    return levels[level] || 1;
-  }
-
-  debug(message: string, data?: any) {
-    if (this.getLevelNumber('debug') >= this.getLevelNumber(this.logLevel)) {
-      console.log(`[DEBUG] ${message}`, data || '');
-    }
-  }
-
-  info(message: string, data?: any) {
-    if (this.getLevelNumber('info') >= this.getLevelNumber(this.logLevel)) {
-      console.log(`[INFO] ${message}`, data || '');
-    }
-  }
-
-  warn(message: string, data?: any) {
-    if (this.getLevelNumber('warn') >= this.getLevelNumber(this.logLevel)) {
-      console.warn(`[WARN] ${message}`, data || '');
-    }
-  }
-
-  error(message: string, data?: any) {
-    if (this.getLevelNumber('error') >= this.getLevelNumber(this.logLevel)) {
-      console.error(`[ERROR] ${message}`, data || '');
-    }
-  }
+/**
+ * Get logger instance from factory
+ */
+export function getLogger(name?: string): ILogger {
+  return LoggerFactory.getInstance().getLogger(name);
 }
