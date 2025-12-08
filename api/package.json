@@ -1,7 +1,7 @@
 {
   "name": "api",
-  "version": "1.0.0",
-  "description": "VPS Local Orchestrator API - v1.0.0 Production Release",
+  "version": "1.0.2",
+  "description": "VPS Local Orchestrator API - v1.0.2 Code Review & Cleanup",
   "main": "index.js",
   "scripts": {
     "start": "tsx src/index.ts",

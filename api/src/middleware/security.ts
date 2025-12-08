@@ -1,7 +1,18 @@
 import { type Request, type Response, type NextFunction } from 'express';
 
 /**
- * Middleware para validar que la petición viene de localhost
+ * Middleware para validar que la petición viene de localhost.
+ * Rechaza todas las peticiones que no originen desde 127.0.0.1, ::1, o localhost.
+ * 
+ * @param req - Express request object
+ * @param res - Express response object
+ * @param next - Express next function
+ * @returns Response 403 si no es localhost, o llama a next() si es local
+ * 
+ * @example
+ * ```typescript
+ * app.use(localhostOnly); // Aplicar a todas las rutas
+ * ```
  */
 export function localhostOnly(req: Request, res: Response, next: NextFunction) {
   const clientIp = req.ip || req.socket.remoteAddress;
@@ -24,7 +35,17 @@ export function localhostOnly(req: Request, res: Response, next: NextFunction) {
 }
 
 /**
- * Middleware para logging de requests
+ * Middleware para logging de requests HTTP.
+ * Registra timestamp, método HTTP, URL y dirección IP del cliente.
+ * 
+ * @param req - Express request object
+ * @param res - Express response object
+ * @param next - Express next function
+ * 
+ * @example
+ * ```typescript
+ * app.use(requestLogger); // Log all requests
+ * ```
  */
 export function requestLogger(req: Request, res: Response, next: NextFunction) {
   const timestamp = new Date().toISOString();
@@ -37,7 +58,20 @@ export function requestLogger(req: Request, res: Response, next: NextFunction) {
 }
 
 /**
- * Middleware para validar body de comandos
+ * Middleware para validar el body de peticiones que contienen comandos.
+ * Verifica que el comando existe, es un string válido, no está vacío y no excede el tamaño máximo.
+ * 
+ * @param req - Express request object con req.body.command
+ * @param res - Express response object
+ * @param next - Express next function
+ * @returns Response 400/413 si validación falla, o llama a next() si es válido
+ * 
+ * @example
+ * ```typescript
+ * router.post('/command/execute', validateCommandBody, async (req, res) => {
+ *   // req.body.command is guaranteed to be valid
+ * });
+ * ```
  */
 export function validateCommandBody(req: Request, res: Response, next: NextFunction) {
   const { command } = req.body;
@@ -70,7 +104,20 @@ export function validateCommandBody(req: Request, res: Response, next: NextFunct
 }
 
 /**
- * Middleware global para manejo de errores
+ * Middleware global para manejo de errores.
+ * Captura errores no manejados y retorna respuesta JSON apropiada.
+ * En producción oculta detalles del error; en desarrollo muestra stack trace.
+ * 
+ * @param err - Error object capturado
+ * @param req - Express request object
+ * @param res - Express response object
+ * @param next - Express next function (no utilizado)
+ * @returns Response 500 con mensaje de error apropiado al entorno
+ * 
+ * @example
+ * ```typescript
+ * app.use(errorHandler); // Must be last middleware
+ * ```
  */
 export function errorHandler(err: Error, req: Request, res: Response, next: NextFunction) {
   const isProduction = process.env.NODE_ENV === 'production';
