@@ -30,6 +30,7 @@ import eventsRoutes from './routes/events.routes.js';
 import eventstoreRoutes from './routes/eventstore.routes.js';
 import eventprocessorRoutes from './routes/eventprocessor.routes.js';
 import encryptionRoutes from './routes/encryption.routes.js';
+import rbacRoutes from './routes/rbac.routes.js';
 import { getConfig, initializeLogger, getLogger } from './config/index.js';
 import { initializeMappers } from './application/mappers/index.js';
 import { createContainer } from './infrastructure/container.js';
@@ -49,6 +50,7 @@ import { initializeEventBus, eventBusMiddleware } from './infrastructure/events/
 import { initializeEventStore } from './infrastructure/eventstore/index.js';
 import { initializeEventProcessor } from './infrastructure/eventprocessor/index.js';
 import { initializeEncryption } from './infrastructure/encryption/index.js';
+import { initializeRBAC } from './infrastructure/rbac/index.js';
 import type { ICommandRepository, IResourceRepository, IServiceRepository } from './domain/ports/repository.interfaces.js';
 
 const config = getConfig();
@@ -89,6 +91,9 @@ initializeEventProcessor();
 // Initialize encryption service
 const masterKey = process.env.ENCRYPTION_MASTER_KEY;
 initializeEncryption(masterKey);
+
+// Initialize RBAC
+initializeRBAC();
 
 // Initialize job queue
 const jobQueue = initializeJobQueue({
@@ -165,13 +170,14 @@ app.use('/api/events', eventsRoutes);
 app.use('/api/eventstore', eventstoreRoutes);
 app.use('/api/processor', eventprocessorRoutes);
 app.use('/api/encryption', encryptionRoutes);
+app.use('/api/rbac', rbacRoutes);
 
 // Ruta por defecto
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '8.1.0',
-    description: 'API para orquestar recursos y ejecutar comandos localmente - v8.1.0 Encryption & Secret Management',
+    version: '8.2.0',
+    description: 'API para orquestar recursos y ejecutar comandos localmente - v8.2.0 RBAC & Access Control',
     endpoints: {
       health: 'GET /health',
       healthLiveness: 'GET /health/live',
