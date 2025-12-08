@@ -58,8 +58,8 @@ app.use('/api/analytics', analyticsRoutes);
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '4.2.0',
-    description: 'API para orquestar recursos y ejecutar comandos localmente - v4.2.0 Dependency Injection',
+    version: '4.3.0',
+    description: 'API para orquestar recursos y ejecutar comandos localmente - v4.3.0 Side-Effect Isolation',
     endpoints: {
       health: 'GET /health',
       executeCommand: 'POST /api/command/execute',
