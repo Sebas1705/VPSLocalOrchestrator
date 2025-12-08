@@ -17,11 +17,13 @@ import dockerRoutes from './routes/docker.routes.js';
 import databaseRoutes from './routes/database.routes.js';
 import loadBalancerRoutes from './routes/loadbalancer.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
+import healthRoutes from './routes/health.routes.js';
 import { getConfig, initializeLogger, getLogger } from './config/index.js';
 import { initializeMappers } from './application/mappers/index.js';
 import { createContainer } from './infrastructure/container.js';
 import { initializeTracer } from './infrastructure/tracing/index.js';
 import { initializeMetrics } from './infrastructure/metrics/index.js';
+import { initializeHealthChecker } from './infrastructure/health/index.js';
 import type { ICommandRepository, IResourceRepository, IServiceRepository } from './domain/ports/repository.interfaces.js';
 
 const config = getConfig();
@@ -30,6 +32,7 @@ const logger = initializeLogger(config);
 // Initialize observability infrastructure early
 initializeTracer();
 initializeMetrics();
+initializeHealthChecker();
 
 // Initialize mappers early
 initializeMappers();
@@ -64,6 +67,9 @@ app.get('/health', (req: Request, res: Response) => {
 // Metrics endpoint (Prometheus compatible)
 app.get('/metrics', metricsEndpoint);
 
+// Health check routes (Kubernetes-style probes)
+app.use('/health', healthRoutes);
+
 // Rutas principales (con inyección de dependencias)
 app.use('/api/command', createCommandRoutes(commandRepository));
 app.use('/api/resources', createResourceRoutes(resourceRepository));
@@ -84,10 +90,14 @@ app.use('/api/analytics', analyticsRoutes);
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '5.3.0',
-    description: 'API para orquestar recursos y ejecutar comandos localmente - v5.3.0 Metrics Collection',
+    version: '5.4.0',
+    description: 'API para orquestar recursos y ejecutar comandos localmente - v5.4.0 Health Checks',
     endpoints: {
       health: 'GET /health',
+      healthLiveness: 'GET /health/live',
+      healthReadiness: 'GET /health/ready',
+      healthStartup: 'GET /health/startup',
+      metrics: 'GET /metrics',
       executeCommand: 'POST /api/command/execute',
       batchCommands: 'POST /api/command/batch',
       serviceManagement: 'POST /api/command/service',
