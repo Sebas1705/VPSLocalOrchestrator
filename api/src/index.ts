@@ -26,6 +26,7 @@ import circuitbreakerRoutes from './routes/circuitbreaker.routes.js';
 import openapiRoutes from './routes/openapi.routes.js';
 import migrationRoutes from './routes/migration.routes.js';
 import auditEventsRoutes from './routes/audit-events.routes.js';
+import eventsRoutes from './routes/events.routes.js';
 import { getConfig, initializeLogger, getLogger } from './config/index.js';
 import { initializeMappers } from './application/mappers/index.js';
 import { createContainer } from './infrastructure/container.js';
@@ -41,6 +42,7 @@ import { initializeDistributedRateLimiter } from './infrastructure/ratelimit/dis
 import { initializeOpenAPI } from './infrastructure/schema/openapi.js';
 import { initializeSchemaMigrations } from './infrastructure/schema/migration.js';
 import { initializeAuditLogger } from './infrastructure/audit/index.js';
+import { initializeEventBus, eventBusMiddleware } from './infrastructure/events/index.js';
 import type { ICommandRepository, IResourceRepository, IServiceRepository } from './domain/ports/repository.interfaces.js';
 
 const config = getConfig();
@@ -68,6 +70,9 @@ initializeSchemaMigrations('6.3.0', 'header');
 
 // Initialize audit logging
 initializeAuditLogger();
+
+// Initialize event bus
+initializeEventBus(10000);
 
 // Initialize job queue
 const jobQueue = initializeJobQueue({
@@ -100,6 +105,7 @@ app.use(tracingMiddleware);
 app.use(metricsMiddleware);
 app.use(backPressureMiddleware);
 app.use(rateLimitMiddleware);
+app.use(eventBusMiddleware);
 app.use(requestLogger);
 app.use(localhostOnly);
 
@@ -139,13 +145,14 @@ app.use('/api/circuitbreakers', circuitbreakerRoutes);
 app.use('/api', openapiRoutes);
 app.use('/api', migrationRoutes);
 app.use('/api/audit', auditEventsRoutes);
+app.use('/api/events', eventsRoutes);
 
 // Ruta por defecto
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '6.3.0',
-    description: 'API para orquestar recursos y ejecutar comandos localmente - v6.3.0 Audit Logging',
+    version: '7.1.0',
+    description: 'API para orquestar recursos y ejecutar comandos localmente - v7.1.0 Event Bus Infrastructure',
     endpoints: {
       health: 'GET /health',
       healthLiveness: 'GET /health/live',
