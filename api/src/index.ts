@@ -18,12 +18,15 @@ import databaseRoutes from './routes/database.routes.js';
 import loadBalancerRoutes from './routes/loadbalancer.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
 import healthRoutes from './routes/health.routes.js';
+import jobsRoutes from './routes/jobs.routes.js';
 import { getConfig, initializeLogger, getLogger } from './config/index.js';
 import { initializeMappers } from './application/mappers/index.js';
 import { createContainer } from './infrastructure/container.js';
 import { initializeTracer } from './infrastructure/tracing/index.js';
 import { initializeMetrics } from './infrastructure/metrics/index.js';
 import { initializeHealthChecker } from './infrastructure/health/index.js';
+import { initializeJobQueue, getJobQueue } from './infrastructure/queue/index.js';
+import { processCommandJob, processBatchCommandJob } from './services/commandJobProcessor.js';
 import type { ICommandRepository, IResourceRepository, IServiceRepository } from './domain/ports/repository.interfaces.js';
 
 const config = getConfig();
@@ -33,6 +36,17 @@ const logger = initializeLogger(config);
 initializeTracer();
 initializeMetrics();
 initializeHealthChecker();
+
+// Initialize job queue
+const jobQueue = initializeJobQueue({
+  maxConcurrency: 5,
+  defaultTimeout: 300000, // 5 minutes
+  defaultMaxAttempts: 3,
+});
+
+// Register job processors
+jobQueue.registerProcessor('command', processCommandJob);
+jobQueue.registerProcessor('batch-command', processBatchCommandJob);
 
 // Initialize mappers early
 initializeMappers();
@@ -85,19 +99,27 @@ app.use('/api/docker', dockerRoutes);
 app.use('/api/databases', databaseRoutes);
 app.use('/api/loadbalancer', loadBalancerRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/jobs', jobsRoutes);
 
 // Ruta por defecto
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '5.4.0',
-    description: 'API para orquestar recursos y ejecutar comandos localmente - v5.4.0 Health Checks',
+    version: '5.5.0',
+    description: 'API para orquestar recursos y ejecutar comandos localmente - v5.5.0 Job Queue Abstraction',
     endpoints: {
       health: 'GET /health',
       healthLiveness: 'GET /health/live',
       healthReadiness: 'GET /health/ready',
       healthStartup: 'GET /health/startup',
       metrics: 'GET /metrics',
+      jobsCreate: 'POST /api/jobs',
+      jobsList: 'GET /api/jobs',
+      jobsGet: 'GET /api/jobs/:id',
+      jobsCancel: 'DELETE /api/jobs/:id',
+      jobsRetry: 'POST /api/jobs/:id/retry',
+      jobsStats: 'GET /api/jobs/stats/summary',
+      jobsClear: 'DELETE /api/jobs/completed/clear',
       executeCommand: 'POST /api/command/execute',
       batchCommands: 'POST /api/command/batch',
       serviceManagement: 'POST /api/command/service',
