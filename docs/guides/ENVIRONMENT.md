@@ -360,4 +360,4 @@ PORT=3001 npm run dev
 
 - See [`docs/guides/CONFIGURATION.md`](CONFIGURATION.md) for configuration details
 - See [`docs/guides/AUTHENTICATION.md`](AUTHENTICATION.md) for token usage
-- See [`docs/setup/INSTALLATION.md`](../setup/INSTALLATION.md) for installation
+- See [`docs/guides/INSTALLATION.md`](../guides/INSTALLATION.md) for installation

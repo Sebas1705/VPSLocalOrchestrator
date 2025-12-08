@@ -126,7 +126,6 @@ Future enhancements planned (see FEATURE_ROADMAP.md):
 Ready for:
 - ✅ Production deployment
 - ✅ Enterprise use cases
-- ✅ n8n integration
 - ✅ Community contributions
 - ✅ Commercial use (MIT License)
 

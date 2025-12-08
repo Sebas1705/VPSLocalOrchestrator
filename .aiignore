@@ -1,0 +1,113 @@
+# ===================================================================
+# AI Model Data Protection - Sensitive Files
+# ===================================================================
+# This file lists patterns that should NEVER be shared with external
+# AI services or used for model training.
+#
+# Related Policy: See AGENTS.md - AI Model Data Protection Policy
+# ===================================================================
+
+# Environment & Secrets
+# ---------------------
+.env
+.env.*
+*.env
+.env.local
+.env.production
+.env.development
+.env.test
+
+# Cryptographic Materials
+# -----------------------
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+*.jks
+secrets/
+keys/
+certificates/
+
+# Database Files
+# --------------
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+data/*.db
+database/*.sqlite
+
+# Logs & Monitoring
+# -----------------
+logs/
+*.log
+*.log.*
+log/
+audit/
+*.trace
+
+# Configuration
+# -------------
+config/production.*
+config/*.production.*
+*.production.json
+*.production.yaml
+*.production.yml
+
+# Backup Files
+# ------------
+backup/
+backups/
+*.backup
+*.bak
+*.old
+
+# Temporary & Cache
+# -----------------
+tmp/
+temp/
+.cache/
+*.tmp
+
+# Node Modules & Dependencies
+# ----------------------------
+node_modules/
+.pnpm-store/
+.yarn/
+.npm/
+
+# Build Artifacts
+# ---------------
+dist/
+build/
+out/
+*.js.map
+*.d.ts.map
+
+# Version Control
+# ---------------
+.git/
+.svn/
+.hg/
+
+# IDE & Editor
+# ------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS Files
+# --------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Custom Proprietary Code
+# ------------------------
+# Add your proprietary directories here
+# Example: src/core/proprietary/
+# Example: api/src/services/critical/

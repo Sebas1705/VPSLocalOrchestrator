@@ -38,6 +38,8 @@ curl -X POST http://127.0.0.1:3000/api/privileged/execute \
   -d '{"command": "whoami"}'
 ```
 
+More curl samples for each endpoint: [Endpoint usage examples](/docs/examples/ENDPOINT_EXAMPLES.md).
+
 ### Successful Response (200)
 ```json
 {
@@ -224,7 +226,7 @@ print(result)
 
 **Error: "This API is only accessible from localhost"**
 - The request must come from 127.0.0.1 or localhost
-- Verify that n8n/application is running on the same host
+- Verify that your calling application runs on the same host
 
 **Token expired or revealed**
 - Generate new token: `openssl rand -hex 32`

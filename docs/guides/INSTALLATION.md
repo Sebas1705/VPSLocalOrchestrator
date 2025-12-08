@@ -316,8 +316,8 @@ lsof -i :3000
 1. **Verify it works**: Follow tests above ✅
 2. **Read documentation**: See [`docs/README.md`](../README.md)
 3. **Configure completely**: [`docs/guides/CONFIGURATION.md`](../guides/CONFIGURATION.md)
-4. **Learn endpoints**: [`docs/api/ENDPOINTS.md`](../api/ENDPOINTS.md)
-5. **Integrate with n8n**: [`docs/examples/N8N.md`](../examples/N8N.md)
+4. **Learn endpoints**: [`docs/core/ENDPOINTS.md`](../core/ENDPOINTS.md)
+5. **Try calls**: [`docs/examples/ENDPOINT_EXAMPLES.md`](../examples/ENDPOINT_EXAMPLES.md)
 
 ## ✅ Installation Checklist
 
@@ -335,4 +335,4 @@ lsof -i :3000
 
 ---
 
-Installation completed! 🎉 Now check [`docs/examples/CURL.md`](../examples/CURL.md) for practical examples.
+Installation completed! 🎉 Now check [`docs/examples/ENDPOINT_EXAMPLES.md`](../examples/ENDPOINT_EXAMPLES.md) for practical curl examples.

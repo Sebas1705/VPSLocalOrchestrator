@@ -314,4 +314,4 @@ npm run dev
 
 - See [`docs/guides/ENVIRONMENT.md`](ENVIRONMENT.md) for variable details
 - See [`docs/guides/AUTHENTICATION.md`](AUTHENTICATION.md) for token usage
-- See [`docs/setup/INSTALLATION.md`](../setup/INSTALLATION.md) for complete installation
+- See [`docs/guides/INSTALLATION.md`](../guides/INSTALLATION.md) for complete installation
