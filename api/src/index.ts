@@ -29,6 +29,7 @@ import auditEventsRoutes from './routes/audit-events.routes.js';
 import eventsRoutes from './routes/events.routes.js';
 import eventstoreRoutes from './routes/eventstore.routes.js';
 import eventprocessorRoutes from './routes/eventprocessor.routes.js';
+import encryptionRoutes from './routes/encryption.routes.js';
 import { getConfig, initializeLogger, getLogger } from './config/index.js';
 import { initializeMappers } from './application/mappers/index.js';
 import { createContainer } from './infrastructure/container.js';
@@ -47,6 +48,7 @@ import { initializeAuditLogger } from './infrastructure/audit/index.js';
 import { initializeEventBus, eventBusMiddleware } from './infrastructure/events/index.js';
 import { initializeEventStore } from './infrastructure/eventstore/index.js';
 import { initializeEventProcessor } from './infrastructure/eventprocessor/index.js';
+import { initializeEncryption } from './infrastructure/encryption/index.js';
 import type { ICommandRepository, IResourceRepository, IServiceRepository } from './domain/ports/repository.interfaces.js';
 
 const config = getConfig();
@@ -83,6 +85,10 @@ initializeEventStore(10);
 
 // Initialize event processor
 initializeEventProcessor();
+
+// Initialize encryption service
+const masterKey = process.env.ENCRYPTION_MASTER_KEY;
+initializeEncryption(masterKey);
 
 // Initialize job queue
 const jobQueue = initializeJobQueue({
@@ -158,13 +164,14 @@ app.use('/api/audit', auditEventsRoutes);
 app.use('/api/events', eventsRoutes);
 app.use('/api/eventstore', eventstoreRoutes);
 app.use('/api/processor', eventprocessorRoutes);
+app.use('/api/encryption', encryptionRoutes);
 
 // Ruta por defecto
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '7.3.0',
-    description: 'API para orquestar recursos y ejecutar comandos localmente - v7.3.0 Event-driven Command Processing',
+    version: '8.1.0',
+    description: 'API para orquestar recursos y ejecutar comandos localmente - v8.1.0 Encryption & Secret Management',
     endpoints: {
       health: 'GET /health',
       healthLiveness: 'GET /health/live',
