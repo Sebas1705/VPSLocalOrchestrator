@@ -1,5 +1,8 @@
 import express, { type Request, type Response, type Router } from 'express';
+import { z } from 'zod';
 import { getServiceHealth, listActiveServices } from '../services/healthMonitor.js';
+import { sendValidatedResponse, sendErrorResponse, validateQuery } from '../application/validation-middleware.js';
+import { ServiceStatusResponseSchema } from '../application/validation-schemas.js';
 
 const router: Router = express.Router();
 
@@ -13,12 +16,10 @@ router.get('/', async (req: Request, res: Response) => {
     res.json({
       success: true,
       data: services,
+      timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
+    sendErrorResponse(res, 'SERVICE_LIST_ERROR', error.message, 500);
   }
 });
 
@@ -31,10 +32,7 @@ router.get('/:name/health', async (req: Request, res: Response) => {
     const serviceName = req.params.name ?? '';
 
     if (!serviceName) {
-      return res.status(400).json({
-        success: false,
-        error: 'Service name is required',
-      });
+      return sendErrorResponse(res, 'SERVICE_NAME_REQUIRED', 'Service name is required', 400);
     }
 
     const health = await getServiceHealth(serviceName);
@@ -42,12 +40,10 @@ router.get('/:name/health', async (req: Request, res: Response) => {
     res.json({
       success: true,
       data: health,
+      timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
+    sendErrorResponse(res, 'SERVICE_HEALTH_ERROR', error.message, 500, { serviceName: req.params.name });
   }
 });
 

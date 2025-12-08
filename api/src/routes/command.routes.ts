@@ -1,24 +1,27 @@
 import express from 'express';
 import type { Request, Response } from 'express';
+import { z } from 'zod';
 import { executeCommand } from '../services/commandExecutor.js';
 import { validateCommandBody } from '../middleware/security.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { validateBody, sendValidatedResponse, sendErrorResponse } from '../application/validation-middleware.js';
+import { ExecuteCommandRequestSchema, BatchCommandRequestSchema, CommandResultResponseSchema } from '../application/validation-schemas.js';
 const router = express.Router();
 
 /**
  * POST /api/command/execute
  * Ejecuta un comando del sistema (requiere autenticación)
  */
-router.post('/execute', requireAuth, validateCommandBody, async (req: Request, res: Response) => {
+router.post('/execute', requireAuth, validateCommandBody, validateBody(ExecuteCommandRequestSchema), async (req: Request, res: Response) => {
   console.log('[handler /execute] Handler ejecutado');
   try {
-    const { command, timeout, cwd, env } = req.body;
+    const { command, timeout, cwd, env } = (req as any).validatedBody;
     const result = await executeCommand(command, {
       timeout: timeout || 30000,
       cwd,
       env,
     });
-    res.json({
+    const response = {
       success: result.exitCode === 0,
       result: {
         stdout: result.stdout,
@@ -26,12 +29,11 @@ router.post('/execute', requireAuth, validateCommandBody, async (req: Request, r
         exitCode: result.exitCode,
         duration: result.duration,
       },
-    });
+      timestamp: new Date().toISOString(),
+    };
+    sendValidatedResponse(res, CommandResultResponseSchema, response);
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
+    sendErrorResponse(res, 'COMMAND_EXECUTION_ERROR', error.message, 500, { command: req.body.command });
   }
 });
 
@@ -39,15 +41,9 @@ router.post('/execute', requireAuth, validateCommandBody, async (req: Request, r
  * POST /api/command/batch
  * Ejecuta múltiples comandos secuencialmente (requiere autenticación)
  */
-router.post('/batch', requireAuth, async (req: Request, res: Response) => {
+router.post('/batch', requireAuth, validateBody(BatchCommandRequestSchema), async (req: Request, res: Response) => {
   try {
-    const { commands } = req.body;
-    if (!Array.isArray(commands) || commands.length === 0) {
-      return res.status(400).json({
-        error: 'Bad Request',
-        message: 'Commands must be a non-empty array',
-      });
-    }
+    const { commands } = (req as any).validatedBody;
     const results = [];
     for (const cmd of commands) {
       if (typeof cmd === 'string') {
@@ -65,12 +61,10 @@ router.post('/batch', requireAuth, async (req: Request, res: Response) => {
     res.json({
       success: true,
       results,
+      timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
+    sendErrorResponse(res, 'BATCH_EXECUTION_ERROR', error.message, 500);
   }
 });
 
@@ -79,26 +73,9 @@ router.post('/batch', requireAuth, async (req: Request, res: Response) => {
  * Gestiona servicios systemd (start, stop, restart, status, enable, disable)
  * Requiere autenticación
  */
-router.post('/service', requireAuth, async (req: Request, res: Response) => {
+router.post('/service', requireAuth, validateBody(z.object({ service: z.string(), action: z.enum(['start', 'stop', 'restart', 'status', 'enable', 'disable']) })), async (req: Request, res: Response) => {
   try {
-    const { service, action } = req.body;
-
-    if (!service || !action) {
-      return res.status(400).json({
-        success: false,
-        error: 'Bad Request',
-        message: 'Service name and action are required',
-      });
-    }
-
-    const validActions = ['start', 'stop', 'restart', 'status', 'enable', 'disable'];
-    if (!validActions.includes(action)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Bad Request',
-        message: `Action must be one of: ${validActions.join(', ')}`,
-      });
-    }
+    const { service, action } = (req as any).validatedBody;
 
     const command = `sudo -n systemctl ${action} ${service}`; // -n evita prompt interactivo
     console.log(`[command] Service operation: ${command}`);
@@ -107,12 +84,13 @@ router.post('/service', requireAuth, async (req: Request, res: Response) => {
 
     // Si sudo falla por falta de permisos o requiere password, retorna 403
     if (result.exitCode !== 0 && /sudo:|permission/i.test(result.stderr)) {
-      return res.status(403).json({
-        success: false,
-        error: 'Forbidden',
-        message: 'Sudo not permitted or password required. Configure sudoers for passwordless access.',
-        stderr: result.stderr,
-      });
+      return sendErrorResponse(
+        res,
+        'SUDO_PERMISSION_DENIED',
+        'Sudo not permitted or password required. Configure sudoers for passwordless access.',
+        403,
+        { service, action, stderr: result.stderr }
+      );
     }
 
     res.json({
@@ -125,12 +103,10 @@ router.post('/service', requireAuth, async (req: Request, res: Response) => {
         exitCode: result.exitCode,
         duration: result.duration,
       },
+      timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
+    sendErrorResponse(res, 'SERVICE_OPERATION_ERROR', error.message, 500, { service: req.body.service, action: req.body.action });
   }
 });
 

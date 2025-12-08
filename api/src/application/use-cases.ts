@@ -5,7 +5,7 @@
  * Independent of HTTP/transport; can be tested in isolation.
  */
 
-import type { Command, CommandExecution } from '../domain/command/entities.js';
+import { Command, CommandExecution } from '../domain/command/entities.js';
 import type { CommandExecutionError } from '../domain/command/errors.js';
 import type { ICommandExecutionRepository } from '../infrastructure/ports.js';
 
