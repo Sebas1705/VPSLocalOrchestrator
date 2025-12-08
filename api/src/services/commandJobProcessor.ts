@@ -38,7 +38,8 @@ export interface CommandJobResult {
  * Process command execution job
  */
 export async function processCommandJob(
-  job: Job<CommandJobPayload>
+  job: Job<CommandJobPayload>,
+  signal: AbortSignal
 ): Promise<CommandJobResult> {
   const { command, workingDir, env, timeout } = job.payload;
 
@@ -47,6 +48,11 @@ export async function processCommandJob(
     command: command.substring(0, 50),
     workingDir,
   });
+
+  // Check if already aborted
+  if (signal.aborted) {
+    throw new Error('Job aborted before execution');
+  }
 
   const startTime = Date.now();
 
@@ -122,7 +128,8 @@ export interface BatchCommandJobResult {
  * Process batch command execution job
  */
 export async function processBatchCommandJob(
-  job: Job<BatchCommandJobPayload>
+  job: Job<BatchCommandJobPayload>,
+  signal: AbortSignal
 ): Promise<BatchCommandJobResult> {
   const { commands, stopOnError = true } = job.payload;
 
@@ -132,12 +139,27 @@ export async function processBatchCommandJob(
     stopOnError,
   });
 
+  // Check if already aborted
+  if (signal.aborted) {
+    throw new Error('Job aborted before execution');
+  }
+
   const startTime = Date.now();
   const results: CommandJobResult[] = [];
   let successCount = 0;
   let failureCount = 0;
 
   for (let i = 0; i < commands.length; i++) {
+    // Check abort signal between commands
+    if (signal.aborted) {
+      logger.warn('Batch job aborted mid-execution', {
+        jobId: job.id,
+        completedCommands: i,
+        totalCommands: commands.length,
+      });
+      throw new Error(`Job aborted after ${i} commands`);
+    }
+
     const cmd = commands[i];
     if (!cmd) continue;
 

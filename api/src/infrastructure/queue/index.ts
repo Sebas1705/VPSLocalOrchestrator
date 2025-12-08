@@ -53,12 +53,16 @@ export interface Job<T = any> {
   result?: any;
   error?: string;
   metadata?: Record<string, any>;
+  abortController?: AbortController;
 }
 
 /**
- * Job processor function
+ * Job processor function - receives abort signal for cancellation
  */
-export type JobProcessor<T = any, R = any> = (job: Job<T>) => Promise<R>;
+export type JobProcessor<T = any> = (
+  job: Job<T>,
+  signal: AbortSignal
+) => Promise<any>;
 
 /**
  * Queue options
@@ -101,9 +105,9 @@ export class JobQueue extends EventEmitter {
   /**
    * Register job processor
    */
-  registerProcessor<T = any, R = any>(
+  registerProcessor(
     jobType: string,
-    processor: JobProcessor<T, R>
+    processor: JobProcessor
   ): void {
     this.processors.set(jobType, processor);
     logger.info('Registered job processor', { jobType });
@@ -195,16 +199,42 @@ export class JobQueue extends EventEmitter {
     }
 
     if (job.status === JobStatus.RUNNING) {
-      // Mark for cancellation, actual cancellation handled by processor
+      // Trigger abort controller
+      if (job.abortController) {
+        job.abortController.abort();
+      }
+      
+      // Mark for cancellation
       job.status = JobStatus.CANCELLED;
       job.completedAt = Date.now();
 
-      logger.warn('Running job marked for cancellation', { jobId });
+      logger.warn('Running job cancelled via abort signal', { jobId });
       this.emit('job:cancelled', job);
       return true;
     }
 
     return false;
+  }
+
+  /**
+   * Cancel all jobs matching criteria
+   */
+  async cancelAllJobs(filter?: {
+    type?: string;
+    status?: JobStatus;
+  }): Promise<number> {
+    let cancelled = 0;
+
+    for (const job of this.jobs.values()) {
+      if (filter?.type && job.type !== filter.type) continue;
+      if (filter?.status && job.status !== filter.status) continue;
+
+      const result = await this.cancelJob(job.id);
+      if (result) cancelled++;
+    }
+
+    logger.info('Bulk job cancellation', { cancelled, filter });
+    return cancelled;
   }
 
   /**
@@ -319,6 +349,9 @@ export class JobQueue extends EventEmitter {
       return;
     }
 
+    // Create abort controller for cancellation
+    job.abortController = new AbortController();
+
     // Mark as running
     job.status = JobStatus.RUNNING;
     job.startedAt = Date.now();
@@ -334,8 +367,11 @@ export class JobQueue extends EventEmitter {
     this.emit('job:started', job);
 
     try {
-      // Execute with timeout
-      const result = await this.executeWithTimeout(processor(job), job.timeout);
+      // Execute with timeout and abort signal
+      const result = await this.executeWithTimeout(
+        processor(job, job.abortController.signal),
+        job.timeout
+      );
 
       // Check if cancelled during execution (status can change externally)
       // @ts-expect-error - Status can be changed to CANCELLED by cancelJob during execution

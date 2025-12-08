@@ -4,6 +4,7 @@ import { errorHandlingMiddleware, notFoundHandler } from './middleware/errorHand
 import { tracingMiddleware } from './middleware/tracing.js';
 import { metricsMiddleware, metricsEndpoint } from './middleware/metrics.js';
 import { rateLimitMiddleware } from './middleware/ratelimit.js';
+import { backPressureMiddleware } from './middleware/backpressure.js';
 import { createCommandRoutes } from './routes/command.routes.js';
 import { createResourceRoutes } from './routes/resources.routes.js';
 import { createServiceRoutes } from './routes/services.routes.js';
@@ -21,6 +22,7 @@ import analyticsRoutes from './routes/analytics.routes.js';
 import healthRoutes from './routes/health.routes.js';
 import jobsRoutes from './routes/jobs.routes.js';
 import ratelimitsRoutes from './routes/ratelimits.routes.js';
+import circuitbreakerRoutes from './routes/circuitbreaker.routes.js';
 import { getConfig, initializeLogger, getLogger } from './config/index.js';
 import { initializeMappers } from './application/mappers/index.js';
 import { createContainer } from './infrastructure/container.js';
@@ -29,6 +31,7 @@ import { initializeMetrics } from './infrastructure/metrics/index.js';
 import { initializeHealthChecker } from './infrastructure/health/index.js';
 import { initializeJobQueue, getJobQueue } from './infrastructure/queue/index.js';
 import { initializeRateLimiter } from './infrastructure/ratelimit/index.js';
+import { initializeCircuitBreakers, initializeBackPressure } from './infrastructure/circuitbreaker/index.js';
 import { processCommandJob, processBatchCommandJob } from './services/commandJobProcessor.js';
 import type { ICommandRepository, IResourceRepository, IServiceRepository } from './domain/ports/repository.interfaces.js';
 
@@ -40,6 +43,10 @@ initializeTracer();
 initializeMetrics();
 initializeHealthChecker();
 initializeRateLimiter();
+
+// Initialize resilience infrastructure
+initializeCircuitBreakers();
+initializeBackPressure(100, 50); // max 100 queued, 50 concurrent
 
 // Initialize job queue
 const jobQueue = initializeJobQueue({
@@ -70,6 +77,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(tracingMiddleware);
 app.use(metricsMiddleware);
+app.use(backPressureMiddleware);
 app.use(rateLimitMiddleware);
 app.use(requestLogger);
 app.use(localhostOnly);
@@ -106,13 +114,14 @@ app.use('/api/loadbalancer', loadBalancerRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/jobs', jobsRoutes);
 app.use('/api/ratelimits', ratelimitsRoutes);
+app.use('/api/circuitbreakers', circuitbreakerRoutes);
 
 // Ruta por defecto
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '5.6.0',
-    description: 'API para orquestar recursos y ejecutar comandos localmente - v5.6.0 Rate Limiting & Concurrency Controls',
+    version: '5.7.0',
+    description: 'API para orquestar recursos y ejecutar comandos localmente - v5.7.0 Back-pressure & Cancellation',
     endpoints: {
       health: 'GET /health',
       healthLiveness: 'GET /health/live',
@@ -131,6 +140,12 @@ app.get('/', (req: Request, res: Response) => {
       rateLimitConfig: 'POST /api/ratelimits/config',
       rateLimitReset: 'DELETE /api/ratelimits/reset',
       rateLimitTiers: 'GET /api/ratelimits/tiers',
+      circuitBreakers: 'GET /api/circuitbreakers',
+      circuitBreakerGet: 'GET /api/circuitbreakers/:name',
+      circuitBreakerReset: 'POST /api/circuitbreakers/:name/reset',
+      circuitBreakerState: 'POST /api/circuitbreakers/:name/state',
+      circuitBreakerResetAll: 'POST /api/circuitbreakers/actions/reset-all',
+      backpressureStatus: 'GET /api/backpressure/status',
       executeCommand: 'POST /api/command/execute',
       batchCommands: 'POST /api/command/batch',
       serviceManagement: 'POST /api/command/service',
