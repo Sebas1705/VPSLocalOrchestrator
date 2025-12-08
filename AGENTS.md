@@ -221,20 +221,42 @@ DELETE /api/resources/process/:pid       # Terminar proceso
 
 **Destino: v1.2.0**
 
-1. **Network Monitoring** → v1.0.1
+### v1.0.1 - Documentation Consolidation ✅ COMPLETED
+- Consolidated 29 documentation files into 15 organized files (77% redundancy reduction)
+- Created GETTING_STARTED.md: comprehensive setup guide
+- Created ARCHITECTURE.md: system design and patterns
+- Created EXAMPLES.md: API examples and usage patterns
+- Updated README.md: modern consolidated overview
+- Updated docs/README.md: navigation hub
+- Cleaned docs/guides/: kept only SECURITY.md and TROUBLESHOOTING.md
+- Deleted docs/analysis/ and docs/examples/ (consolidated)
+- **Status**: ✅ Released 2025-12-08
+
+### v1.0.2 - Code Review and Cleanup (PENDING)
+- Scan for unused imports and dead code
+- Identify and remove deprecated functions/types
+- Add missing JSDoc comments to public APIs
+- Verify no circular dependencies
+- Code quality improvements
+
+### v1.0.3 - Test Implementation (PENDING)
+- Analyze current test coverage (<80%)
+- Implement tests for: Controllers, Services, Domain logic, Middleware, Utilities
+- Add integration tests
+- Achieve >80% coverage
+
+### v1.0.4 - First Phase Features (PENDING)
+1. Network Monitoring → v1.0.4
    - GET /api/resources/network
-
-2. **Enhanced Service Status** → v1.0.2
+2. Enhanced Service Status → v1.0.5
    - GET /api/services/:name/health
-
-3. **Basic Audit Logging** → v1.0.3
+3. Basic Audit Logging → v1.0.6
    - GET /api/logs
    - POST /api/logs/search
-
-4. **Process Priority Control** → v1.0.4
+4. Process Priority Control → v1.0.7
    - POST /api/processes/set-priority/:pid
 
-**Final**: v1.0.4 → v1.2.0
+**Final Phase 1**: v1.0.7 → v1.2.0 (feature version upgrade)
 
 ---
 
@@ -250,4 +272,5 @@ DELETE /api/resources/process/:pid       # Terminar proceso
 ---
 
 **Última actualización**: 2025-12-08  
-**Versión actual**: v1.0.0 🎉 (42 pre-release features + 1 production release)
+**Versión actual**: v1.0.1 🎉 (Documentation consolidation patch)
+**Versiones completadas**: v1.0.0 (Production), v1.0.1 (Documentation patch)
