@@ -1,7 +1,7 @@
 {
   "name": "api",
-  "version": "8.3.0",
-  "description": "",
+  "version": "7.5.0",
+  "description": "VPS Local Orchestrator API - v7.5.0 Threat Detection & Intrusion Prevention",
   "main": "index.js",
   "scripts": {
     "start": "tsx src/index.ts",

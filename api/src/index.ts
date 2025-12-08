@@ -182,8 +182,8 @@ app.use('/api/threat', threatRoutes);
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '8.3.0',
-    description: 'API para orquestar recursos y ejecutar comandos localmente - v8.3.0 Threat Detection & Intrusion Prevention',
+    version: '7.5.0',
+    description: 'API para orquestar recursos y ejecutar comandos localmente - v7.5.0 Threat Detection & Intrusion Prevention',
     endpoints: {
       health: 'GET /health',
       healthLiveness: 'GET /health/live',
