@@ -1,6 +1,10 @@
 import express, { type Application, type Request, type Response } from 'express';
 import { localhostOnly, requestLogger, errorHandler } from './middleware/security.js';
 import { errorHandlingMiddleware, notFoundHandler } from './middleware/errorHandlingMiddleware.js';
+import { tracingMiddleware } from './middleware/tracing.js';
+import { metricsMiddleware, metricsEndpoint } from './middleware/metrics.js';
+import { rateLimitMiddleware } from './middleware/ratelimit.js';
+import { backPressureMiddleware } from './middleware/backpressure.js';
 import { createCommandRoutes } from './routes/command.routes.js';
 import { createResourceRoutes } from './routes/resources.routes.js';
 import { createServiceRoutes } from './routes/services.routes.js';
@@ -15,13 +19,97 @@ import dockerRoutes from './routes/docker.routes.js';
 import databaseRoutes from './routes/database.routes.js';
 import loadBalancerRoutes from './routes/loadbalancer.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
+import healthRoutes from './routes/health.routes.js';
+import jobsRoutes from './routes/jobs.routes.js';
+import ratelimitsRoutes from './routes/ratelimits.routes.js';
+import circuitbreakerRoutes from './routes/circuitbreaker.routes.js';
+import openapiRoutes from './routes/openapi.routes.js';
+import migrationRoutes from './routes/migration.routes.js';
+import auditEventsRoutes from './routes/audit-events.routes.js';
+import eventsRoutes from './routes/events.routes.js';
+import eventstoreRoutes from './routes/eventstore.routes.js';
+import eventprocessorRoutes from './routes/eventprocessor.routes.js';
+import encryptionRoutes from './routes/encryption.routes.js';
+import rbacRoutes from './routes/rbac.routes.js';
+import threatRoutes from './routes/threat.routes.js';
 import { getConfig, initializeLogger, getLogger } from './config/index.js';
 import { initializeMappers } from './application/mappers/index.js';
 import { createContainer } from './infrastructure/container.js';
+import { initializeTracer } from './infrastructure/tracing/index.js';
+import { initializeMetrics } from './infrastructure/metrics/index.js';
+import { initializeHealthChecker } from './infrastructure/health/index.js';
+import { initializeJobQueue, getJobQueue } from './infrastructure/queue/index.js';
+import { initializeRateLimiter } from './infrastructure/ratelimit/index.js';
+import { initializeCircuitBreakers, initializeBackPressure } from './infrastructure/circuitbreaker/index.js';
+import { processCommandJob, processBatchCommandJob } from './services/commandJobProcessor.js';
+import { initializeCache } from './infrastructure/cache/index.js';
+import { initializeDistributedRateLimiter } from './infrastructure/ratelimit/distributed.js';
+import { initializeOpenAPI } from './infrastructure/schema/openapi.js';
+import { initializeSchemaMigrations } from './infrastructure/schema/migration.js';
+import { initializeAuditLogger } from './infrastructure/audit/index.js';
+import { initializeEventBus, eventBusMiddleware } from './infrastructure/events/index.js';
+import { initializeEventStore } from './infrastructure/eventstore/index.js';
+import { initializeEventProcessor } from './infrastructure/eventprocessor/index.js';
+import { initializeEncryption } from './infrastructure/encryption/index.js';
+import { initializeRBAC } from './infrastructure/rbac/index.js';
+import { initializeThreatDetector } from './infrastructure/security/threat.js';
 import type { ICommandRepository, IResourceRepository, IServiceRepository } from './domain/ports/repository.interfaces.js';
 
 const config = getConfig();
 const logger = initializeLogger(config);
+
+// Initialize observability infrastructure early
+initializeTracer();
+initializeMetrics();
+initializeHealthChecker();
+initializeRateLimiter();
+
+// Initialize resilience infrastructure
+initializeCircuitBreakers();
+initializeBackPressure(100, 50); // max 100 queued, 50 concurrent
+
+// Initialize distributed cache for horizontal scaling
+initializeCache();
+initializeDistributedRateLimiter();
+
+// Initialize OpenAPI schema generation
+initializeOpenAPI('VPS Local Orchestrator API', '6.2.0');
+
+// Initialize schema migration system
+initializeSchemaMigrations('6.3.0', 'header');
+
+// Initialize audit logging
+initializeAuditLogger();
+
+// Initialize event bus
+initializeEventBus(10000);
+
+// Initialize event store
+initializeEventStore(10);
+
+// Initialize event processor
+initializeEventProcessor();
+
+// Initialize encryption service
+const masterKey = process.env.ENCRYPTION_MASTER_KEY;
+initializeEncryption(masterKey);
+
+// Initialize RBAC
+initializeRBAC();
+
+// Initialize threat detector
+initializeThreatDetector();
+
+// Initialize job queue
+const jobQueue = initializeJobQueue({
+  maxConcurrency: 5,
+  defaultTimeout: 300000, // 5 minutes
+  defaultMaxAttempts: 3,
+});
+
+// Register job processors
+jobQueue.registerProcessor('command', processCommandJob);
+jobQueue.registerProcessor('batch-command', processBatchCommandJob);
 
 // Initialize mappers early
 initializeMappers();
@@ -39,6 +127,11 @@ const HOST = config.api.host;
 // Middleware global
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+app.use(tracingMiddleware);
+app.use(metricsMiddleware);
+app.use(backPressureMiddleware);
+app.use(rateLimitMiddleware);
+app.use(eventBusMiddleware);
 app.use(requestLogger);
 app.use(localhostOnly);
 
@@ -50,6 +143,12 @@ app.get('/health', (req: Request, res: Response) => {
     uptime: process.uptime(),
   });
 });
+
+// Metrics endpoint (Prometheus compatible)
+app.get('/metrics', metricsEndpoint);
+
+// Health check routes (Kubernetes-style probes)
+app.use('/health', healthRoutes);
 
 // Rutas principales (con inyección de dependencias)
 app.use('/api/command', createCommandRoutes(commandRepository));
@@ -66,15 +165,49 @@ app.use('/api/docker', dockerRoutes);
 app.use('/api/databases', databaseRoutes);
 app.use('/api/loadbalancer', loadBalancerRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/jobs', jobsRoutes);
+app.use('/api/ratelimits', ratelimitsRoutes);
+app.use('/api/circuitbreakers', circuitbreakerRoutes);
+app.use('/api', openapiRoutes);
+app.use('/api', migrationRoutes);
+app.use('/api/audit', auditEventsRoutes);
+app.use('/api/events', eventsRoutes);
+app.use('/api/eventstore', eventstoreRoutes);
+app.use('/api/processor', eventprocessorRoutes);
+app.use('/api/encryption', encryptionRoutes);
+app.use('/api/rbac', rbacRoutes);
+app.use('/api/threat', threatRoutes);
 
 // Ruta por defecto
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '5.1.0',
-    description: 'API para orquestar recursos y ejecutar comandos localmente - v5.1.0 Observability - Structured Logging',
+    version: '8.3.0',
+    description: 'API para orquestar recursos y ejecutar comandos localmente - v8.3.0 Threat Detection & Intrusion Prevention',
     endpoints: {
       health: 'GET /health',
+      healthLiveness: 'GET /health/live',
+      healthReadiness: 'GET /health/ready',
+      healthStartup: 'GET /health/startup',
+      metrics: 'GET /metrics',
+      jobsCreate: 'POST /api/jobs',
+      jobsList: 'GET /api/jobs',
+      jobsGet: 'GET /api/jobs/:id',
+      jobsCancel: 'DELETE /api/jobs/:id',
+      jobsRetry: 'POST /api/jobs/:id/retry',
+      jobsStats: 'GET /api/jobs/stats/summary',
+      jobsClear: 'DELETE /api/jobs/completed/clear',
+      rateLimitStats: 'GET /api/ratelimits/stats',
+      rateLimitAll: 'GET /api/ratelimits/all',
+      rateLimitConfig: 'POST /api/ratelimits/config',
+      rateLimitReset: 'DELETE /api/ratelimits/reset',
+      rateLimitTiers: 'GET /api/ratelimits/tiers',
+      circuitBreakers: 'GET /api/circuitbreakers',
+      circuitBreakerGet: 'GET /api/circuitbreakers/:name',
+      circuitBreakerReset: 'POST /api/circuitbreakers/:name/reset',
+      circuitBreakerState: 'POST /api/circuitbreakers/:name/state',
+      circuitBreakerResetAll: 'POST /api/circuitbreakers/actions/reset-all',
+      backpressureStatus: 'GET /api/backpressure/status',
       executeCommand: 'POST /api/command/execute',
       batchCommands: 'POST /api/command/batch',
       serviceManagement: 'POST /api/command/service',
