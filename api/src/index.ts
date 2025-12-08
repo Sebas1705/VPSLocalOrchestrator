@@ -1,6 +1,7 @@
 import express, { type Application, type Request, type Response } from 'express';
 import { localhostOnly, requestLogger, errorHandler } from './middleware/security.js';
 import { errorHandlingMiddleware, notFoundHandler } from './middleware/errorHandlingMiddleware.js';
+import { tracingMiddleware } from './middleware/tracing.js';
 import { createCommandRoutes } from './routes/command.routes.js';
 import { createResourceRoutes } from './routes/resources.routes.js';
 import { createServiceRoutes } from './routes/services.routes.js';
@@ -18,10 +19,14 @@ import analyticsRoutes from './routes/analytics.routes.js';
 import { getConfig, initializeLogger, getLogger } from './config/index.js';
 import { initializeMappers } from './application/mappers/index.js';
 import { createContainer } from './infrastructure/container.js';
+import { initializeTracer } from './infrastructure/tracing/index.js';
 import type { ICommandRepository, IResourceRepository, IServiceRepository } from './domain/ports/repository.interfaces.js';
 
 const config = getConfig();
 const logger = initializeLogger(config);
+
+// Initialize tracer early
+initializeTracer();
 
 // Initialize mappers early
 initializeMappers();
@@ -39,6 +44,7 @@ const HOST = config.api.host;
 // Middleware global
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+app.use(tracingMiddleware);
 app.use(requestLogger);
 app.use(localhostOnly);
 
@@ -71,8 +77,8 @@ app.use('/api/analytics', analyticsRoutes);
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '5.1.0',
-    description: 'API para orquestar recursos y ejecutar comandos localmente - v5.1.0 Observability - Structured Logging',
+    version: '5.2.0',
+    description: 'API para orquestar recursos y ejecutar comandos localmente - v5.2.0 Distributed Tracing',
     endpoints: {
       health: 'GET /health',
       executeCommand: 'POST /api/command/execute',
