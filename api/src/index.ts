@@ -31,6 +31,7 @@ import eventstoreRoutes from './routes/eventstore.routes.js';
 import eventprocessorRoutes from './routes/eventprocessor.routes.js';
 import encryptionRoutes from './routes/encryption.routes.js';
 import rbacRoutes from './routes/rbac.routes.js';
+import threatRoutes from './routes/threat.routes.js';
 import { getConfig, initializeLogger, getLogger } from './config/index.js';
 import { initializeMappers } from './application/mappers/index.js';
 import { createContainer } from './infrastructure/container.js';
@@ -51,6 +52,7 @@ import { initializeEventStore } from './infrastructure/eventstore/index.js';
 import { initializeEventProcessor } from './infrastructure/eventprocessor/index.js';
 import { initializeEncryption } from './infrastructure/encryption/index.js';
 import { initializeRBAC } from './infrastructure/rbac/index.js';
+import { initializeThreatDetector } from './infrastructure/security/threat.js';
 import type { ICommandRepository, IResourceRepository, IServiceRepository } from './domain/ports/repository.interfaces.js';
 
 const config = getConfig();
@@ -94,6 +96,9 @@ initializeEncryption(masterKey);
 
 // Initialize RBAC
 initializeRBAC();
+
+// Initialize threat detector
+initializeThreatDetector();
 
 // Initialize job queue
 const jobQueue = initializeJobQueue({
@@ -171,13 +176,14 @@ app.use('/api/eventstore', eventstoreRoutes);
 app.use('/api/processor', eventprocessorRoutes);
 app.use('/api/encryption', encryptionRoutes);
 app.use('/api/rbac', rbacRoutes);
+app.use('/api/threat', threatRoutes);
 
 // Ruta por defecto
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '8.2.0',
-    description: 'API para orquestar recursos y ejecutar comandos localmente - v8.2.0 RBAC & Access Control',
+    version: '8.3.0',
+    description: 'API para orquestar recursos y ejecutar comandos localmente - v8.3.0 Threat Detection & Intrusion Prevention',
     endpoints: {
       health: 'GET /health',
       healthLiveness: 'GET /health/live',
