@@ -249,5 +249,5 @@ DELETE /api/resources/process/:pid       # Terminar proceso
 
 ---
 
-**Última actualización**: 2025-12-06  
-**Versión actual**: v1.0.2
+**Última actualización**: 2025-12-08  
+**Versión actual**: v1.0.0 🎉 (42 pre-release features + 1 production release)
