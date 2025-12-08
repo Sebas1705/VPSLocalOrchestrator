@@ -33,6 +33,8 @@ import { initializeJobQueue, getJobQueue } from './infrastructure/queue/index.js
 import { initializeRateLimiter } from './infrastructure/ratelimit/index.js';
 import { initializeCircuitBreakers, initializeBackPressure } from './infrastructure/circuitbreaker/index.js';
 import { processCommandJob, processBatchCommandJob } from './services/commandJobProcessor.js';
+import { initializeCache } from './infrastructure/cache/index.js';
+import { initializeDistributedRateLimiter } from './infrastructure/ratelimit/distributed.js';
 import type { ICommandRepository, IResourceRepository, IServiceRepository } from './domain/ports/repository.interfaces.js';
 
 const config = getConfig();
@@ -47,6 +49,10 @@ initializeRateLimiter();
 // Initialize resilience infrastructure
 initializeCircuitBreakers();
 initializeBackPressure(100, 50); // max 100 queued, 50 concurrent
+
+// Initialize distributed cache for horizontal scaling
+initializeCache();
+initializeDistributedRateLimiter();
 
 // Initialize job queue
 const jobQueue = initializeJobQueue({
@@ -120,8 +126,8 @@ app.use('/api/circuitbreakers', circuitbreakerRoutes);
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '5.7.0',
-    description: 'API para orquestar recursos y ejecutar comandos localmente - v5.7.0 Back-pressure & Cancellation',
+    version: '5.8.0',
+    description: 'API para orquestar recursos y ejecutar comandos localmente - v5.8.0 Horizontal-readiness',
     endpoints: {
       health: 'GET /health',
       healthLiveness: 'GET /health/live',
