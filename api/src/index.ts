@@ -3,6 +3,7 @@ import { localhostOnly, requestLogger, errorHandler } from './middleware/securit
 import { errorHandlingMiddleware, notFoundHandler } from './middleware/errorHandlingMiddleware.js';
 import { tracingMiddleware } from './middleware/tracing.js';
 import { metricsMiddleware, metricsEndpoint } from './middleware/metrics.js';
+import { rateLimitMiddleware } from './middleware/ratelimit.js';
 import { createCommandRoutes } from './routes/command.routes.js';
 import { createResourceRoutes } from './routes/resources.routes.js';
 import { createServiceRoutes } from './routes/services.routes.js';
@@ -19,6 +20,7 @@ import loadBalancerRoutes from './routes/loadbalancer.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
 import healthRoutes from './routes/health.routes.js';
 import jobsRoutes from './routes/jobs.routes.js';
+import ratelimitsRoutes from './routes/ratelimits.routes.js';
 import { getConfig, initializeLogger, getLogger } from './config/index.js';
 import { initializeMappers } from './application/mappers/index.js';
 import { createContainer } from './infrastructure/container.js';
@@ -26,6 +28,7 @@ import { initializeTracer } from './infrastructure/tracing/index.js';
 import { initializeMetrics } from './infrastructure/metrics/index.js';
 import { initializeHealthChecker } from './infrastructure/health/index.js';
 import { initializeJobQueue, getJobQueue } from './infrastructure/queue/index.js';
+import { initializeRateLimiter } from './infrastructure/ratelimit/index.js';
 import { processCommandJob, processBatchCommandJob } from './services/commandJobProcessor.js';
 import type { ICommandRepository, IResourceRepository, IServiceRepository } from './domain/ports/repository.interfaces.js';
 
@@ -36,6 +39,7 @@ const logger = initializeLogger(config);
 initializeTracer();
 initializeMetrics();
 initializeHealthChecker();
+initializeRateLimiter();
 
 // Initialize job queue
 const jobQueue = initializeJobQueue({
@@ -66,6 +70,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(tracingMiddleware);
 app.use(metricsMiddleware);
+app.use(rateLimitMiddleware);
 app.use(requestLogger);
 app.use(localhostOnly);
 
@@ -100,13 +105,14 @@ app.use('/api/databases', databaseRoutes);
 app.use('/api/loadbalancer', loadBalancerRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/jobs', jobsRoutes);
+app.use('/api/ratelimits', ratelimitsRoutes);
 
 // Ruta por defecto
 app.get('/', (req: Request, res: Response) => {
   res.json({
     name: 'VPS Local Orchestrator API',
-    version: '5.5.0',
-    description: 'API para orquestar recursos y ejecutar comandos localmente - v5.5.0 Job Queue Abstraction',
+    version: '5.6.0',
+    description: 'API para orquestar recursos y ejecutar comandos localmente - v5.6.0 Rate Limiting & Concurrency Controls',
     endpoints: {
       health: 'GET /health',
       healthLiveness: 'GET /health/live',
@@ -120,6 +126,11 @@ app.get('/', (req: Request, res: Response) => {
       jobsRetry: 'POST /api/jobs/:id/retry',
       jobsStats: 'GET /api/jobs/stats/summary',
       jobsClear: 'DELETE /api/jobs/completed/clear',
+      rateLimitStats: 'GET /api/ratelimits/stats',
+      rateLimitAll: 'GET /api/ratelimits/all',
+      rateLimitConfig: 'POST /api/ratelimits/config',
+      rateLimitReset: 'DELETE /api/ratelimits/reset',
+      rateLimitTiers: 'GET /api/ratelimits/tiers',
       executeCommand: 'POST /api/command/execute',
       batchCommands: 'POST /api/command/batch',
       serviceManagement: 'POST /api/command/service',
