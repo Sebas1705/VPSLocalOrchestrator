@@ -422,10 +422,26 @@ export class BackPressureManager {
       return a.timestamp - b.timestamp;
     });
 
-    // Wait for slot
-    return new Promise((resolve) => {
+    // Wait for slot with timeout
+    return new Promise((resolve, reject) => {
+      const startTime = Date.now();
+      const timeout = 30000; // 30 seconds timeout
+      
       const checkInterval = setInterval(() => {
         const index = this.requestQueue.findIndex((r) => r.id === requestId);
+        
+        // Check timeout
+        if (Date.now() - startTime > timeout) {
+          clearInterval(checkInterval);
+          // Remove from queue
+          const queueIndex = this.requestQueue.findIndex((r) => r.id === requestId);
+          if (queueIndex !== -1) {
+            this.requestQueue.splice(queueIndex, 1);
+          }
+          reject(new Error('Request timeout: waited too long in queue'));
+          return;
+        }
+        
         if (index === -1) {
           clearInterval(checkInterval);
           return;

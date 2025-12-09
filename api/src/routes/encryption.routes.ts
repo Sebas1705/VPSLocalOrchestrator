@@ -238,7 +238,7 @@ router.post('/vault/store', requireAuth, (req: Request, res: Response): void => 
  * GET /api/encryption/vault/retrieve/:path
  * Retrieve secret from vault
  */
-router.get('/vault/retrieve/:path(*)', requireAuth, (req: Request, res: Response): void => {
+router.get('/vault/retrieve/:path', requireAuth, (req: Request, res: Response): void => {
   try {
     const path = req.params.path || '';
     
@@ -316,7 +316,7 @@ router.put('/vault/update', requireAuth, (req: Request, res: Response): void => 
  * DELETE /api/encryption/vault/delete/:path
  * Delete secret from vault
  */
-router.delete('/vault/delete/:path(*)', requireAuth, (req: Request, res: Response): void => {
+router.delete('/vault/delete/:path', requireAuth, (req: Request, res: Response): void => {
   try {
     const path = req.params.path || '';
     

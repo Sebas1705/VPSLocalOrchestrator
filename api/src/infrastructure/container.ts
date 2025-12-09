@@ -12,7 +12,7 @@
  *   const executor = container.get('executor');
  */
 
-export type ServiceFactory<T> = (container: Container) => T;
+export type ServiceFactory<T> = (container: Container) => T | Promise<T>;
 
 export class Container {
   private services = new Map<string, unknown>();
@@ -41,7 +41,7 @@ export class Container {
    * Resolve and return a service instance.
    * If singleton, caches and returns same instance on subsequent calls.
    */
-  get<T>(key: string): T {
+  async get<T>(key: string): Promise<T> {
     // Check singleton cache
     if (this.services.has(key)) {
       return this.services.get(key) as T;
@@ -53,8 +53,8 @@ export class Container {
       throw new Error(`Service '${key}' is not registered`);
     }
 
-    // Create instance
-    const instance = factory(this) as T;
+    // Create instance (support async factories)
+    const instance = await factory(this) as T;
 
     // Cache if singleton
     if (this.singletons.get(key)) {
@@ -96,9 +96,9 @@ export function createContainer(): Container {
   // Register repositories (singletons for in-memory storage)
   container.register(
     'commandRepository',
-    () => {
+    async () => {
       // Dynamic import to avoid circular dependencies
-      const { InMemoryCommandRepository } = require('./repositories/index.js') as any;
+      const { InMemoryCommandRepository } = await import('./repositories/index.js');
       return new InMemoryCommandRepository();
     },
     true // singleton
@@ -106,8 +106,8 @@ export function createContainer(): Container {
 
   container.register(
     'resourceRepository',
-    () => {
-      const { InMemoryResourceRepository } = require('./repositories/index.js') as any;
+    async () => {
+      const { InMemoryResourceRepository } = await import('./repositories/index.js');
       return new InMemoryResourceRepository();
     },
     true // singleton
@@ -115,8 +115,8 @@ export function createContainer(): Container {
 
   container.register(
     'serviceRepository',
-    () => {
-      const { InMemoryServiceRepository } = require('./repositories/index.js') as any;
+    async () => {
+      const { InMemoryServiceRepository } = await import('./repositories/index.js');
       return new InMemoryServiceRepository();
     },
     true // singleton
