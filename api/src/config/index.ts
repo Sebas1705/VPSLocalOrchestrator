@@ -49,7 +49,7 @@ export function getConfig(): Config {
   const config: Config = {
     api: {
       port: parseInt(process.env.PORT || '3000', 10),
-      host: '127.0.0.1', // Solo localhost por seguridad
+      host: process.env.API_HOST || '127.0.0.1', // Permitir sobrescribir con API_HOST (para Docker)
       logLevel: (process.env.LOG_LEVEL as any) || 'info',
     },
     security: {

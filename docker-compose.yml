@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    image: vps-local-orchestrator-api:local
+    env_file:
+      - ./api/.env
+    ports:
+      - "127.0.0.1:${PORT:-3000}:3000"  # loopback para acceso local
+      - "3001:3000"                       # puerto en apps-network para n8n (protegido con token Bearer)
+    restart: unless-stopped
+    networks:
+      - internal
+      - apps-network
+    volumes:
+      - /home/sebss/apps:/home/sebss/apps
+      - /var/run/docker.sock:/var/run/docker.sock
+
+networks:
+  internal:
+    driver: bridge
+  apps-network:
+    driver: bridge
+    external: true

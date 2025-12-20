@@ -15,6 +15,11 @@ SyslogIdentifier=vps-orchestrator
 
 # Variables de entorno
 Environment="NODE_ENV=production"
+# Carga el .env del proyecto (API_TOKEN, SECRET_KEY, etc.)
+EnvironmentFile=/home/sebss/apps/VPSLocalOrchestrator/api/.env
+# Sobrescribe host/puerto para exponer a n8n
+Environment="API_HOST=0.0.0.0"
+Environment="PORT=3000"
 
 [Install]
 WantedBy=multi-user.target

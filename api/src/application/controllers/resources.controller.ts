@@ -34,7 +34,7 @@ export class ResourceController implements IResourceController {
   }
 
   async getProcesses(req: Request, res: Response): Promise<void> {
-    const limit = (req as any).validatedQuery?.limit || 10;
+    const limit = (req as any).validatedQuery?.limit ?? 10;
     
     if (limit < 1 || limit > 1000) {
       throw ResourceAccessError.invalid('process list', 'limit', limit);

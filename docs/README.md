@@ -12,4 +12,5 @@ Version: v1.0.3
 - **Quick sheet**: `QUICK_REFERENCE.md`
 - **Testing details**: `core/TESTING.md`
 - **Coverage report**: `../TEST_COVERAGE_EXPANSION_REPORT.md`
+- **n8n integration**: `N8N_INTEGRATION.md`
 

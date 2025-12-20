@@ -120,11 +120,8 @@ describe('Unit Tests - Resource Controller', () => {
       ).toHaveBeenCalledWith(20);
     });
 
-    it.skip('should throw error for invalid limit (too small)', async () => {
-      // TODO: Fix mock setup to properly test validation errors
-      const req = {
-        validatedQuery: { limit: 0 },
-      } as any;
+    it('should throw error for invalid limit (too small)', async () => {
+      const req = mockRequest({}, { limit: 0 });
       const res = mockResponse();
 
       await expect(
@@ -249,6 +246,32 @@ describe('Unit Tests - Resource Controller', () => {
       expect(
         require('../../../src/services/resourceMonitor.js').killProcess
       ).toHaveBeenCalledWith(1234, 'TERM');
+    });
+  });
+
+  describe('getNetwork', () => {
+    it('should return network stats successfully', async () => {
+      const req = mockRequest();
+      const res = mockResponse();
+
+      jest.spyOn(require('../../../src/services/networkMonitor.js'), 'getNetworkStats')
+        .mockResolvedValue({
+          interfaces: [
+            { name: 'eth0', ipv4: '192.168.1.1', bytesIn: 100, bytesOut: 200, packetsIn: 50, packetsOut: 60, errors: 0, dropped: 0 }
+          ],
+          connections: { established: 5, timeWait: 1, listening: 2, other: 0 },
+          timestamp: new Date(),
+        });
+
+      await controller.getNetwork(req as Request, res as Response);
+
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          data: expect.objectContaining({ interfaces: expect.any(Array) }),
+          timestamp: expect.any(String),
+        })
+      );
     });
   });
 
