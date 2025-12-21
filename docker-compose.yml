@@ -18,6 +18,9 @@ services:
     volumes:
       - /home/sebss/apps:/home/sebss/apps
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./data/secrets:/app/secrets
+      - ./data/backups:/app/backups
+      - ./data/workflows:/app/workflows
 
 networks:
   internal:
