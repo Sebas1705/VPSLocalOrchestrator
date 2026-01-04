@@ -18,6 +18,7 @@ services:
     volumes:
       - /home/sebss/apps:/home/sebss/apps
       - /var/run/docker.sock:/var/run/docker.sock
+      - /home/sebss/.docker/cli-plugins/docker-compose:/root/.docker/cli-plugins/docker-compose:ro
       - ./data/secrets:/app/secrets
       - ./data/backups:/app/backups
       - ./data/workflows:/app/workflows
