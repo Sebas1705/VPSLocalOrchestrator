@@ -16,7 +16,8 @@ set -e  # Exit on error
 
 # Configuration
 API_BASE="http://127.0.0.1:3000"
-API_TOKEN="test-token-123"
+# Use API_TOKEN from environment if provided, otherwise default to test-token-123
+API_TOKEN="${API_TOKEN:-test-token-123}"
 API_DIR="/home/sebss/apps/VPSLocalOrchestrator/api"
 LOG_FILE="/tmp/api-test-$(date +%Y%m%d-%H%M%S).log"
 TEST_RESULTS="/tmp/api-test-results-$(date +%Y%m%d-%H%M%S).json"
