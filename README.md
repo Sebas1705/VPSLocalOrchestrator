@@ -1,55 +1,119 @@
-git clone https://github.com/Sebas1705/VPSLocalOrchestrator.git
 # VPS Local Orchestrator
 
-Version: v1.0.3 · Node 18+ · TypeScript 5+
+**v1.2.0** · Node 18+ · TypeScript 5 · Express 5
 
-Production-ready API to orchestrate VPS resources and execute local commands with RBAC, encryption, auditing, metrics, and tracing.
+A self-hosted REST API for orchestrating VPS resources and executing commands locally — with production-grade features built in: role-based access control, AES-256-GCM encryption, structured audit logging, Prometheus metrics, distributed tracing, rate limiting, and more.
 
-## Quick start
+Designed to run on your own VPS behind a reverse proxy, giving you a secure HTTP interface to automate infrastructure tasks without exposing SSH.
+
+## Why
+
+Managing a VPS typically means SSH + manual commands. This API wraps those operations behind a single authenticated HTTP surface with:
+
+- Fine-grained RBAC — different tokens, different permissions
+- A full audit trail of every command executed
+- Automatic metrics and tracing you can hook into Grafana
+- Secret encryption at rest
+
+## Features
+
+| Category | Capabilities |
+|---|---|
+| **Security** | RBAC with role/permission model, AES-256-GCM secret encryption, threat detection, rate limiting per route |
+| **Commands** | Execute shell commands via authenticated endpoints |
+| **Docker** | Start/stop/inspect containers and services |
+| **Services** | Manage systemd services |
+| **Files** | Read, write, and manage files on the host |
+| **Database** | Run queries and migrations |
+| **Jobs** | Schedule and track background jobs |
+| **Observability** | Prometheus metrics, structured audit logs, distributed tracing |
+| **Events** | Event store, event processor, webhook delivery |
+| **Workflows** | Define and execute multi-step automation workflows |
+| **Backups** | Trigger and track backup operations |
+| **Load Balancing** | Circuit breaker pattern, load balancer routing |
+| **API Docs** | OpenAPI spec auto-generated at runtime |
+
+## Quick Start
 
 ```bash
 git clone https://github.com/Sebas1705/VPSLocalOrchestrator.git
 cd VPSLocalOrchestrator/api
 npm install
-# Create ./api/.env with API_TOKEN, SECRET_KEY (base64 32 bytes), and PORT=3000
+
+# Create api/.env with:
+# API_TOKEN=your_secret_token
+# SECRET_KEY=$(openssl rand -base64 32)
+# PORT=3000
+
 npm run build && npm start
 ```
 
-Server: http://localhost:3000
+Server: `http://localhost:3000`
 
-## Essential docs
-- Reference: `docs/REFERENCE.md`
-- Setup & architecture: `docs/SETUP_ARCHITECTURE.md`
-- Security & examples: `docs/SECURITY_EXAMPLES.md`
-- Operations: `docs/OPERATIONS.md`
-- Development: `docs/DEVELOPMENT.md`
-- Roadmap & releases: `docs/ROADMAP_RELEASES.md`
-- Testing: `docs/core/TESTING.md`
+## Deploy
+
+**Docker Compose** (recommended):
+```bash
+cd VPSLocalOrchestrator
+# Set API_TOKEN and SECRET_KEY in api/.env
+docker compose build api
+docker compose up -d
+```
+The service binds to `127.0.0.1:3000` only — put Nginx or Caddy in front.
+
+**Systemd**:
+```bash
+cp vps-orchestrator.service /etc/systemd/system/
+systemctl enable --now vps-orchestrator
+```
+
+## Tech Stack
+
+| | |
+|---|---|
+| Runtime | Node.js 18+ |
+| Language | TypeScript 5 |
+| Framework | Express 5 |
+| Validation | Zod 4 |
+| Testing | Jest 30 + Supertest |
+| Containers | Docker + Docker Compose |
 
 ## Testing
 
 ```bash
-npm test                     # all tests
-npm run test:coverage        # coverage report
+npm test                 # 555 tests, 23 suites
+npm run test:coverage    # ~43% coverage (target: 80%)
 ```
 
-Current: 555 tests, 23 suites, ~43% coverage (target 80%).
+## Architecture
 
-## Deploy quick refs
-- Docker Compose: `docker compose build api && docker compose up -d` (binds to 127.0.0.1:3000, auto-restarts via `restart: unless-stopped`)
-- Systemd: copy `vps-orchestrator.service`, then `systemctl enable --now vps-orchestrator`
+Clean architecture with clear layer separation:
 
-## Containers
-
-```bash
-cd VPSLocalOrchestrator
-# Provide API_TOKEN and SECRET_KEY in api/.env (SECRET_KEY must be base64 for 32 bytes)
-docker compose build api
-docker compose up -d
+```
+api/src/
+├── routes/         <- 27 route modules (one per feature domain)
+├── application/    <- Use cases / application services
+├── domain/         <- Entities and business rules
+├── infrastructure/ <- External integrations (filesystem, DB, Docker)
+├── middleware/     <- Auth, rate limiting, error handling
+├── services/       <- Cross-cutting services (audit, metrics, encryption)
+└── config/         <- Environment and DI configuration
 ```
 
-- Service is only exposed on the host loopback: `127.0.0.1:${PORT:-3000}`
-- Containers restart automatically unless explicitly stopped; ensure Docker starts on boot for server restarts to bring the app back up
+## Documentation
 
-## Support
-Docs: `docs/` · Issues: GitHub · License: MIT
+Full reference in [`docs/`](./docs/):
+
+| Doc | Content |
+|---|---|
+| [REFERENCE.md](docs/REFERENCE.md) | Complete API endpoint reference |
+| [SETUP_ARCHITECTURE.md](docs/SETUP_ARCHITECTURE.md) | Deployment and design decisions |
+| [SECURITY_EXAMPLES.md](docs/SECURITY_EXAMPLES.md) | Auth, RBAC, and encryption examples |
+| [OPERATIONS.md](docs/OPERATIONS.md) | Monitoring, alerting, maintenance |
+| [DEVELOPMENT.md](docs/DEVELOPMENT.md) | Contributing and adding routes |
+| [TESTING.md](docs/TESTING.md) | Test strategy and coverage |
+| [ROADMAP_RELEASES.md](docs/ROADMAP_RELEASES.md) | Changelog and upcoming features |
+
+## License
+
+MIT
