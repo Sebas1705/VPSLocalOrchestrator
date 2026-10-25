@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: api
+
+jobs:
+  test:
+    name: Typecheck and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      # package-lock.json is gitignored in this repo, so npm ci is not an option.
+      - name: Install
+        run: npm install --no-audit --no-fund
+
+      # The project has no lint script. Typecheck is reported but does not
+      # block: src/routes/*.ts currently has pre-existing `req.params` typing
+      # errors against the @types/express version npm install resolves.
+      - name: Typecheck (non-blocking)
+        run: npx tsc --noEmit
+        continue-on-error: true
+
+      - name: Test with coverage
+        run: npx jest --ci --coverage --coverageReporters=text-summary --coverageReporters=json-summary
+
+      - name: Coverage summary
+        if: always()
+        run: |
+          node -e '
+            const fs = require("fs");
+            const file = "coverage/coverage-summary.json";
+            if (!fs.existsSync(file)) { console.log("No coverage summary produced"); process.exit(0); }
+            const t = JSON.parse(fs.readFileSync(file, "utf8")).total;
+            const row = (k) => `| ${k} | ${t[k].pct}% | ${t[k].covered}/${t[k].total} |`;
+            const md = ["## Coverage", "", "| Metric | Covered | Count |", "|---|---|---|",
+              row("statements"), row("branches"), row("functions"), row("lines"), ""].join("\n");
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);
+            console.log(md);
+          '
