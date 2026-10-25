@@ -9,7 +9,7 @@
 # 3. Cleans up any test data created
 # 4. Stops the API server
 #
-# Usage: ./test-api-complete.sh
+# Usage: scripts/test-api-complete.sh   (from the repository root, or from anywhere)
 ###############################################################################
 
 set -e  # Exit on error
@@ -17,7 +17,8 @@ set -e  # Exit on error
 # Configuration
 API_BASE="http://127.0.0.1:3000"
 API_TOKEN="test-token-123"
-API_DIR="/home/sebss/apps/VPSLocalOrchestrator/api"
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+API_DIR="${API_DIR:-$REPO_DIR/api}"
 LOG_FILE="/tmp/api-test-$(date +%Y%m%d-%H%M%S).log"
 TEST_RESULTS="/tmp/api-test-results-$(date +%Y%m%d-%H%M%S).json"
 SERVER_PID=""
@@ -67,7 +68,7 @@ collect_code_metrics() {
     echo "╚════════════════════════════════════════════════════════════╝"
     echo ""
     
-    local api_dir="/home/sebss/apps/VPSLocalOrchestrator/api"
+    local api_dir="$API_DIR"
     
     # Lines of Code
     echo "📊 CODE STATISTICS:"

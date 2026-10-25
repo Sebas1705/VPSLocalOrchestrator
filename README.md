@@ -1,6 +1,10 @@
 # VPS Local Orchestrator
 
-**v1.2.0** · Node 18+ · TypeScript 5 · Express 5
+[![CI](https://github.com/Sebas1705/VPSLocalOrchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/Sebas1705/VPSLocalOrchestrator/actions/workflows/ci.yml)
+
+**v1.2.0** (per `api/package.json` and the `v1.2.0` git tag) · Node 18+ · TypeScript 5 · Express 5
+
+> GitHub Releases lag behind the tags: the latest published release is [v1.0.0](https://github.com/Sebas1705/VPSLocalOrchestrator/releases). Use the tags for the version history.
 
 A self-hosted REST API for orchestrating VPS resources and executing commands locally — with production-grade features built in: role-based access control, AES-256-GCM encryption, structured audit logging, Prometheus metrics, distributed tracing, rate limiting, and more.
 
@@ -81,9 +85,32 @@ systemctl enable --now vps-orchestrator
 ## Testing
 
 ```bash
-npm test                 # 555 tests, 23 suites
-npm run test:coverage    # ~43% coverage (target: 80%)
+cd api
+npm test                 # Jest: 30 suites, 628 tests, no external services needed
+npm run test:coverage    # HTML/lcov report in api/coverage/
 ```
+
+End-to-end smoke test against a running server (starts the API, exercises every endpoint as a client, cleans up):
+
+```bash
+scripts/test-api-complete.sh
+```
+
+CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) installs, typechecks, runs the suite with coverage and writes the coverage table to the job summary.
+
+## Security model
+
+What the code does today, with the file that does it. Read this before exposing the API anywhere.
+
+**Who can call it.** Authentication is `requireAuth` ([`api/src/middleware/requireAuth.ts`](api/src/middleware/requireAuth.ts)): a single shared bearer token, `API_TOKEN`, compared in constant time with `crypto.timingSafeEqual` ([`api/src/middleware/auth.ts`](api/src/middleware/auth.ts)). It guards the routes that act on the host (`/api/command`, `/api/files`, `/api/secrets`, `/api/docker`, `/api/databases`, `/api/backups`, `/api/workflows`, `/api/webhooks`, `/api/jobs`, `/api/rbac`, `/api/encryption`, `/api/threat`, among others). As of this version the following route modules mount no auth middleware (see [`api/src/index.ts`](api/src/index.ts) and the files under `api/src/routes/`): `/health`, `/api/openapi.json` and `/api/schema`, `/api/resources`, `/api/services`, `/api/logs` (audit log reads), `/api/events`, `/api/eventstore` and `/api/processor`. There are no per-user identities: anyone holding the token can run any guarded endpoint, including arbitrary shell commands (`ALLOW_SUDO_COMMANDS` defaults to on, [`api/src/config/index.ts`](api/src/config/index.ts)).
+
+**RBAC.** [`api/src/infrastructure/rbac/index.ts`](api/src/infrastructure/rbac/index.ts) ships three default roles: `admin` (every permission), `operator` (read, execute, start/stop/restart services, view metrics and logs, create/cancel jobs) and `viewer` (read, view metrics and logs), plus custom roles with inheritance, managed through `/api/rbac`. It is an in-memory model: it is not wired as a middleware gate on the other routes, so today it does not narrow what a token holder can do.
+
+**Secrets at rest.** [`api/src/services/secretsManager.ts`](api/src/services/secretsManager.ts) encrypts each stored secret with AES-256-GCM (Node `crypto`), a random 12-byte IV per value and the GCM auth tag kept alongside the ciphertext. The key is `SECRET_KEY`, a base64-encoded 32-byte value validated at startup. Ciphertext is written to `api/secrets/secrets.json` (mounted from `./data/secrets` in `docker-compose.yml`). The separate `/api/encryption` vault ([`api/src/infrastructure/encryption/index.ts`](api/src/infrastructure/encryption/index.ts)) also uses AES-256-GCM with key rotation, but keeps keys and secrets in memory only.
+
+**Audit logging.** [`api/src/services/auditLogger.ts`](api/src/services/auditLogger.ts) appends one JSON line per recorded action to `api/logs/audit.log`, queryable through `/api/logs`. [`api/src/infrastructure/audit/index.ts`](api/src/infrastructure/audit/index.ts) adds an in-memory typed event stream exposed at `/api/audit`. Note that `requireAuth` currently logs the raw `Authorization` header to the console, so treat the process logs as sensitive.
+
+**Network assumption.** The server binds to `API_HOST`, default `127.0.0.1` ([`api/src/config/index.ts`](api/src/config/index.ts)); `docker-compose.yml` publishes it on loopback and on the internal `apps-network` for n8n. The `localhostOnly` and `rateLimitMiddleware` middlewares exist ([`api/src/middleware/security.ts`](api/src/middleware/security.ts), [`api/src/middleware/ratelimit.ts`](api/src/middleware/ratelimit.ts)) but are commented out in [`api/src/index.ts`](api/src/index.ts), so the token is the only barrier. The design assumes a trusted network: run it behind a reverse proxy or VPN on a host you control, and never expose port 3000 to the Internet directly. A leaked token is equivalent to shell access on the host.
 
 ## Architecture
 
