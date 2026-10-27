@@ -12,7 +12,7 @@
  * @module routes/jobs
  */
 
-import { Router, type Request, type Response } from 'express';
+import { Router } from 'express';
 import { getJobQueue, JobPriority, JobStatus } from '../infrastructure/queue/index.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { getLogger } from '../config/index.js';
@@ -25,7 +25,7 @@ const queue = getJobQueue();
  * Create new job
  * POST /api/jobs
  */
-router.post('/', requireAuth, async (req: Request, res: Response) => {
+router.post('/', requireAuth, async (req, res) => {
   try {
     const { type, payload, priority, timeout, maxAttempts, metadata } = req.body;
 
@@ -68,7 +68,7 @@ router.post('/', requireAuth, async (req: Request, res: Response) => {
  * List all jobs with optional filtering
  * GET /api/jobs?status=pending&type=command
  */
-router.get('/', requireAuth, async (req: Request, res: Response) => {
+router.get('/', requireAuth, async (req, res) => {
   try {
     const { status, type, limit } = req.query;
 
@@ -122,7 +122,7 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
  * Get job by ID
  * GET /api/jobs/:id
  */
-router.get('/:id', requireAuth, async (req: Request, res: Response) => {
+router.get('/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     if (!id) {
@@ -164,7 +164,7 @@ router.get('/:id', requireAuth, async (req: Request, res: Response) => {
  * Cancel job
  * DELETE /api/jobs/:id
  */
-router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
+router.delete('/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     if (!id) {
@@ -193,7 +193,7 @@ router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
  * Retry failed job
  * POST /api/jobs/:id/retry
  */
-router.post('/:id/retry', requireAuth, async (req: Request, res: Response) => {
+router.post('/:id/retry', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     if (!id) {
@@ -224,7 +224,7 @@ router.post('/:id/retry', requireAuth, async (req: Request, res: Response) => {
  * Get queue statistics
  * GET /api/jobs/stats
  */
-router.get('/stats/summary', requireAuth, async (req: Request, res: Response) => {
+router.get('/stats/summary', requireAuth, async (req, res) => {
   try {
     const stats = queue.getStatistics();
 
@@ -242,7 +242,7 @@ router.get('/stats/summary', requireAuth, async (req: Request, res: Response) =>
  * Clear completed jobs
  * DELETE /api/jobs/completed
  */
-router.delete('/completed/clear', requireAuth, async (req: Request, res: Response) => {
+router.delete('/completed/clear', requireAuth, async (req, res) => {
   try {
     const { olderThanMs } = req.query;
     const olderThan = olderThanMs && typeof olderThanMs === 'string' 

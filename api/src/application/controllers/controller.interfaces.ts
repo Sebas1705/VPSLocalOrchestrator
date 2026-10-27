@@ -52,13 +52,13 @@ export interface IResourceController {
    * Kill a process
    * DELETE /api/resources/process/:pid
    */
-  killProcess(req: Request, res: Response): Promise<void>;
+  killProcess(req: Request<{ pid: string }>, res: Response): Promise<void>;
 
   /**
    * Set process priority
    * POST /api/resources/process/:pid/priority
    */
-  setPriority(req: Request, res: Response): Promise<void>;
+  setPriority(req: Request<{ pid: string }>, res: Response): Promise<void>;
 
   /**
    * Get network statistics
@@ -82,5 +82,5 @@ export interface IServiceController {
    * Get service health
    * GET /api/services/:name/health
    */
-  getServiceHealth(req: Request, res: Response): Promise<void>;
+  getServiceHealth(req: Request<{ name: string }>, res: Response): Promise<void>;
 }

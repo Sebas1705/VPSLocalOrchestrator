@@ -1,4 +1,4 @@
-import express, { type Request, type Response, type Router } from 'express';
+import express, { type Router } from 'express';
 import { requireAuth } from '../middleware/requireAuth.js';
 import {
   listBackends,
@@ -12,7 +12,7 @@ const router: Router = express.Router();
 
 router.use(requireAuth);
 
-router.get('/backends', async (req: Request, res: Response) => {
+router.get('/backends', async (req, res) => {
   try {
     const backends = await listBackends();
     res.json({ success: true, count: backends.length, data: backends });
@@ -21,7 +21,7 @@ router.get('/backends', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/backends', async (req: Request, res: Response) => {
+router.post('/backends', async (req, res) => {
   try {
     const { address } = req.body;
     const backend = await addBackend(address);
@@ -31,7 +31,7 @@ router.post('/backends', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/backends/:id/drain', async (req: Request, res: Response) => {
+router.post('/backends/:id/drain', async (req, res) => {
   try {
     const { id } = req.params;
     if (!id) {
@@ -45,7 +45,7 @@ router.post('/backends/:id/drain', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/backends/:id/enable', async (req: Request, res: Response) => {
+router.post('/backends/:id/enable', async (req, res) => {
   try {
     const { id } = req.params;
     if (!id) {
@@ -59,7 +59,7 @@ router.post('/backends/:id/enable', async (req: Request, res: Response) => {
   }
 });
 
-router.delete('/backends/:id', async (req: Request, res: Response) => {
+router.delete('/backends/:id', async (req, res) => {
   try {
     const { id } = req.params;
     if (!id) {

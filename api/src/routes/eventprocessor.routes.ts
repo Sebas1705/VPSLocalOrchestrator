@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import type { Request, Response } from 'express';
 import { getEventProcessor, SagaStatus } from '../infrastructure/eventprocessor/index.js';
 import { LoggerFactory } from '../infrastructure/logging/index.js';
 
@@ -20,7 +19,7 @@ const logger = LoggerFactory.getInstance().getLogger();
  * POST /api/processor/commands
  * Execute a command (requires auth)
  */
-router.post('/commands', async (req: Request, res: Response) => {
+router.post('/commands', async (req, res) => {
   const eventProcessor = getEventProcessor();
   const { type, aggregateId, payload, metadata } = req.body;
 
@@ -61,7 +60,7 @@ router.post('/commands', async (req: Request, res: Response) => {
  * GET /api/processor/commands/:commandId
  * Get command status (for reference)
  */
-router.get('/commands/:commandId', (req: Request, res: Response) => {
+router.get('/commands/:commandId', (req, res) => {
   res.json({
     commandId: req.params.commandId,
     status: 'completed',
@@ -77,7 +76,7 @@ router.get('/commands/:commandId', (req: Request, res: Response) => {
  * POST /api/processor/sagas
  * Start a saga (requires auth)
  */
-router.post('/sagas', async (req: Request, res: Response) => {
+router.post('/sagas', async (req, res) => {
   const eventProcessor = getEventProcessor();
   const { definitionId, aggregateId, metadata } = req.body;
 
@@ -120,7 +119,7 @@ router.post('/sagas', async (req: Request, res: Response) => {
  * GET /api/processor/sagas/:sagaId
  * Get saga instance status
  */
-router.get('/sagas/:sagaId', (req: Request, res: Response) => {
+router.get('/sagas/:sagaId', (req, res) => {
   const eventProcessor = getEventProcessor();
   const sagaId = req.params.sagaId || '';
   const saga = eventProcessor.getSagaInstance(sagaId);
@@ -149,7 +148,7 @@ router.get('/sagas/:sagaId', (req: Request, res: Response) => {
  * GET /api/processor/sagas/:sagaId/steps
  * Get saga steps and current progress
  */
-router.get('/sagas/:sagaId/steps', (req: Request, res: Response) => {
+router.get('/sagas/:sagaId/steps', (req, res) => {
   const eventProcessor = getEventProcessor();
   const sagaId = req.params.sagaId || '';
   const saga = eventProcessor.getSagaInstance(sagaId);
@@ -177,7 +176,7 @@ router.get('/sagas/:sagaId/steps', (req: Request, res: Response) => {
  * GET /api/processor/sagas/by-aggregate/:aggregateId
  * Get active sagas for an aggregate
  */
-router.get('/aggregates/:aggregateId/sagas', (req: Request, res: Response) => {
+router.get('/aggregates/:aggregateId/sagas', (req, res) => {
   const eventProcessor = getEventProcessor();
   const aggregateId = req.params.aggregateId || '';
 
@@ -205,7 +204,7 @@ router.get('/aggregates/:aggregateId/sagas', (req: Request, res: Response) => {
  * GET /api/processor/sagas/definitions
  * Get available saga definitions
  */
-router.get('/definitions', (req: Request, res: Response) => {
+router.get('/definitions', (req, res) => {
   // This would normally fetch from the event processor's registered definitions
   // For now, return example definitions
   res.json({
@@ -219,7 +218,7 @@ router.get('/definitions', (req: Request, res: Response) => {
  * POST /api/processor/sagas/definitions
  * Register saga definition (requires auth)
  */
-router.post('/definitions', (req: Request, res: Response) => {
+router.post('/definitions', (req, res) => {
   const eventProcessor = getEventProcessor();
   const { id, name, description, steps, timeout } = req.body;
 
@@ -260,7 +259,7 @@ router.post('/definitions', (req: Request, res: Response) => {
  * GET /api/processor/stats
  * Get processor statistics
  */
-router.get('/stats', (req: Request, res: Response) => {
+router.get('/stats', (req, res) => {
   const eventProcessor = getEventProcessor();
   const stats = eventProcessor.getStats();
 
@@ -285,7 +284,7 @@ router.get('/stats', (req: Request, res: Response) => {
  * GET /api/processor/sagas/history
  * Get saga execution history
  */
-router.get('/history', (req: Request, res: Response) => {
+router.get('/history', (req, res) => {
   const eventProcessor = getEventProcessor();
   const aggregateId = req.query.aggregateId as string | undefined;
 
@@ -318,7 +317,7 @@ router.get('/history', (req: Request, res: Response) => {
  * GET /api/processor/health
  * Check processor health
  */
-router.get('/health', (req: Request, res: Response) => {
+router.get('/health', (req, res) => {
   const eventProcessor = getEventProcessor();
   const stats = eventProcessor.getStats();
 

@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import type { Request, Response } from 'express';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { getRBACManager } from '../infrastructure/rbac/index.js';
 import type { Permission, ResourceType, AccessContext } from '../infrastructure/rbac/index.js';
@@ -14,7 +13,7 @@ const router = Router();
  * POST /api/rbac/roles
  * Create new role
  */
-router.post('/roles', requireAuth, (req: Request, res: Response): void => {
+router.post('/roles', requireAuth, (req, res): void => {
   try {
     const { name, description, permissions, inheritsFrom } = req.body;
     
@@ -48,7 +47,7 @@ router.post('/roles', requireAuth, (req: Request, res: Response): void => {
  * GET /api/rbac/roles
  * List all roles
  */
-router.get('/roles', requireAuth, (req: Request, res: Response): void => {
+router.get('/roles', requireAuth, (req, res): void => {
   try {
     const rbac = getRBACManager();
     const roles = rbac.listRoles();
@@ -71,7 +70,7 @@ router.get('/roles', requireAuth, (req: Request, res: Response): void => {
  * GET /api/rbac/roles/:id
  * Get role details
  */
-router.get('/roles/:id', requireAuth, (req: Request, res: Response): void => {
+router.get('/roles/:id', requireAuth, (req, res): void => {
   try {
     const roleId = req.params.id || '';
 
@@ -105,7 +104,7 @@ router.get('/roles/:id', requireAuth, (req: Request, res: Response): void => {
  * PUT /api/rbac/roles/:id
  * Update role
  */
-router.put('/roles/:id', requireAuth, (req: Request, res: Response): void => {
+router.put('/roles/:id', requireAuth, (req, res): void => {
   try {
     const roleId = req.params.id || '';
     const updates = req.body;
@@ -135,7 +134,7 @@ router.put('/roles/:id', requireAuth, (req: Request, res: Response): void => {
  * DELETE /api/rbac/roles/:id
  * Delete role
  */
-router.delete('/roles/:id', requireAuth, (req: Request, res: Response): void => {
+router.delete('/roles/:id', requireAuth, (req, res): void => {
   try {
     const roleId = req.params.id || '';
 
@@ -168,7 +167,7 @@ router.delete('/roles/:id', requireAuth, (req: Request, res: Response): void => 
  * POST /api/rbac/users
  * Create new user
  */
-router.post('/users', requireAuth, (req: Request, res: Response): void => {
+router.post('/users', requireAuth, (req, res): void => {
   try {
     const { username, roles } = req.body;
     
@@ -197,7 +196,7 @@ router.post('/users', requireAuth, (req: Request, res: Response): void => {
  * GET /api/rbac/users
  * List all users
  */
-router.get('/users', requireAuth, (req: Request, res: Response): void => {
+router.get('/users', requireAuth, (req, res): void => {
   try {
     const rbac = getRBACManager();
     const users = rbac.listUsers();
@@ -220,7 +219,7 @@ router.get('/users', requireAuth, (req: Request, res: Response): void => {
  * GET /api/rbac/users/:id
  * Get user details
  */
-router.get('/users/:id', requireAuth, (req: Request, res: Response): void => {
+router.get('/users/:id', requireAuth, (req, res): void => {
   try {
     const userId = req.params.id || '';
 
@@ -254,7 +253,7 @@ router.get('/users/:id', requireAuth, (req: Request, res: Response): void => {
  * POST /api/rbac/users/:id/roles
  * Assign roles to user
  */
-router.post('/users/:id/roles', requireAuth, (req: Request, res: Response): void => {
+router.post('/users/:id/roles', requireAuth, (req, res): void => {
   try {
     const userId = req.params.id || '';
     const { roleIds } = req.body;
@@ -289,7 +288,7 @@ router.post('/users/:id/roles', requireAuth, (req: Request, res: Response): void
  * DELETE /api/rbac/users/:id/roles
  * Revoke roles from user
  */
-router.delete('/users/:id/roles', requireAuth, (req: Request, res: Response): void => {
+router.delete('/users/:id/roles', requireAuth, (req, res): void => {
   try {
     const userId = req.params.id || '';
     const { roleIds } = req.body;
@@ -328,7 +327,7 @@ router.delete('/users/:id/roles', requireAuth, (req: Request, res: Response): vo
  * POST /api/rbac/policies
  * Create new policy
  */
-router.post('/policies', requireAuth, (req: Request, res: Response): void => {
+router.post('/policies', requireAuth, (req, res): void => {
   try {
     const { name, description, effect, actions, resources, conditions, priority } = req.body;
     
@@ -365,7 +364,7 @@ router.post('/policies', requireAuth, (req: Request, res: Response): void => {
  * GET /api/rbac/policies
  * List all policies
  */
-router.get('/policies', requireAuth, (req: Request, res: Response): void => {
+router.get('/policies', requireAuth, (req, res): void => {
   try {
     const rbac = getRBACManager();
     const policies = rbac.listPolicies();
@@ -388,7 +387,7 @@ router.get('/policies', requireAuth, (req: Request, res: Response): void => {
  * GET /api/rbac/policies/:id
  * Get policy details
  */
-router.get('/policies/:id', requireAuth, (req: Request, res: Response): void => {
+router.get('/policies/:id', requireAuth, (req, res): void => {
   try {
     const policyId = req.params.id || '';
 
@@ -417,7 +416,7 @@ router.get('/policies/:id', requireAuth, (req: Request, res: Response): void => 
  * PUT /api/rbac/policies/:id
  * Update policy
  */
-router.put('/policies/:id', requireAuth, (req: Request, res: Response): void => {
+router.put('/policies/:id', requireAuth, (req, res): void => {
   try {
     const policyId = req.params.id || '';
     const updates = req.body;
@@ -447,7 +446,7 @@ router.put('/policies/:id', requireAuth, (req: Request, res: Response): void => 
  * DELETE /api/rbac/policies/:id
  * Delete policy
  */
-router.delete('/policies/:id', requireAuth, (req: Request, res: Response): void => {
+router.delete('/policies/:id', requireAuth, (req, res): void => {
   try {
     const policyId = req.params.id || '';
 
@@ -480,7 +479,7 @@ router.delete('/policies/:id', requireAuth, (req: Request, res: Response): void 
  * POST /api/rbac/check-access
  * Check if user has access to resource
  */
-router.post('/check-access', requireAuth, (req: Request, res: Response): void => {
+router.post('/check-access', requireAuth, (req, res): void => {
   try {
     const { userId, permission, resourceType, resourceId, metadata } = req.body;
     
@@ -518,7 +517,7 @@ router.post('/check-access', requireAuth, (req: Request, res: Response): void =>
  * GET /api/rbac/permissions
  * List all available permissions
  */
-router.get('/permissions', requireAuth, (req: Request, res: Response): void => {
+router.get('/permissions', requireAuth, (req, res): void => {
   try {
     const { Permission } = require('../infrastructure/rbac/index.js');
     const permissions = Object.values(Permission);
@@ -541,7 +540,7 @@ router.get('/permissions', requireAuth, (req: Request, res: Response): void => {
  * GET /api/rbac/resource-types
  * List all resource types
  */
-router.get('/resource-types', requireAuth, (req: Request, res: Response): void => {
+router.get('/resource-types', requireAuth, (req, res): void => {
   try {
     const { ResourceType } = require('../infrastructure/rbac/index.js');
     const resourceTypes = Object.values(ResourceType);
@@ -568,7 +567,7 @@ router.get('/resource-types', requireAuth, (req: Request, res: Response): void =
  * GET /api/rbac/stats
  * Get RBAC statistics
  */
-router.get('/stats', requireAuth, (req: Request, res: Response): void => {
+router.get('/stats', requireAuth, (req, res): void => {
   try {
     const rbac = getRBACManager();
     const stats = rbac.getStats();
@@ -594,7 +593,7 @@ router.get('/stats', requireAuth, (req: Request, res: Response): void => {
  * GET /api/rbac/health
  * Health check for RBAC system
  */
-router.get('/health', (req: Request, res: Response): void => {
+router.get('/health', (req, res): void => {
   try {
     const rbac = getRBACManager();
     const stats = rbac.getStats();

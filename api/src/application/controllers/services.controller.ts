@@ -36,7 +36,7 @@ export class ServiceController implements IServiceController {
     });
   }
 
-  async getServiceHealth(req: Request, res: Response): Promise<void> {
+  async getServiceHealth(req: Request<{ name: string }>, res: Response): Promise<void> {
     const serviceName = req.params.name ?? '';
 
     if (!serviceName || serviceName.trim().length === 0) {
