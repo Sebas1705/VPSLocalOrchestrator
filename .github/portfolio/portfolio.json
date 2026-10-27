@@ -1,0 +1,11 @@
+{
+  "accent": "#0E7490",
+  "icon_alt": {
+    "en": "Local VPS Orchestrator logo: a server cube wrapped in a teal spiral, a brain above and hexagonal nodes below, inside a dark round badge",
+    "es": "Logo de Local VPS Orchestrator: un cubo de servidor envuelto en una espiral turquesa, un cerebro encima y nodos hexagonales debajo, dentro de una insignia redonda oscura"
+  },
+  "banner_alt": {
+    "en": "Local VPS Orchestrator banner: the logo, the tagline \"Self-hosted REST API to orchestrate a VPS\" and the stack (Node.js, Express, TypeScript, Docker, RBAC)",
+    "es": "Banner de Local VPS Orchestrator: el logo, el lema \"API REST autoalojada para orquestar un VPS\" y el stack (Node.js, Express, TypeScript, Docker, RBAC)"
+  }
+}
