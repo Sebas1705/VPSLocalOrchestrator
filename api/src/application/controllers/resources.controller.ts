@@ -61,7 +61,7 @@ export class ResourceController implements IResourceController {
     });
   }
 
-  async killProcess(req: Request, res: Response): Promise<void> {
+  async killProcess(req: Request<{ pid: string }>, res: Response): Promise<void> {
     const pid = parseInt(req.params.pid ?? '');
     const signal = (req.query.signal as string) || 'TERM';
 
@@ -82,7 +82,7 @@ export class ResourceController implements IResourceController {
     });
   }
 
-  async setPriority(req: Request, res: Response): Promise<void> {
+  async setPriority(req: Request<{ pid: string }>, res: Response): Promise<void> {
     const pid = parseInt(req.params.pid ?? '');
     const { priority } = req.body;
 

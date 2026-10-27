@@ -17,7 +17,7 @@ import { isValidToken, extractToken } from './auth.js';
  * });
  * ```
  */
-export function requireAuth(req: Request, res: Response, next: NextFunction) {
+export function requireAuth<P>(req: Request<P>, res: Response, next: NextFunction) {
   const token = extractToken(req.headers.authorization);
   console.log('[requireAuth] Ejecutando middleware. Authorization:', req.headers.authorization, 'Token extraído:', token);
   if (!isValidToken(token)) {

@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import type { Request, Response } from 'express';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { getEncryptionService, getSecretVault } from '../infrastructure/encryption/index.js';
 import type { EncryptedData } from '../infrastructure/encryption/index.js';
@@ -14,7 +13,7 @@ const router = Router();
  * POST /api/encryption/encrypt
  * Encrypt data with current key
  */
-router.post('/encrypt', requireAuth, (req: Request, res: Response): void => {
+router.post('/encrypt', requireAuth, (req, res): void => {
   try {
     const { data } = req.body;
     
@@ -44,7 +43,7 @@ router.post('/encrypt', requireAuth, (req: Request, res: Response): void => {
  * POST /api/encryption/decrypt
  * Decrypt encrypted data
  */
-router.post('/decrypt', requireAuth, (req: Request, res: Response): void => {
+router.post('/decrypt', requireAuth, (req, res): void => {
   try {
     const encryptedData = req.body as EncryptedData;
     
@@ -73,7 +72,7 @@ router.post('/decrypt', requireAuth, (req: Request, res: Response): void => {
  * POST /api/encryption/reencrypt
  * Re-encrypt data with current key (for key rotation)
  */
-router.post('/reencrypt', requireAuth, (req: Request, res: Response): void => {
+router.post('/reencrypt', requireAuth, (req, res): void => {
   try {
     const encryptedData = req.body as EncryptedData;
     
@@ -108,7 +107,7 @@ router.post('/reencrypt', requireAuth, (req: Request, res: Response): void => {
  * POST /api/encryption/keys/rotate
  * Rotate encryption key
  */
-router.post('/keys/rotate', requireAuth, (req: Request, res: Response): void => {
+router.post('/keys/rotate', requireAuth, (req, res): void => {
   try {
     const { expiresInDays } = req.body;
 
@@ -135,7 +134,7 @@ router.post('/keys/rotate', requireAuth, (req: Request, res: Response): void => 
  * GET /api/encryption/keys
  * List all key versions
  */
-router.get('/keys', requireAuth, (req: Request, res: Response): void => {
+router.get('/keys', requireAuth, (req, res): void => {
   try {
     const encryption = getEncryptionService();
     const versions = encryption.getAllKeyVersions();
@@ -162,7 +161,7 @@ router.get('/keys', requireAuth, (req: Request, res: Response): void => {
  * GET /api/encryption/keys/:version
  * Get key information for specific version
  */
-router.get('/keys/:version', requireAuth, (req: Request, res: Response): void => {
+router.get('/keys/:version', requireAuth, (req, res): void => {
   try {
     const version = parseInt(req.params.version || '0', 10);
     
@@ -200,7 +199,7 @@ router.get('/keys/:version', requireAuth, (req: Request, res: Response): void =>
  * POST /api/encryption/vault/store
  * Store secret in vault
  */
-router.post('/vault/store', requireAuth, (req: Request, res: Response): void => {
+router.post('/vault/store', requireAuth, (req, res): void => {
   try {
     const { path, value, ttl, tags } = req.body;
     
@@ -238,7 +237,7 @@ router.post('/vault/store', requireAuth, (req: Request, res: Response): void => 
  * GET /api/encryption/vault/retrieve/:path
  * Retrieve secret from vault
  */
-router.get('/vault/retrieve/:path', requireAuth, (req: Request, res: Response): void => {
+router.get('/vault/retrieve/:path', requireAuth, (req, res): void => {
   try {
     const path = req.params.path || '';
     
@@ -273,7 +272,7 @@ router.get('/vault/retrieve/:path', requireAuth, (req: Request, res: Response): 
  * PUT /api/encryption/vault/update
  * Update existing secret
  */
-router.put('/vault/update', requireAuth, (req: Request, res: Response): void => {
+router.put('/vault/update', requireAuth, (req, res): void => {
   try {
     const { path, value, ttl, tags } = req.body;
     
@@ -316,7 +315,7 @@ router.put('/vault/update', requireAuth, (req: Request, res: Response): void => 
  * DELETE /api/encryption/vault/delete/:path
  * Delete secret from vault
  */
-router.delete('/vault/delete/:path', requireAuth, (req: Request, res: Response): void => {
+router.delete('/vault/delete/:path', requireAuth, (req, res): void => {
   try {
     const path = req.params.path || '';
     
@@ -350,7 +349,7 @@ router.delete('/vault/delete/:path', requireAuth, (req: Request, res: Response):
  * GET /api/encryption/vault/list
  * List all secrets (with optional prefix filter)
  */
-router.get('/vault/list', requireAuth, (req: Request, res: Response): void => {
+router.get('/vault/list', requireAuth, (req, res): void => {
   try {
     const prefix = req.query.prefix as string | undefined;
 
@@ -376,7 +375,7 @@ router.get('/vault/list', requireAuth, (req: Request, res: Response): void => {
  * POST /api/encryption/vault/search
  * Search secrets by tags
  */
-router.post('/vault/search', requireAuth, (req: Request, res: Response): void => {
+router.post('/vault/search', requireAuth, (req, res): void => {
   try {
     const { tags } = req.body;
     
@@ -407,7 +406,7 @@ router.post('/vault/search', requireAuth, (req: Request, res: Response): void =>
  * POST /api/encryption/vault/rotate-all
  * Rotate encryption for all secrets
  */
-router.post('/vault/rotate-all', requireAuth, (req: Request, res: Response): void => {
+router.post('/vault/rotate-all', requireAuth, (req, res): void => {
   try {
     const vault = getSecretVault();
     const rotated = vault.rotateAllSecrets();
@@ -430,7 +429,7 @@ router.post('/vault/rotate-all', requireAuth, (req: Request, res: Response): voi
  * GET /api/encryption/vault/stats
  * Get vault statistics
  */
-router.get('/vault/stats', requireAuth, (req: Request, res: Response): void => {
+router.get('/vault/stats', requireAuth, (req, res): void => {
   try {
     const vault = getSecretVault();
     const stats = vault.getStats();
@@ -456,7 +455,7 @@ router.get('/vault/stats', requireAuth, (req: Request, res: Response): void => {
  * GET /api/encryption/health
  * Health check for encryption service
  */
-router.get('/health', (req: Request, res: Response): void => {
+router.get('/health', (req, res): void => {
   try {
     const encryption = getEncryptionService();
     const vault = getSecretVault();

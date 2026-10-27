@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import type { Request, Response } from 'express';
 import { getEventStore } from '../infrastructure/eventstore/index.js';
 import { LoggerFactory } from '../infrastructure/logging/index.js';
 
@@ -20,7 +19,7 @@ const logger = LoggerFactory.getInstance().getLogger();
  * GET /api/eventstore/aggregates
  * Get all aggregate IDs, optionally filtered by type
  */
-router.get('/aggregates', (req: Request, res: Response) => {
+router.get('/aggregates', (req, res) => {
   const eventStore = getEventStore();
   const aggregateType = req.query.type as string | undefined;
 
@@ -40,7 +39,7 @@ router.get('/aggregates', (req: Request, res: Response) => {
  * GET /api/eventstore/aggregates/:aggregateId
  * Get aggregate stream metadata and stats
  */
-router.get('/aggregates/:aggregateId', (req: Request, res: Response) => {
+router.get('/aggregates/:aggregateId', (req, res) => {
   const eventStore = getEventStore();
   const aggregateId = req.params.aggregateId || '';
   const stream = eventStore.getAggregateStream(aggregateId);
@@ -78,7 +77,7 @@ router.get('/aggregates/:aggregateId', (req: Request, res: Response) => {
  * GET /api/eventstore/aggregates/:aggregateId/events
  * Get events for an aggregate with filtering and replay options
  */
-router.get('/aggregates/:aggregateId/events', (req: Request, res: Response) => {
+router.get('/aggregates/:aggregateId/events', (req, res) => {
   const eventStore = getEventStore();
   const aggregateId = req.params.aggregateId || '';
 
@@ -121,7 +120,7 @@ router.get('/aggregates/:aggregateId/events', (req: Request, res: Response) => {
  * GET /api/eventstore/aggregates/:aggregateId/events/:eventId
  * Get specific event details
  */
-router.get('/aggregates/:aggregateId/events/:eventId', (req: Request, res: Response) => {
+router.get('/aggregates/:aggregateId/events/:eventId', (req, res) => {
   const eventStore = getEventStore();
   const aggregateId = req.params.aggregateId || '';
   const events = eventStore.getAggregateEvents(aggregateId);
@@ -150,7 +149,7 @@ router.get('/aggregates/:aggregateId/events/:eventId', (req: Request, res: Respo
  * POST /api/eventstore/aggregates/:aggregateId/events
  * Append event to aggregate (requires auth)
  */
-router.post('/aggregates/:aggregateId/events', (req: Request, res: Response) => {
+router.post('/aggregates/:aggregateId/events', (req, res) => {
   const eventStore = getEventStore();
   const aggregateId = req.params.aggregateId || '';
   const { eventType, payload, metadata, expectedVersion } = req.body;
@@ -191,7 +190,7 @@ router.post('/aggregates/:aggregateId/events', (req: Request, res: Response) => 
  * GET /api/eventstore/aggregates/:aggregateId/snapshots
  * Get snapshots for an aggregate
  */
-router.get('/aggregates/:aggregateId/snapshots', (req: Request, res: Response) => {
+router.get('/aggregates/:aggregateId/snapshots', (req, res) => {
   const eventStore = getEventStore();
   const aggregateId = req.params.aggregateId || '';
   const snapshot = eventStore.getLatestSnapshot(aggregateId);
@@ -219,7 +218,7 @@ router.get('/aggregates/:aggregateId/snapshots', (req: Request, res: Response) =
  * POST /api/eventstore/aggregates/:aggregateId/snapshots
  * Create snapshot for aggregate (requires auth)
  */
-router.post('/aggregates/:aggregateId/snapshots', (req: Request, res: Response) => {
+router.post('/aggregates/:aggregateId/snapshots', (req, res) => {
   const eventStore = getEventStore();
   const aggregateId = req.params.aggregateId || '';
   const { state } = req.body;
@@ -252,7 +251,7 @@ router.post('/aggregates/:aggregateId/snapshots', (req: Request, res: Response) 
  * POST /api/eventstore/aggregates/:aggregateId/replay
  * Replay aggregate from events and return reconstructed state
  */
-router.post('/aggregates/:aggregateId/replay', (req: Request, res: Response) => {
+router.post('/aggregates/:aggregateId/replay', (req, res) => {
   const eventStore = getEventStore();
   const aggregateId = req.params.aggregateId || '';
   const { fromVersion, toVersion } = req.body;
@@ -298,7 +297,7 @@ router.post('/aggregates/:aggregateId/replay', (req: Request, res: Response) => 
  * GET /api/eventstore/events/by-type/:eventType
  * Get events by type
  */
-router.get('/events/by-type/:eventType', (req: Request, res: Response) => {
+router.get('/events/by-type/:eventType', (req, res) => {
   const eventStore = getEventStore();
   const eventType = req.params.eventType || '';
   const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
@@ -328,7 +327,7 @@ router.get('/events/by-type/:eventType', (req: Request, res: Response) => {
  * GET /api/eventstore/consistency
  * Check event store consistency
  */
-router.get('/consistency', (req: Request, res: Response) => {
+router.get('/consistency', (req, res) => {
   const eventStore = getEventStore();
   const result = eventStore.checkConsistency();
 
@@ -349,7 +348,7 @@ router.get('/consistency', (req: Request, res: Response) => {
  * GET /api/eventstore/stats
  * Get event store statistics
  */
-router.get('/stats', (req: Request, res: Response) => {
+router.get('/stats', (req, res) => {
   const eventStore = getEventStore();
   const stats = eventStore.getStats();
 
@@ -379,7 +378,7 @@ router.get('/stats', (req: Request, res: Response) => {
  * POST /api/eventstore/export
  * Export events (requires auth)
  */
-router.post('/export', (req: Request, res: Response) => {
+router.post('/export', (req, res) => {
   const eventStore = getEventStore();
   const { aggregateType, format } = req.body;
 

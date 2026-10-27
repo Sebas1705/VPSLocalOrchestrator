@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import type { Request, Response } from 'express';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { getThreatDetector } from '../infrastructure/security/threat.js';
 import type { ThreatType, ThreatSeverity, IncidentStatus } from '../infrastructure/security/threat.js';
@@ -7,7 +6,7 @@ import type { ThreatType, ThreatSeverity, IncidentStatus } from '../infrastructu
 const router = Router();
 
 // Indicators
-router.post('/indicators', requireAuth, (req: Request, res: Response): void => {
+router.post('/indicators', requireAuth, (req, res): void => {
   try {
     const { type, severity, source, details } = req.body;
     if (!type || !severity || !source) {
@@ -22,7 +21,7 @@ router.post('/indicators', requireAuth, (req: Request, res: Response): void => {
   }
 });
 
-router.get('/indicators', requireAuth, (req: Request, res: Response): void => {
+router.get('/indicators', requireAuth, (req, res): void => {
   try {
     const detector = getThreatDetector();
     const indicators = detector.listIndicators();
@@ -32,7 +31,7 @@ router.get('/indicators', requireAuth, (req: Request, res: Response): void => {
   }
 });
 
-router.get('/indicators/:id', requireAuth, (req: Request, res: Response): void => {
+router.get('/indicators/:id', requireAuth, (req, res): void => {
   try {
     const detector = getThreatDetector();
     const indicator = detector.getIndicator(req.params.id || '');
@@ -47,7 +46,7 @@ router.get('/indicators/:id', requireAuth, (req: Request, res: Response): void =
 });
 
 // Incidents
-router.post('/incidents', requireAuth, (req: Request, res: Response): void => {
+router.post('/incidents', requireAuth, (req, res): void => {
   try {
     const { type, severity, indicators, source } = req.body;
     if (!type || !severity || !source) {
@@ -62,7 +61,7 @@ router.post('/incidents', requireAuth, (req: Request, res: Response): void => {
   }
 });
 
-router.get('/incidents', requireAuth, (req: Request, res: Response): void => {
+router.get('/incidents', requireAuth, (req, res): void => {
   try {
     const detector = getThreatDetector();
     const incidents = detector.listIncidents();
@@ -72,7 +71,7 @@ router.get('/incidents', requireAuth, (req: Request, res: Response): void => {
   }
 });
 
-router.put('/incidents/:id', requireAuth, (req: Request, res: Response): void => {
+router.put('/incidents/:id', requireAuth, (req, res): void => {
   try {
     const detector = getThreatDetector();
     const incident = detector.updateIncident(req.params.id || '', req.body);
@@ -86,7 +85,7 @@ router.put('/incidents/:id', requireAuth, (req: Request, res: Response): void =>
   }
 });
 
-router.post('/incidents/:id/resolve', requireAuth, (req: Request, res: Response): void => {
+router.post('/incidents/:id/resolve', requireAuth, (req, res): void => {
   try {
     const { resolution } = req.body;
     if (!resolution) {
@@ -105,7 +104,7 @@ router.post('/incidents/:id/resolve', requireAuth, (req: Request, res: Response)
   }
 });
 
-router.post('/incidents/:id/notes', requireAuth, (req: Request, res: Response): void => {
+router.post('/incidents/:id/notes', requireAuth, (req, res): void => {
   try {
     const { note } = req.body;
     if (!note) {
@@ -125,7 +124,7 @@ router.post('/incidents/:id/notes', requireAuth, (req: Request, res: Response): 
 });
 
 // IP Management
-router.get('/ip/:ip/reputation', requireAuth, (req: Request, res: Response): void => {
+router.get('/ip/:ip/reputation', requireAuth, (req, res): void => {
   try {
     const detector = getThreatDetector();
     const reputation = detector.getIPReputation(req.params.ip || '');
@@ -139,7 +138,7 @@ router.get('/ip/:ip/reputation', requireAuth, (req: Request, res: Response): voi
   }
 });
 
-router.post('/ip/:ip/block', requireAuth, (req: Request, res: Response): void => {
+router.post('/ip/:ip/block', requireAuth, (req, res): void => {
   try {
     const { reason } = req.body;
     const detector = getThreatDetector();
@@ -150,7 +149,7 @@ router.post('/ip/:ip/block', requireAuth, (req: Request, res: Response): void =>
   }
 });
 
-router.post('/ip/:ip/unblock', requireAuth, (req: Request, res: Response): void => {
+router.post('/ip/:ip/unblock', requireAuth, (req, res): void => {
   try {
     const detector = getThreatDetector();
     const success = detector.unblockIP(req.params.ip || '');
@@ -164,7 +163,7 @@ router.post('/ip/:ip/unblock', requireAuth, (req: Request, res: Response): void 
   }
 });
 
-router.post('/ip/:ip/whitelist', requireAuth, (req: Request, res: Response): void => {
+router.post('/ip/:ip/whitelist', requireAuth, (req, res): void => {
   try {
     const detector = getThreatDetector();
     detector.whitelistIP(req.params.ip || '');
@@ -174,7 +173,7 @@ router.post('/ip/:ip/whitelist', requireAuth, (req: Request, res: Response): voi
   }
 });
 
-router.get('/ip/blocked', requireAuth, (req: Request, res: Response): void => {
+router.get('/ip/blocked', requireAuth, (req, res): void => {
   try {
     const detector = getThreatDetector();
     const blocked = detector.listBlockedIPs();
@@ -185,7 +184,7 @@ router.get('/ip/blocked', requireAuth, (req: Request, res: Response): void => {
 });
 
 // Alerts
-router.get('/alerts', requireAuth, (req: Request, res: Response): void => {
+router.get('/alerts', requireAuth, (req, res): void => {
   try {
     const detector = getThreatDetector();
     const alerts = detector.listAlerts();
@@ -195,7 +194,7 @@ router.get('/alerts', requireAuth, (req: Request, res: Response): void => {
   }
 });
 
-router.post('/alerts/:id/acknowledge', requireAuth, (req: Request, res: Response): void => {
+router.post('/alerts/:id/acknowledge', requireAuth, (req, res): void => {
   try {
     const { userId } = req.body;
     if (!userId) {
@@ -215,7 +214,7 @@ router.post('/alerts/:id/acknowledge', requireAuth, (req: Request, res: Response
 });
 
 // Patterns
-router.get('/patterns', requireAuth, (req: Request, res: Response): void => {
+router.get('/patterns', requireAuth, (req, res): void => {
   try {
     const detector = getThreatDetector();
     const patterns = detector.listPatterns();
@@ -225,7 +224,7 @@ router.get('/patterns', requireAuth, (req: Request, res: Response): void => {
   }
 });
 
-router.post('/patterns/:id/enable', requireAuth, (req: Request, res: Response): void => {
+router.post('/patterns/:id/enable', requireAuth, (req, res): void => {
   try {
     const detector = getThreatDetector();
     const success = detector.enablePattern(req.params.id || '');
@@ -239,7 +238,7 @@ router.post('/patterns/:id/enable', requireAuth, (req: Request, res: Response): 
   }
 });
 
-router.post('/patterns/:id/disable', requireAuth, (req: Request, res: Response): void => {
+router.post('/patterns/:id/disable', requireAuth, (req, res): void => {
   try {
     const detector = getThreatDetector();
     const success = detector.disablePattern(req.params.id || '');
@@ -254,7 +253,7 @@ router.post('/patterns/:id/disable', requireAuth, (req: Request, res: Response):
 });
 
 // Stats & Health
-router.get('/stats', requireAuth, (req: Request, res: Response): void => {
+router.get('/stats', requireAuth, (req, res): void => {
   try {
     const detector = getThreatDetector();
     const stats = detector.getStats();
@@ -264,7 +263,7 @@ router.get('/stats', requireAuth, (req: Request, res: Response): void => {
   }
 });
 
-router.get('/health', (req: Request, res: Response): void => {
+router.get('/health', (req, res): void => {
   try {
     const detector = getThreatDetector();
     const stats = detector.getStats();

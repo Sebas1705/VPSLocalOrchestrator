@@ -22,17 +22,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
+          cache: npm
+          cache-dependency-path: api/package-lock.json
 
-      # package-lock.json is gitignored in this repo, so npm ci is not an option.
       - name: Install
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
-      # The project has no lint script. Typecheck is reported but does not
-      # block: src/routes/*.ts currently has pre-existing `req.params` typing
-      # errors against the @types/express version npm install resolves.
-      - name: Typecheck (non-blocking)
+      # The project has no lint script; the typecheck is the static gate.
+      - name: Typecheck
         run: npx tsc --noEmit
-        continue-on-error: true
 
       - name: Test with coverage
         run: npx jest --ci --coverage --coverageReporters=text-summary --coverageReporters=json-summary
@@ -51,3 +49,13 @@ jobs:
             fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);
             console.log(md);
           '
+
+  docker:
+    name: Docker build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Build only (no push) to catch Dockerfile and `npm run build` breakage.
+      - name: Build API image
+        run: docker build --tag vps-orchestrator-api:ci .

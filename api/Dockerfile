@@ -5,7 +5,7 @@ ENV NODE_ENV=production
 FROM base AS build
 WORKDIR /app
 COPY package*.json ./
-RUN npm install --include=dev
+RUN npm ci --include=dev --no-audit --no-fund
 COPY tsconfig.json jest.config.js ./
 COPY src ./src
 RUN npm run build

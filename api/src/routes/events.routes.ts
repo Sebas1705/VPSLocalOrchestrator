@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import type { Request, Response } from 'express';
 import { getEventBus, EventCategory, DomainEventType } from '../infrastructure/events/index.js';
 import { LoggerFactory } from '../infrastructure/logging/index.js';
 
@@ -20,7 +19,7 @@ const logger = LoggerFactory.getInstance().getLogger();
  * GET /api/events/subscriptions
  * Get all active subscriptions, optionally filtered by event type
  */
-router.get('/subscriptions', (req: Request, res: Response) => {
+router.get('/subscriptions', (req, res) => {
   const eventBus = getEventBus();
   const eventType = req.query.type as string | undefined;
 
@@ -45,7 +44,7 @@ router.get('/subscriptions', (req: Request, res: Response) => {
  * GET /api/events/subscriptions/:subscriptionId
  * Get specific subscription details
  */
-router.get('/subscriptions/:subscriptionId', (req: Request, res: Response) => {
+router.get('/subscriptions/:subscriptionId', (req, res) => {
   const eventBus = getEventBus();
   const subscriptions = eventBus.getSubscriptions();
   const subscription = subscriptions.find(s => s.id === req.params.subscriptionId);
@@ -67,7 +66,7 @@ router.get('/subscriptions/:subscriptionId', (req: Request, res: Response) => {
  * DELETE /api/events/subscriptions/:subscriptionId
  * Unsubscribe from event type (requires auth)
  */
-router.delete('/subscriptions/:subscriptionId', (req: Request, res: Response) => {
+router.delete('/subscriptions/:subscriptionId', (req, res) => {
   const eventBus = getEventBus();
   const subscriptionId = req.params.subscriptionId || '';
   const success = eventBus.unsubscribe(subscriptionId);
@@ -91,7 +90,7 @@ router.delete('/subscriptions/:subscriptionId', (req: Request, res: Response) =>
  * POST /api/events/publish
  * Publish event to subscribers (requires auth)
  */
-router.post('/publish', async (req: Request, res: Response) => {
+router.post('/publish', async (req, res) => {
   const { eventType, payload, category, source } = req.body;
 
   if (!eventType) {
@@ -127,7 +126,7 @@ router.post('/publish', async (req: Request, res: Response) => {
  * GET /api/events/history
  * Get event history with optional filtering
  */
-router.get('/history', (req: Request, res: Response) => {
+router.get('/history', (req, res) => {
   const eventBus = getEventBus();
   
   const eventType = req.query.type as string | undefined;
@@ -171,7 +170,7 @@ router.get('/history', (req: Request, res: Response) => {
  * GET /api/events/history/:eventId
  * Get specific event from history
  */
-router.get('/history/:eventId', (req: Request, res: Response) => {
+router.get('/history/:eventId', (req, res) => {
   const eventBus = getEventBus();
   const history = eventBus.getHistory({ limit: 10000 });
   const event = history.find(e => e.id === req.params.eventId);
@@ -201,7 +200,7 @@ router.get('/history/:eventId', (req: Request, res: Response) => {
  * GET /api/events/stats
  * Get event bus statistics
  */
-router.get('/stats', (req: Request, res: Response) => {
+router.get('/stats', (req, res) => {
   const eventBus = getEventBus();
   const stats = eventBus.getStats();
 
@@ -225,7 +224,7 @@ router.get('/stats', (req: Request, res: Response) => {
  * POST /api/events/stats/reset
  * Reset statistics (requires auth)
  */
-router.post('/stats/reset', (req: Request, res: Response) => {
+router.post('/stats/reset', (req, res) => {
   const eventBus = getEventBus();
   eventBus.resetStats();
 
@@ -241,7 +240,7 @@ router.post('/stats/reset', (req: Request, res: Response) => {
  * GET /api/events/domains
  * Get list of available event domains
  */
-router.get('/domains', (req: Request, res: Response) => {
+router.get('/domains', (req, res) => {
   const domainEvents = Object.entries(DomainEventType).map(([key, value]) => ({
     name: key,
     value,
@@ -283,7 +282,7 @@ function categorizeEvent(eventValue: string): string {
  * GET /api/events/domains/:category
  * Get events for specific category
  */
-router.get('/domains/:category', (req: Request, res: Response) => {
+router.get('/domains/:category', (req, res) => {
   const { category } = req.params;
   
   const domainEvents = Object.entries(DomainEventType)
