@@ -19,15 +19,17 @@ import { isValidToken, extractToken } from './auth.js';
  */
 export function requireAuth<P>(req: Request<P>, res: Response, next: NextFunction) {
   const token = extractToken(req.headers.authorization);
-  console.log('[requireAuth] Ejecutando middleware. Authorization:', req.headers.authorization, 'Token extraído:', token);
   if (!isValidToken(token)) {
-    console.log('[requireAuth] Token inválido o ausente.');
+    // Never log the Authorization header or the token: only whether one was
+    // sent. A leaked log line must not be usable as a credential.
+    console.warn(
+      `[requireAuth] Rejected ${req.method} ${req.originalUrl ?? req.url}: bearer token ${token ? 'present but invalid' : 'absent'}`
+    );
     return res.status(401).json({
       success: false,
       error: 'Unauthorized',
       message: 'Valid API token required for this operation',
     });
   }
-  console.log('[requireAuth] Token válido, permitiendo acceso.');
   next();
 }

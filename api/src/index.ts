@@ -57,6 +57,7 @@ import { initializeEncryption } from './infrastructure/encryption/index.js';
 import { initializeRBAC } from './infrastructure/rbac/index.js';
 import { initializeThreatDetector } from './infrastructure/security/threat.js';
 import type { ICommandRepository, IResourceRepository, IServiceRepository } from './domain/ports/repository.interfaces.js';
+import { secretFingerprint } from './infrastructure/logging/redact.js';
 
 const config = getConfig();
 const logger = initializeLogger(config);
@@ -293,7 +294,7 @@ app.listen(PORT, HOST, () => {
   logger.info(`⏰ Started at: ${new Date().toISOString()}`);
   logger.info('='.repeat(50));
   logger.info('\n🔑 API Configuration loaded:');
-  logger.info(`   - API Token: ${config.security.apiToken.substring(0, 10)}...`);
+  logger.info(`   - API Token: configured (${secretFingerprint(config.security.apiToken)})`);
   logger.info(`   - Sudo commands: ${config.security.allowSudoCommands ? '✅ Allowed' : '❌ Not allowed'}`);
   logger.info(`   - Command allowlist: ${[...getCommandPolicyConfig().allowlist].join(', ') || '(empty: all commands denied)'}`);
   logger.info(`   - Log level: ${config.api.logLevel.toUpperCase()}`);

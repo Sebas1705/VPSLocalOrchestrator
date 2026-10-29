@@ -12,6 +12,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { getRateLimiter } from '../infrastructure/ratelimit/index.js';
 import { extractToken } from './auth.js';
 import { getLogger } from '../config/index.js';
+import { secretFingerprint } from '../infrastructure/logging/redact.js';
 
 const logger = getLogger('ratelimit-middleware');
 const rateLimiter = getRateLimiter();
@@ -49,7 +50,7 @@ export function rateLimitMiddleware(
         }
 
         logger.warn('Rate limit exceeded', {
-          token: token.substring(0, 10) + '...',
+          token: secretFingerprint(token),
           path: req.path,
           method: req.method,
           retryAfter: result.retryAfter,
@@ -76,7 +77,7 @@ export function rateLimitMiddleware(
       });
 
       logger.debug('Rate limit checked', {
-        token: token.substring(0, 10) + '...',
+        token: secretFingerprint(token),
         remaining: result.remaining,
         path: req.path,
       });
