@@ -3,6 +3,11 @@
  *
  * Handles HTTP requests for command execution.
  * Throws domain errors for proper error handling middleware integration.
+ *
+ * Commands are accepted either as `{ command: "docker ps -a" }` (tokenized
+ * without a shell) or as `{ command: "docker", args: ["ps", "-a"] }`. Both are
+ * authorized against the command allowlist in services/commandPolicy.ts and
+ * run with execFile; a denied command surfaces as a 403 CommandExecutionError.
  */
 
 import type { Request, Response } from 'express';
@@ -12,8 +17,14 @@ import { CommandExecutionError } from '../../domain/errors/index.js';
 import { sendValidatedResponse } from '../validation-middleware.js';
 import { CommandResultResponseSchema } from '../validation-schemas.js';
 import { executeCommand } from '../../services/commandExecutor.js';
+import { assertServiceName, describeCommandInput, type CommandInput } from '../../services/commandPolicy.js';
 import { CommandResultResponseMapper } from '../mappers/command.mappers.js';
 import { Command, CommandExecution } from '../../domain/command/entities.js';
+
+/** Build the executor input from a validated body: argv form when args is present. */
+function toCommandInput(command: string, args: unknown): CommandInput {
+  return Array.isArray(args) ? { command, args } : command;
+}
 
 export class CommandController implements ICommandController {
   private resultMapper = new CommandResultResponseMapper();
@@ -24,25 +35,29 @@ export class CommandController implements ICommandController {
   }
 
   async executeCommand(req: Request, res: Response): Promise<void> {
-    const { command, timeout, cwd, env } = (req as any).validatedBody;
-    
+    const { command, args, timeout, cwd, env } = (req as any).validatedBody;
+
     if (!command || command.trim().length === 0) {
       throw CommandExecutionError.invalidSyntax(command, 'Command cannot be empty');
     }
 
-    const result = await executeCommand(command, {
+    const input = toCommandInput(command, args);
+    const display = describeCommandInput(input);
+
+    const result = await executeCommand(input, {
       timeout: timeout || 30000,
       cwd,
       env,
+      source: 'api:/api/command/execute',
     });
 
     // Check for execution failures
     if (result.exitCode !== 0 && result.stderr.includes('Permission denied')) {
-      throw CommandExecutionError.denied(command, 'Permission denied - check sudo configuration');
+      throw CommandExecutionError.denied(display, 'Permission denied - check sudo configuration');
     }
 
     // Create Command entity and CommandExecution record
-    const cmdEntity = Command.create(command, timeout || 30000, cwd || '/tmp');
+    const cmdEntity = Command.create(display, timeout || 30000, cwd || '/tmp');
     const execution = new CommandExecution('generated', cmdEntity, 'api-user');
     execution.complete(result.exitCode, result.stdout, result.stderr);
 
@@ -55,7 +70,7 @@ export class CommandController implements ICommandController {
 
   async executeBatch(req: Request, res: Response): Promise<void> {
     const { commands } = (req as any).validatedBody;
-    
+
     if (!Array.isArray(commands) || commands.length === 0) {
       throw CommandExecutionError.invalidSyntax('batch', 'Commands array cannot be empty');
     }
@@ -68,13 +83,13 @@ export class CommandController implements ICommandController {
           throw CommandExecutionError.invalidSyntax(cmd, 'Individual commands cannot be empty');
         }
 
-        const result = await executeCommand(cmd);
-        
+        const result = await executeCommand(cmd, { source: 'api:/api/command/batch' });
+
         // Persist each batch execution
         const cmdEntity = Command.create(cmd, 30000, '/tmp');
         const execution = new CommandExecution('generated', cmdEntity, 'api-user');
         execution.complete(result.exitCode, result.stdout, result.stderr);
-        
+
         await this.commandRepository.create(execution);
         results.push({ command: cmd, exitCode: result.exitCode, stdout: result.stdout, stderr: result.stderr });
       } else if (typeof cmd === 'object' && cmd.command) {
@@ -82,18 +97,21 @@ export class CommandController implements ICommandController {
           throw CommandExecutionError.invalidSyntax(cmd.command, 'Command cannot be empty');
         }
 
-        const result = await executeCommand(cmd.command, {
+        const input = toCommandInput(cmd.command, cmd.args);
+        const display = describeCommandInput(input);
+        const result = await executeCommand(input, {
           timeout: cmd.timeout,
           cwd: cmd.cwd,
           env: cmd.env,
+          source: 'api:/api/command/batch',
         });
-        
-        const cmdEntity = Command.create(cmd.command, cmd.timeout || 30000, cmd.cwd || '/tmp');
+
+        const cmdEntity = Command.create(display, cmd.timeout || 30000, cmd.cwd || '/tmp');
         const execution = new CommandExecution('generated', cmdEntity, 'api-user');
         execution.complete(result.exitCode, result.stdout, result.stderr);
-        
+
         await this.commandRepository.create(execution);
-        results.push({ command: cmd.command, exitCode: result.exitCode, stdout: result.stdout, stderr: result.stderr });
+        results.push({ command: display, exitCode: result.exitCode, stdout: result.stdout, stderr: result.stderr });
       }
     }
 
@@ -106,7 +124,7 @@ export class CommandController implements ICommandController {
 
   async manageService(req: Request, res: Response): Promise<void> {
     const { service, action } = (req as any).validatedBody;
-    
+
     if (!service || service.trim().length === 0) {
       throw CommandExecutionError.invalidSyntax(service, 'Service name cannot be empty');
     }
@@ -115,32 +133,39 @@ export class CommandController implements ICommandController {
       throw CommandExecutionError.invalidSyntax(action, 'Invalid service action');
     }
 
-    // Read-only operations don't need sudo
+    // The unit name is passed as a single argv element (no shell), but it must
+    // still look like a unit name so it cannot be read as a systemctl option.
+    assertServiceName(service);
+
+    // Read-only operations don't need sudo. Mutating ones go through the same
+    // command policy as /api/command, so ALLOW_SUDO_COMMANDS=false disables them
+    // and `systemctl` must be on the allowlist.
     const readOnlyActions = ['status'];
     const needsSudo = !readOnlyActions.includes(action);
-    
-    const command = needsSudo 
-      ? `sudo -n systemctl ${action} ${service}`
-      : `systemctl ${action} ${service}`;
-    
-    const result = await executeCommand(command, { timeout: 30000 });
+
+    const input: CommandInput = needsSudo
+      ? { command: 'sudo', args: ['-n', 'systemctl', action, service] }
+      : { command: 'systemctl', args: [action, service] };
+    const display = describeCommandInput(input);
+
+    const result = await executeCommand(input, { timeout: 30000, source: 'api:/api/command/service' });
 
     // Only check sudo errors for operations that need sudo
     if (needsSudo && result.exitCode !== 0 && /sudo:|permission/i.test(result.stderr)) {
-      throw CommandExecutionError.denied(command, 'Sudo not permitted or password required');
+      throw CommandExecutionError.denied(display, 'Sudo not permitted or password required');
     }
 
     res.json({
       success: result.exitCode === 0,
       service,
-        action,
-        result: {
-          stdout: result.stdout,
-          stderr: result.stderr,
-          exitCode: result.exitCode,
-          duration: result.duration,
-        },
-        timestamp: new Date().toISOString(),
-      });
+      action,
+      result: {
+        stdout: result.stdout,
+        stderr: result.stderr,
+        exitCode: result.exitCode,
+        duration: result.duration,
+      },
+      timestamp: new Date().toISOString(),
+    });
   }
 }

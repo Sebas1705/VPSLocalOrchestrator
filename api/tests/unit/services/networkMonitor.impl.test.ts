@@ -1,8 +1,8 @@
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 
-jest.mock('child_process', () => ({ execSync: jest.fn() }));
+jest.mock('child_process', () => ({ execFileSync: jest.fn() }));
 
-const execSyncMock = execSync as jest.Mock;
+const execSyncMock = execFileSync as jest.Mock;
 
 describe('networkMonitor', () => {
   afterEach(() => {
@@ -21,6 +21,7 @@ describe('networkMonitor', () => {
     ].join('\n');
 
     const ssOutput = [
+      'State Recv-Q Send-Q Local Address:Port Peer Address:Port',
       'ESTAB 0 0 127.0.0.1:80 127.0.0.1:50000',
       'TIME-WAIT 0 0 192.168.0.10:22 192.168.0.1:40000',
       'LISTEN 0 0 0.0.0.0:443 0.0.0.0:*',
@@ -35,6 +36,14 @@ describe('networkMonitor', () => {
     const stats = await getNetworkStats();
 
     expect(execSyncMock).toHaveBeenCalledTimes(2);
+    // argv only, never a shell string
+    const [ipFile, ipArgs, ipOpts] = execSyncMock.mock.calls[0];
+    expect(ipFile).toMatch(/(^|[\/])ip$/);
+    expect(ipArgs).toEqual(['-s', '-h', 'link', 'show']);
+    expect(ipOpts).toEqual(expect.objectContaining({ shell: false }));
+    const [ssFile, ssArgs] = execSyncMock.mock.calls[1];
+    expect(ssFile).toMatch(/(^|[\/])ss$/);
+    expect(ssArgs).toEqual(['-tan']);
     expect(stats.interfaces.length).toBe(2);
     expect(stats.interfaces[0].ipv4).toBe('192.168.0.10');
     expect(stats.interfaces[0].ipv6).toBe('2001:db8::1');

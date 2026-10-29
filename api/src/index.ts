@@ -42,6 +42,9 @@ import { initializeJobQueue, getJobQueue } from './infrastructure/queue/index.js
 import { initializeRateLimiter } from './infrastructure/ratelimit/index.js';
 import { initializeCircuitBreakers, initializeBackPressure } from './infrastructure/circuitbreaker/index.js';
 import { processCommandJob, processBatchCommandJob } from './services/commandJobProcessor.js';
+import { setCommandAuditSink } from './services/commandExecutor.js';
+import { getCommandPolicyConfig } from './services/commandPolicy.js';
+import { logAction } from './services/auditLogger.js';
 import { initializeCache } from './infrastructure/cache/index.js';
 import { initializeDistributedRateLimiter } from './infrastructure/ratelimit/distributed.js';
 import { initializeOpenAPI } from './infrastructure/schema/openapi.js';
@@ -106,6 +109,12 @@ const jobQueue = initializeJobQueue({
   defaultTimeout: 300000, // 5 minutes
   defaultMaxAttempts: 3,
 });
+
+// Denied command attempts (allowlist, metacharacters, sudo policy) go to the
+// file-based audit log, queryable through /api/logs.
+setCommandAuditSink((event) =>
+  logAction('command.denied', { command: event.command, source: event.source, statusCode: event.statusCode }, 'failure', event.reason)
+);
 
 // Register job processors
 jobQueue.registerProcessor('command', processCommandJob);
@@ -286,6 +295,7 @@ app.listen(PORT, HOST, () => {
   logger.info('\n🔑 API Configuration loaded:');
   logger.info(`   - API Token: ${config.security.apiToken.substring(0, 10)}...`);
   logger.info(`   - Sudo commands: ${config.security.allowSudoCommands ? '✅ Allowed' : '❌ Not allowed'}`);
+  logger.info(`   - Command allowlist: ${[...getCommandPolicyConfig().allowlist].join(', ') || '(empty: all commands denied)'}`);
   logger.info(`   - Log level: ${config.api.logLevel.toUpperCase()}`);
   logger.info('='.repeat(50));
   logger.info('\n📋 Available endpoints:');

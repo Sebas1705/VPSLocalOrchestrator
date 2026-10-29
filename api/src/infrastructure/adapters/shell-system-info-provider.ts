@@ -3,7 +3,8 @@
 /**
  * System Information Provider via Shell Commands
  *
- * Reads system metrics using standard Unix tools (cat /proc/*, etc.).
+ * Reads system metrics using standard Unix tools (cat /proc/*, df, ip),
+ * executed with an explicit argv and no shell; filtering happens in code.
  * All I/O is isolated in this adapter.
  */
 
@@ -15,7 +16,7 @@ export class ShellSystemInfoProvider implements ISystemInfoProvider {
 
   async getCPUInfo(): Promise<CPUInfo> {
     try {
-      const result = await this.commandExecutor.execute('cat /proc/stat | head -1', {});
+      const result = await this.commandExecutor.execute('head', ['-n', '1', '/proc/stat'], {});
 
       if (result.exitCode !== 0) {
         return { cores: 0, userPercent: 0, systemPercent: 0, idlePercent: 0 };
@@ -38,13 +39,14 @@ export class ShellSystemInfoProvider implements ISystemInfoProvider {
 
   async getMemoryInfo(): Promise<MemoryInfo> {
     try {
-      const result = await this.commandExecutor.execute('cat /proc/meminfo | grep -E "^MemTotal|^MemFree|^MemAvailable"', {});
+      const result = await this.commandExecutor.execute('cat', ['/proc/meminfo'], {});
 
       if (result.exitCode !== 0) {
         return { total: 0, used: 0, free: 0, available: 0 };
       }
 
-      const lines = result.stdout.split('\n');
+      // Keep only the three fields we need (previously filtered with grep).
+      const lines = result.stdout.split('\n').filter((line) => /^(MemTotal|MemFree|MemAvailable):/.test(line));
       const memMap: Record<string, number> = {};
 
       lines.forEach((line) => {
@@ -65,13 +67,15 @@ export class ShellSystemInfoProvider implements ISystemInfoProvider {
 
   async getDiskInfo(): Promise<DiskInfo> {
     try {
-      const result = await this.commandExecutor.execute('df -B1 / | tail -1', {});
+      const result = await this.commandExecutor.execute('df', ['-B1', '/'], {});
 
       if (result.exitCode !== 0) {
         return { total: 0, used: 0, available: 0 };
       }
 
-      const parts = result.stdout.split(/\s+/);
+      // Last line of `df` output (previously selected with tail).
+      const lastLine = result.stdout.split('\n').filter((line) => line.trim()).pop() || '';
+      const parts = lastLine.trim().split(/\s+/);
       return {
         total: parseInt(parts[1], 10) || 0,
         used: parseInt(parts[2], 10) || 0,
@@ -84,7 +88,7 @@ export class ShellSystemInfoProvider implements ISystemInfoProvider {
 
   async getNetworkInterfaces(): Promise<NetworkInfo[]> {
     try {
-      const result = await this.commandExecutor.execute('ip link show', {});
+      const result = await this.commandExecutor.execute('ip', ['link', 'show'], {});
 
       if (result.exitCode !== 0) {
         return [];
@@ -113,7 +117,7 @@ export class ShellSystemInfoProvider implements ISystemInfoProvider {
 
   async getSystemUptime(): Promise<number> {
     try {
-      const result = await this.commandExecutor.execute('cat /proc/uptime', {});
+      const result = await this.commandExecutor.execute('cat', ['/proc/uptime'], {});
 
       if (result.exitCode !== 0) {
         return 0;

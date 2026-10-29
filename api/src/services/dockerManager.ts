@@ -1,4 +1,5 @@
-import { executeCommand } from './commandExecutor.js';
+import { runProcess } from './commandExecutor.js';
+import { assertContainerRef } from './commandPolicy.js';
 
 export interface ContainerInfo {
   id: string;
@@ -43,7 +44,7 @@ function ensureOk(exitCode: number, stderr: string, stdout: string, fallback: st
 }
 
 export async function listContainers(): Promise<ContainerInfo[]> {
-  const result = await executeCommand('docker ps --format "{{json .}}"');
+  const result = await runProcess('docker', ['ps', '--format', '{{json .}}']);
   ensureOk(result.exitCode, result.stderr, result.stdout, 'Failed to list containers');
 
   return parseLines(result.stdout, (item) => ({
@@ -59,7 +60,7 @@ export async function listContainers(): Promise<ContainerInfo[]> {
 }
 
 export async function listImages(): Promise<ImageInfo[]> {
-  const result = await executeCommand('docker images --format "{{json .}}"');
+  const result = await runProcess('docker', ['images', '--format', '{{json .}}']);
   ensureOk(result.exitCode, result.stderr, result.stdout, 'Failed to list images');
 
   return parseLines(result.stdout, (item) => ({
@@ -77,8 +78,8 @@ async function runDockerAction(action: 'start' | 'stop', id: string): Promise<{ 
     throw new Error('container id is required');
   }
 
-  const cmd = `docker ${action} ${id}`;
-  const result = await executeCommand(cmd);
+  assertContainerRef(id);
+  const result = await runProcess('docker', [action, id]);
   ensureOk(result.exitCode, result.stderr, result.stdout, `Failed to ${action} container`);
 
   return {

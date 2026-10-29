@@ -18,6 +18,8 @@ const logger = getLogger('command-job-processor');
  */
 export interface CommandJobPayload {
   command: string;
+  /** Optional argv; when present `command` must be the executable alone. */
+  args?: string[];
   workingDir?: string;
   env?: Record<string, string>;
   timeout?: number;
@@ -41,11 +43,11 @@ export async function processCommandJob(
   job: Job<CommandJobPayload>,
   signal: AbortSignal
 ): Promise<CommandJobResult> {
-  const { command, workingDir, env, timeout } = job.payload;
+  const { command, args, workingDir, env, timeout } = job.payload;
 
   logger.info('Processing command job', {
     jobId: job.id,
-    command: command.substring(0, 50),
+    command: String(command).substring(0, 50),
     workingDir,
   });
 
@@ -64,14 +66,17 @@ export async function processCommandJob(
     }
     
     if (env !== undefined) {
-      options.env = { ...process.env, ...env } as Record<string, string>;
+      // Only the job's own variables; the executor merges process.env and
+      // rejects protected keys (PATH, LD_*, NODE_OPTIONS, ...).
+      options.env = env;
     }
     
     if (timeout !== undefined) {
       options.timeout = timeout;
     }
 
-    const result = await executeCommand(command, options);
+    const input = Array.isArray(args) ? { command, args } : command;
+    const result = await executeCommand(input, { ...options, source: `job:${job.id}` });
 
     const duration = Date.now() - startTime;
     const success = result.exitCode === 0;
@@ -108,6 +113,7 @@ export async function processCommandJob(
 export interface BatchCommandJobPayload {
   commands: Array<{
     command: string;
+    args?: string[];
     workingDir?: string;
     env?: Record<string, string>;
   }>;
@@ -173,10 +179,11 @@ export async function processBatchCommandJob(
       }
       
       if (cmd.env !== undefined) {
-        options.env = { ...process.env, ...cmd.env } as Record<string, string>;
+        options.env = cmd.env;
       }
 
-      const result = await executeCommand(cmd.command, options);
+      const input = Array.isArray(cmd.args) ? { command: cmd.command, args: cmd.args } : cmd.command;
+      const result = await executeCommand(input, { ...options, source: `job:${job.id}` });
       const duration = Date.now() - cmdStartTime;
 
       const cmdResult: CommandJobResult = {

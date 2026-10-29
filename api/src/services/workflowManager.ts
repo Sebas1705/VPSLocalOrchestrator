@@ -15,6 +15,8 @@ export interface WorkflowStep {
   id: string;
   type: WorkflowStepType;
   command?: string;
+  /** Optional argv; when present `command` must be the executable alone. */
+  args?: string[];
   waitMs?: number;
   url?: string;
   method?: string;
@@ -105,6 +107,9 @@ function validateStep(step: any): asserts step is WorkflowStep {
   if (step.type === 'command') {
     if (!step.command || typeof step.command !== 'string') {
       throw new Error('command step requires command string');
+    }
+    if (step.args !== undefined && (!Array.isArray(step.args) || step.args.some((a: unknown) => typeof a !== 'string'))) {
+      throw new Error('command step args must be an array of strings');
     }
   }
   if (step.type === 'wait') {
@@ -214,7 +219,9 @@ async function runStep(step: WorkflowStep): Promise<StepResult> {
   const started = Date.now();
   try {
     if (step.type === 'command') {
-      const result = await executeCommand(step.command!);
+      // Denied commands (allowlist / metacharacters) throw and are reported as a failed step.
+      const input = Array.isArray(step.args) ? { command: step.command!, args: step.args } : step.command!;
+      const result = await executeCommand(input, { source: `workflow:${step.id}` });
       const base: Omit<StepResult, 'status' | 'type'> & { status: StepResult['status']; type: WorkflowStepType } = {
         stepId: step.id,
         type: step.type,

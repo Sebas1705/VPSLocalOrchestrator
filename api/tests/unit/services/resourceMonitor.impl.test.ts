@@ -8,13 +8,17 @@ jest.mock('os', () => ({
 
 import * as os from 'os';
 import { getProcessList, getSystemResources, killProcess, setProcessPriority } from '../../../src/services/resourceMonitor.js';
-import { executeCommand } from '../../../src/services/commandExecutor.js';
+import { runProcess } from '../../../src/services/commandExecutor.js';
 
 jest.mock('../../../src/services/commandExecutor.js', () => ({
-  executeCommand: jest.fn(),
+  runProcess: jest.fn(),
 }));
 
-const executeCommandMock = executeCommand as jest.Mock;
+const executeCommandMock = runProcess as jest.Mock;
+
+const TOP_OUTPUT = (idle: string) =>
+  ['top - 10:00:00 up 1 day', `%Cpu(s):  5.0 us,  2.0 sy,  0.0 ni, ${idle} id,  0.0 wa`, 'MiB Mem : 1000 total'].join('\n');
+const DF_OUTPUT = ['Filesystem 1K-blocks Used Available Use% Mounted on', '/dev/sda1 1000 200 800 20% /'].join('\n');
 
 describe('resourceMonitor', () => {
   afterEach(() => {
@@ -24,8 +28,8 @@ describe('resourceMonitor', () => {
   describe('getSystemResources', () => {
     it('returns cpu, memory, and disk metrics', async () => {
       executeCommandMock
-        .mockResolvedValueOnce({ stdout: '12.5', stderr: '', exitCode: 0, duration: 10 }) // CPU
-        .mockResolvedValueOnce({ stdout: '1000 200 800 20%', stderr: '', exitCode: 0, duration: 10 }); // Disk
+        .mockResolvedValueOnce({ stdout: TOP_OUTPUT('87.5'), stderr: '', exitCode: 0, duration: 10 }) // CPU
+        .mockResolvedValueOnce({ stdout: DF_OUTPUT, stderr: '', exitCode: 0, duration: 10 }); // Disk
 
       const resources = await getSystemResources();
 
@@ -42,7 +46,7 @@ describe('resourceMonitor', () => {
     it('falls back to zeros when cpu command fails', async () => {
       executeCommandMock
         .mockRejectedValueOnce(new Error('cpu fail'))
-        .mockResolvedValueOnce({ stdout: '1000 200 800 20%', stderr: '', exitCode: 0, duration: 10 });
+        .mockResolvedValueOnce({ stdout: DF_OUTPUT, stderr: '', exitCode: 0, duration: 10 });
 
       const resources = await getSystemResources();
 
@@ -52,7 +56,7 @@ describe('resourceMonitor', () => {
 
     it('returns zeroed disk metrics when parsing fails', async () => {
       executeCommandMock
-        .mockResolvedValueOnce({ stdout: '5', stderr: '', exitCode: 0, duration: 10 })
+        .mockResolvedValueOnce({ stdout: TOP_OUTPUT('95.0'), stderr: '', exitCode: 0, duration: 10 })
         .mockRejectedValueOnce(new Error('df fail'));
 
       const resources = await getSystemResources();
@@ -62,11 +66,18 @@ describe('resourceMonitor', () => {
 
   describe('getProcessList', () => {
     it('parses process list output', async () => {
-      const psOutput = '1234 node 12.0 1.5\n4321 nginx 5.0 0.8\n';
+      const psOutput = [
+        'USER PID %CPU %MEM VSZ RSS TTY STAT START TIME COMMAND',
+        'app 1234 12.0 1.5 100 50 ? S 10:00 0:01 node server.js',
+        'www 4321 5.0 0.8 100 50 ? S 10:00 0:01 nginx -g daemon',
+        'www 4322 1.0 0.1 100 50 ? S 10:00 0:01 nginx -g daemon',
+      ].join('\n');
       executeCommandMock.mockResolvedValueOnce({ stdout: psOutput, stderr: '', exitCode: 0, duration: 5 });
 
       const processes = await getProcessList(2);
 
+      // header skipped and list truncated in code, no head/tail/awk pipeline
+      expect(executeCommandMock).toHaveBeenCalledWith('ps', ['aux', '--sort=-%cpu']);
       expect(processes).toHaveLength(2);
       expect(processes[0]).toEqual({ pid: 1234, name: 'node', cpu: 12, memory: 1.5 });
       expect(processes[1].name).toBe('nginx');
@@ -89,6 +100,14 @@ describe('resourceMonitor', () => {
     it('returns true when kill succeeds', async () => {
       executeCommandMock.mockResolvedValueOnce({ stdout: '', stderr: '', exitCode: 0, duration: 1 });
       await expect(killProcess(123)).resolves.toBe(true);
+      expect(executeCommandMock).toHaveBeenCalledWith('kill', ['-TERM', '123']);
+    });
+
+    it('rejects injected signals and pids without spawning anything', async () => {
+      await expect(killProcess(1, 'TERM; rm -rf /')).resolves.toBe(false);
+      await expect(killProcess('1 && reboot' as any)).resolves.toBe(false);
+      await expect(killProcess(-1)).resolves.toBe(false);
+      expect(executeCommandMock).not.toHaveBeenCalled();
     });
 
     it('returns false on error', async () => {
@@ -135,6 +154,32 @@ describe('resourceMonitor', () => {
       const result = await setProcessPriority(200, 10);
       expect(result.success).toBe(true);
       expect(executeCommandMock).toHaveBeenCalledTimes(3);
+      expect(executeCommandMock).toHaveBeenNthCalledWith(1, 'ps', ['-p', '200', '-o', 'pid=']);
+      expect(executeCommandMock).toHaveBeenNthCalledWith(2, 'renice', ['10', '-p', '200']);
+      expect(executeCommandMock).toHaveBeenNthCalledWith(3, 'sudo', ['-n', 'renice', '10', '-p', '200']);
+    });
+
+    it('does not retry with sudo when ALLOW_SUDO_COMMANDS=false', async () => {
+      const previous = process.env.ALLOW_SUDO_COMMANDS;
+      process.env.ALLOW_SUDO_COMMANDS = 'false';
+      try {
+        executeCommandMock
+          .mockResolvedValueOnce({ stdout: '', stderr: '', exitCode: 0, duration: 1 }) // check ps
+          .mockResolvedValueOnce({ stdout: '', stderr: 'permission denied', exitCode: 1, duration: 1 }); // renice
+
+        const result = await setProcessPriority(200, 10);
+        expect(result.success).toBe(false);
+        expect(executeCommandMock).toHaveBeenCalledTimes(2);
+      } finally {
+        if (previous === undefined) delete process.env.ALLOW_SUDO_COMMANDS;
+        else process.env.ALLOW_SUDO_COMMANDS = previous;
+      }
+    });
+
+    it('rejects a non-numeric pid before running ps', async () => {
+      const result = await setProcessPriority('1; reboot' as any, 5);
+      expect(result.success).toBe(false);
+      expect(executeCommandMock).not.toHaveBeenCalled();
     });
 
     it('returns failure when renice exits with non-permission error', async () => {

@@ -14,6 +14,12 @@ export const ExecuteCommandRequestSchema = z.object({
     .string()
     .min(1, 'Command cannot be empty')
     .max(10000, 'Command too long'),
+  // Preferred contract: `command` is the executable alone and `args` its argv.
+  // When omitted, `command` is tokenized (quote-aware, no shell, metacharacters rejected).
+  args: z
+    .array(z.string().max(4096, 'Argument too long'))
+    .max(256, 'Too many arguments')
+    .optional(),
   timeout: z
     .number()
     .int()
