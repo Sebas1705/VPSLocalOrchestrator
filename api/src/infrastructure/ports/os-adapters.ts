@@ -6,10 +6,14 @@
  */
 
 /**
- * CommandExecutor: Port for executing shell commands
+ * CommandExecutor: Port for executing a program with an explicit argv.
+ *
+ * There is no shell: `file` is the program and `args` are passed verbatim,
+ * so pipes, redirections and globbing are not available (and cannot be
+ * injected). Adapters do any post-processing in code.
  */
 export interface ICommandExecutor {
-  execute(command: string, options: CommandExecutionOptions): Promise<CommandExecutionResult>;
+  execute(file: string, args: readonly string[], options?: CommandExecutionOptions): Promise<CommandExecutionResult>;
 }
 
 export interface CommandExecutionOptions {

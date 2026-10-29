@@ -3,12 +3,13 @@
 /**
  * OS Command Process Manager Adapter
  *
- * Uses `ps`, `kill`, and other shell commands to manage processes.
+ * Uses `ps` and `kill` (argv only, no shell) to manage processes.
  * All side-effects are isolated in this adapter.
  */
 
 import type { IProcessManager, ProcessInfo, ProcessStats } from '../ports/os-adapters.js';
 import type { ICommandExecutor } from '../ports/os-adapters.js';
+import { assertPid, assertSignal } from '../../services/commandPolicy.js';
 
 export class OsCommandProcessManager implements IProcessManager {
   constructor(private readonly commandExecutor: ICommandExecutor) {}
@@ -16,7 +17,7 @@ export class OsCommandProcessManager implements IProcessManager {
   async getProcessList(): Promise<ProcessInfo[]> {
     try {
       // ps aux format: USER PID %CPU %MEM VSZ RSS COMMAND
-      const result = await this.commandExecutor.execute('ps aux --no-header', {});
+      const result = await this.commandExecutor.execute('ps', ['aux', '--no-header'], {});
 
       if (result.exitCode !== 0) {
         return [];
@@ -34,7 +35,7 @@ export class OsCommandProcessManager implements IProcessManager {
 
   async getProcessById(pid: number): Promise<ProcessInfo | null> {
     try {
-      const result = await this.commandExecutor.execute(`ps p ${pid} --no-header`, {});
+      const result = await this.commandExecutor.execute('ps', ['p', String(assertPid(pid)), '--no-header'], {});
 
       if (result.exitCode !== 0 || !result.stdout) {
         return null;
@@ -47,7 +48,7 @@ export class OsCommandProcessManager implements IProcessManager {
   }
 
   async killProcess(pid: number, signal: string = 'TERM'): Promise<void> {
-    const result = await this.commandExecutor.execute(`kill -${signal} ${pid}`, {});
+    const result = await this.commandExecutor.execute('kill', [`-${assertSignal(signal)}`, String(assertPid(pid))], {});
 
     if (result.exitCode !== 0) {
       throw new Error(`Failed to kill process ${pid}: ${result.stderr}`);
@@ -57,7 +58,8 @@ export class OsCommandProcessManager implements IProcessManager {
   async getProcessStats(pid: number): Promise<ProcessStats | null> {
     try {
       const result = await this.commandExecutor.execute(
-        `ps p ${pid} -o %cpu,%mem,etime,nlwp --no-header`,
+        'ps',
+        ['p', String(assertPid(pid)), '-o', '%cpu,%mem,etime,nlwp', '--no-header'],
         {}
       );
 

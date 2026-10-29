@@ -11,6 +11,7 @@ import { getCache, type ICache } from '../cache/index.js';
 import { getLogger } from '../../config/index.js';
 import type { RateLimitConfig, RateLimitResult } from './index.js';
 import { RateLimitTiers } from './index.js';
+import { secretFingerprint } from '../logging/redact.js';
 
 const logger = getLogger('distributed-ratelimit');
 
@@ -191,7 +192,7 @@ export class DistributedRateLimiter {
     const ttl = 86400000; // 24 hours
     await this.cache.set(`ratelimit:config:${token}`, config, { ttl });
 
-    logger.info('Rate limit config set for token', { token });
+    logger.info('Rate limit config set for token', { token: secretFingerprint(token) });
   }
 
   /**
@@ -199,7 +200,7 @@ export class DistributedRateLimiter {
    */
   async reset(token: string): Promise<void> {
     await this.cache.delete(`ratelimit:state:${token}`);
-    logger.info('Rate limit reset for token', { token });
+    logger.info('Rate limit reset for token', { token: secretFingerprint(token) });
   }
 
   /**

@@ -15,6 +15,7 @@ import { getRateLimiter, RateLimitTiers } from '../infrastructure/ratelimit/inde
 import { extractToken } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { getLogger } from '../config/index.js';
+import { secretFingerprint } from '../infrastructure/logging/redact.js';
 
 const router = Router();
 const logger = getLogger('ratelimits-routes');
@@ -35,7 +36,7 @@ router.get('/stats', requireAuth, async (req: Request, res: Response) => {
     const stats = rateLimiter.getStats(token);
 
     res.json({
-      token: token.substring(0, 10) + '...',
+      token: secretFingerprint(token),
       stats: {
         tokensRemaining: stats.tokensRemaining,
         requestsInWindow: stats.requestsInWindow,
@@ -99,7 +100,7 @@ router.post('/config', requireAuth, async (req: Request, res: Response) => {
       rateLimiter.setConfig(token, config);
 
       logger.info('Rate limit tier set', {
-        token: token.substring(0, 10) + '...',
+        token: secretFingerprint(token),
         tier,
       });
 
@@ -142,7 +143,7 @@ router.post('/config', requireAuth, async (req: Request, res: Response) => {
       });
 
       logger.info('Custom rate limit config set', {
-        token: token.substring(0, 10) + '...',
+        token: secretFingerprint(token),
         custom,
       });
 
@@ -187,7 +188,7 @@ router.delete('/reset', requireAuth, async (req: Request, res: Response) => {
     rateLimiter.reset(token);
 
     logger.info('Rate limit reset', {
-      token: token.substring(0, 10) + '...',
+      token: secretFingerprint(token),
     });
 
     res.json({

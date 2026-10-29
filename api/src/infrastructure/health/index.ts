@@ -359,13 +359,15 @@ export class BuiltInHealthChecks {
       const startTime = Date.now();
 
       try {
-        // Use child_process to check disk space
-        const { exec } = await import('child_process');
+        // `df -BG <path>` via execFile (no shell); the path is a single argv
+        // element and the "Avail" column of the last line is parsed here.
+        const { execFile } = await import('child_process');
         const { promisify } = await import('util');
-        const execAsync = promisify(exec);
+        const execFileAsync = promisify(execFile);
 
-        const { stdout } = await execAsync(`df -BG ${path} | tail -1 | awk '{print $4}'`);
-        const freeGB = parseInt(stdout.trim().replace('G', ''), 10);
+        const { stdout } = await execFileAsync('df', ['-BG', '--', path], { shell: false, windowsHide: true });
+        const lastLine = String(stdout).split('\n').filter((line) => line.trim()).pop() ?? '';
+        const freeGB = parseInt((lastLine.trim().split(/\s+/)[3] ?? '').replace('G', ''), 10);
 
         const status = freeGB >= minFreeGB ? HealthStatus.HEALTHY : HealthStatus.UNHEALTHY;
 

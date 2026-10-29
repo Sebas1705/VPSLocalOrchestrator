@@ -1,18 +1,19 @@
 /**
  * Systemd Service Manager Adapter
  *
- * Uses systemctl to manage system services.
+ * Uses systemctl (argv only, no shell; unit names validated) to manage services.
  * All side-effects (process control) isolated here.
  */
 
 import type { IServiceManager, ServiceStatusInfo } from '../ports/os-adapters.js';
 import type { ICommandExecutor } from '../ports/os-adapters.js';
+import { assertServiceName } from '../../services/commandPolicy.js';
 
 export class SystemdServiceManager implements IServiceManager {
   constructor(private readonly commandExecutor: ICommandExecutor) {}
 
   async startService(name: string): Promise<void> {
-    const result = await this.commandExecutor.execute(`systemctl start ${name}`, {});
+    const result = await this.commandExecutor.execute('systemctl', ['start', assertServiceName(name)], {});
 
     if (result.exitCode !== 0) {
       throw new Error(`Failed to start service '${name}': ${result.stderr}`);
@@ -20,7 +21,7 @@ export class SystemdServiceManager implements IServiceManager {
   }
 
   async stopService(name: string): Promise<void> {
-    const result = await this.commandExecutor.execute(`systemctl stop ${name}`, {});
+    const result = await this.commandExecutor.execute('systemctl', ['stop', assertServiceName(name)], {});
 
     if (result.exitCode !== 0) {
       throw new Error(`Failed to stop service '${name}': ${result.stderr}`);
@@ -28,7 +29,7 @@ export class SystemdServiceManager implements IServiceManager {
   }
 
   async restartService(name: string): Promise<void> {
-    const result = await this.commandExecutor.execute(`systemctl restart ${name}`, {});
+    const result = await this.commandExecutor.execute('systemctl', ['restart', assertServiceName(name)], {});
 
     if (result.exitCode !== 0) {
       throw new Error(`Failed to restart service '${name}': ${result.stderr}`);
@@ -37,8 +38,8 @@ export class SystemdServiceManager implements IServiceManager {
 
   async getServiceStatus(name: string): Promise<ServiceStatusInfo> {
     try {
-      const result = await this.commandExecutor.execute(`systemctl is-active ${name}`, {});
-      const enabledResult = await this.commandExecutor.execute(`systemctl is-enabled ${name}`, {});
+      const result = await this.commandExecutor.execute('systemctl', ['is-active', assertServiceName(name)], {});
+      const enabledResult = await this.commandExecutor.execute('systemctl', ['is-enabled', assertServiceName(name)], {});
 
       const status = (result.stdout.trim() || 'unknown') as 'active' | 'inactive' | 'failed' | 'unknown';
       const enabled = enabledResult.exitCode === 0;
@@ -60,7 +61,8 @@ export class SystemdServiceManager implements IServiceManager {
   async listServices(): Promise<ServiceStatusInfo[]> {
     try {
       const result = await this.commandExecutor.execute(
-        'systemctl list-units --type=service --no-pager --plain | grep -v ^UNIT',
+        'systemctl',
+        ['list-units', '--type=service', '--no-pager', '--plain', '--no-legend'],
         {}
       );
 

@@ -1,4 +1,5 @@
-import { executeCommand } from './commandExecutor.js';
+import { runProcess } from './commandExecutor.js';
+import { assertPid, assertSignal, getCommandPolicyConfig } from './commandPolicy.js';
 import * as os from 'os';
 import * as fs from 'fs/promises';
 
@@ -36,10 +37,13 @@ export interface ProcessInfo {
  */
 async function getCpuUsage(): Promise<number> {
   try {
-    const result = await executeCommand(
-      "top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\\([0-9.]*\\)%* id.*/\\1/' | awk '{print 100 - $1}'"
-    );
-    return parseFloat(result.stdout) || 0;
+    // `top -bn1`, then parse the idle percentage from the "Cpu(s)" line in JS
+    // (previously a shell pipeline through grep/sed/awk).
+    const result = await runProcess('top', ['-bn1']);
+    const cpuLine = result.stdout.split('\n').find((line) => line.includes('Cpu(s)'));
+    const idle = cpuLine?.match(/([\d.]+)\s*%?\s*id/)?.[1];
+    if (idle === undefined) return 0;
+    return Math.round((100 - parseFloat(idle)) * 10) / 10 || 0;
   } catch (error) {
     // Fallback para sistemas no Linux
     return 0;
@@ -51,8 +55,10 @@ async function getCpuUsage(): Promise<number> {
  */
 async function getDiskUsage(): Promise<{ total: number; free: number; used: number; usagePercent: number }> {
   try {
-    const result = await executeCommand("df -k / | tail -1 | awk '{print $2,$3,$4,$5}'");
-    const [total, used, free, percent] = result.stdout.split(' ');
+    // `df -k /`: last line is "Filesystem 1K-blocks Used Available Use% Mounted"
+    const result = await runProcess('df', ['-k', '/']);
+    const lastLine = result.stdout.split('\n').filter((line) => line.trim()).pop() ?? '';
+    const [, total, used, free, percent] = lastLine.trim().split(/\s+/);
     
     return {
       total: parseInt(total ?? '') * 1024, // Convertir a bytes
@@ -99,19 +105,20 @@ export async function getSystemResources(): Promise<SystemResources> {
  */
 export async function getProcessList(limit: number = 10): Promise<ProcessInfo[]> {
   try {
-    const result = await executeCommand(
-      `ps aux --sort=-%cpu | head -n ${limit + 1} | tail -n ${limit} | awk '{print $2,$11,$3,$4}'`
-    );
+    const count = Number.isSafeInteger(limit) && limit > 0 ? Math.min(limit, 1000) : 10;
+    // `ps aux` columns: USER PID %CPU %MEM VSZ RSS TTY STAT START TIME COMMAND.
+    // Header and top-N selection are done here instead of head/tail/awk.
+    const result = await runProcess('ps', ['aux', '--sort=-%cpu']);
 
     const processes: ProcessInfo[] = [];
-    const lines = result.stdout.split('\n').filter(line => line.trim());
+    const lines = result.stdout.split('\n').filter(line => line.trim()).slice(1, count + 1);
 
     for (const line of lines) {
       const parts = line.trim().split(/\s+/);
-      if (parts.length >= 4) {
+      if (parts.length >= 11) {
         processes.push({
-          pid: parseInt(parts[0] ?? ''),
-          name: parts[1] ?? '',
+          pid: parseInt(parts[1] ?? ''),
+          name: parts[10] ?? '',
           cpu: parseFloat(parts[2] ?? ''),
           memory: parseFloat(parts[3] ?? ''),
         });
@@ -129,7 +136,7 @@ export async function getProcessList(limit: number = 10): Promise<ProcessInfo[]>
  */
 export async function killProcess(pid: number, signal: string = 'TERM'): Promise<boolean> {
   try {
-    const result = await executeCommand(`kill -${signal} ${pid}`);
+    const result = await runProcess('kill', [`-${assertSignal(signal)}`, String(assertPid(pid))]);
     return result.exitCode === 0;
   } catch (error) {
     return false;
@@ -156,7 +163,11 @@ export async function setProcessPriority(
 
   try {
     // Verificar que el proceso existe
-    const checkResult = await executeCommand(`ps -p ${pid} -o pid=`);
+    const safePid = String(assertPid(pid));
+    if (!Number.isInteger(priority)) {
+      return { success: false, message: 'Priority must be an integer' };
+    }
+    const checkResult = await runProcess('ps', ['-p', safePid, '-o', 'pid=']);
     if (checkResult.exitCode !== 0) {
       return {
         success: false,
@@ -165,11 +176,11 @@ export async function setProcessPriority(
     }
 
     // Intentar sin sudo primero (si el proceso pertenece al usuario actual)
-    let result = await executeCommand(`renice ${priority} -p ${pid}`);
+    let result = await runProcess('renice', [String(priority), '-p', safePid]);
 
-    // Si falla por permisos, intentar con sudo -n
-    if (result.exitCode !== 0 && /permission/i.test(result.stderr)) {
-      result = await executeCommand(`sudo -n renice ${priority} -p ${pid}`);
+    // Si falla por permisos, intentar con sudo -n (salvo ALLOW_SUDO_COMMANDS=false)
+    if (result.exitCode !== 0 && /permission/i.test(result.stderr) && getCommandPolicyConfig().allowSudo) {
+      result = await runProcess('sudo', ['-n', 'renice', String(priority), '-p', safePid]);
     }
 
     if (result.exitCode === 0) {

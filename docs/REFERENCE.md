@@ -17,7 +17,7 @@ Server: http://localhost:3000
 
 ## Key endpoints (public noted)
 - Public: `GET /`, `GET /health`, `GET /api/resources`, `GET /api/resources/processes`, `GET /api/resources/network`, `GET /api/openapi.json`
-- Commands: `POST /api/command/execute`, `POST /api/command/batch`, `POST /api/command/service` (passwordless sudo recommended)
+- Commands: `POST /api/command/execute`, `POST /api/command/batch`, `POST /api/command/service` (passwordless sudo recommended). Body: `{ "command": "docker", "args": ["ps", "-a"] }` (preferred) or `{ "command": "docker ps -a" }`; no shell is used, the executable must be on `COMMAND_ALLOWLIST`, and denied commands return 403 (see "Security model" in the README)
 - Resources: `GET /api/resources`, `/processes`, `/network`; `POST /api/resources/process/:pid/priority`; `DELETE /api/resources/process/:pid`
 - Files/backups: `GET|POST /api/file`, `POST /api/file/upload`, `POST /api/backup/create`, `POST /api/backup/restore`
 - Jobs/workflows: `POST /api/jobs`, `GET /api/jobs/:id`, `POST /api/workflows/run`

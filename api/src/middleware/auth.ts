@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import { getConfig } from '../config/index.js';
+import { isPrivilegedArgv, tokenizeCommand } from '../services/commandPolicy.js';
 
 const config = getConfig();
 
@@ -43,34 +44,20 @@ export function extractToken(authHeader: string | undefined): string | undefined
 }
 
 /**
- * Lista de comandos que requieren autenticación
- */
-export const PRIVILEGED_COMMANDS = [
-  /^sudo\s+/,
-  /^systemctl\s+/,
-  /^service\s+/,
-  /^rm\s+-rf/,
-  /^shutdown/,
-  /^reboot/,
-  /^poweroff/,
-  /^halt/,
-  /^kill\s+-9/,
-  /^pkill/,
-  /^dd\s+/,
-  /^mkfs/,
-  /^fdisk/,
-  /^parted/,
-  /^chmod\s+/,
-  /^chown\s+/,
-  /^passwd/,
-  /^userdel/,
-  /^useradd/,
-];
-
-/**
- * Verifica si un comando requiere privilegios
+ * Classify a command as privileged (sudo, mutating systemctl/service verbs,
+ * destructive tools such as rm, dd, kill, shutdown).
+ *
+ * This is a classification helper, not a security control: commands are
+ * authorized by the allowlist in services/commandPolicy.ts and always run
+ * without a shell. The former regex denylist (PRIVILEGED_COMMANDS) was
+ * trivially bypassable (`/bin/rm -rf`, `x; rm -rf`, `$(...)`) and was removed.
  */
 export function requiresPrivileges(command: string): boolean {
-  const trimmedCommand = command.trim();
-  return PRIVILEGED_COMMANDS.some(pattern => pattern.test(trimmedCommand));
+  try {
+    return isPrivilegedArgv(tokenizeCommand(command));
+  } catch {
+    // Input the tokenizer rejects (metacharacters, bad quoting) is treated as
+    // privileged; the command policy denies it anyway.
+    return true;
+  }
 }

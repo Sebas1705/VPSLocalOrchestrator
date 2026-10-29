@@ -1,7 +1,8 @@
 import path from 'path';
 import os from 'os';
 import fs from 'fs/promises';
-import { executeCommand } from './commandExecutor.js';
+import { runProcess } from './commandExecutor.js';
+import { formatArgv } from './commandPolicy.js';
 
 const ALLOWED_PREFIXES = [os.homedir(), '/tmp', '/var/tmp'];
 
@@ -44,6 +45,13 @@ export interface StatusResult {
   output: string;
 }
 
+/** PostgreSQL database names: no leading dash (option injection), no control characters. */
+function assertDatabaseName(name: string): void {
+  if (!/^[A-Za-z0-9_][A-Za-z0-9_.$-]{0,62}$/.test(name)) {
+    throw new Error('invalid database name');
+  }
+}
+
 function assertSupported(type: string): asserts type is DatabaseType {
   if (type !== 'postgresql') {
     throw new Error('Only postgresql is supported currently');
@@ -61,10 +69,12 @@ export async function backupDatabase(type: string, name: string, destination?: s
 
   const filename = timestampName(name);
   const fullPath = path.join(destDir, filename);
-  const command = `pg_dump ${name} -f ${fullPath}`;
+  assertDatabaseName(name);
+  const argv = [name, '-f', fullPath];
+  const command = formatArgv(['pg_dump', ...argv]);
 
   const started = Date.now();
-  const result = await executeCommand(command);
+  const result = await runProcess('pg_dump', argv);
   const durationMs = Date.now() - started;
 
   if (result.exitCode !== 0) {
@@ -85,8 +95,8 @@ export async function backupDatabase(type: string, name: string, destination?: s
 export async function databaseStatus(type: string, name?: string): Promise<StatusResult> {
   assertSupported(type);
   const dbName = name && typeof name === 'string' ? name : 'postgres';
-  const command = `pg_isready -d ${dbName}`;
-  const result = await executeCommand(command);
+  assertDatabaseName(dbName);
+  const result = await runProcess('pg_isready', ['-d', dbName]);
   return {
     type: 'postgresql',
     name: dbName,

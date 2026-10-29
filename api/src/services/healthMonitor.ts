@@ -1,4 +1,4 @@
-import { executeCommand } from './commandExecutor.js';
+import { runProcess } from './commandExecutor.js';
 
 export interface ServiceHealth {
   name: string;
@@ -26,7 +26,7 @@ export async function getServiceHealth(serviceName: string): Promise<ServiceHeal
     }
 
     // Ejecutar systemctl status
-    const cmdResult = await executeCommand(`systemctl status ${serviceName}`, { timeout: 10000 });
+    const cmdResult = await runProcess('systemctl', ['status', serviceName], { timeout: 10000 });
     
     // Parsear salida
     const output = cmdResult.stdout;
@@ -84,7 +84,7 @@ export async function getMultipleServicesHealth(serviceNames: string[]): Promise
  */
 export async function listActiveServices(): Promise<{ name: string; status: string }[]> {
   try {
-    const result = await executeCommand('systemctl list-units --type=service --state=active --no-pager -q');
+    const result = await runProcess('systemctl', ['list-units', '--type=service', '--state=active', '--no-pager', '-q']);
     const lines = result.stdout.split('\n').filter(line => line.trim());
     
     const services: { name: string; status: string }[] = [];

@@ -1,4 +1,11 @@
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
+import { getCommandPolicyConfig, resolveExecutable } from './commandPolicy.js';
+
+/** Run a fixed argv synchronously, without a shell, resolving the program in trusted dirs. */
+function runSync(file: string, args: string[], timeout = 5000): string {
+  const resolved = resolveExecutable(file, getCommandPolicyConfig().searchPath) ?? file;
+  return execFileSync(resolved, args, { timeout, shell: false, windowsHide: true }).toString();
+}
 
 export interface NetworkInterface {
   name: string;
@@ -30,7 +37,7 @@ export interface NetworkStats {
  */
 async function getNetworkInterfaces(): Promise<NetworkInterface[]> {
   try {
-    const output = execSync('ip -s -h link show').toString();
+    const output = runSync('ip', ['-s', '-h', 'link', 'show']);
     const lines = output.split('\n');
     const interfaces: NetworkInterface[] = [];
     let currentInterface: Partial<NetworkInterface> | null = null;
@@ -97,8 +104,9 @@ async function getNetworkInterfaces(): Promise<NetworkInterface[]> {
  */
 async function getNetworkConnections(): Promise<NetworkConnections> {
   try {
-    const output = execSync('ss -tan | tail -n +2', { timeout: 2000 }).toString();
-    const lines = output.split('\n').filter(line => line.trim());
+    const output = runSync('ss', ['-tan'], 2000);
+    // Drop the header row (previously done with `tail -n +2`).
+    const lines = output.split('\n').filter(line => line.trim()).slice(1);
 
     const connections: NetworkConnections = {
       established: 0,

@@ -9,6 +9,7 @@
  */
 
 import { getLogger } from '../../config/index.js';
+import { secretFingerprint } from '../logging/redact.js';
 
 const logger = getLogger('rate-limiter');
 
@@ -100,7 +101,7 @@ export class RateLimiter {
   setConfig(token: string, config: RateLimitConfig): void {
     this.configs.set(token, config);
     logger.info('Rate limit config set', {
-      token: token.substring(0, 10) + '...',
+      token: secretFingerprint(token),
       maxRequests: config.maxRequests,
       maxConcurrent: config.maxConcurrent,
     });
@@ -261,7 +262,7 @@ export class RateLimiter {
   reset(token: string): void {
     this.windows.delete(token);
     this.concurrent.delete(token);
-    logger.info('Rate limit reset', { token: token.substring(0, 10) + '...' });
+    logger.info('Rate limit reset', { token: secretFingerprint(token) });
   }
 
   /**
@@ -322,7 +323,7 @@ export class RateLimiter {
     ]);
 
     return Array.from(allTokens).map((token) => ({
-      token: token.substring(0, 10) + '...',
+      token: secretFingerprint(token),
       stats: this.getStats(token),
     }));
   }
