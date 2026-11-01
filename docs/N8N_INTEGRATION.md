@@ -40,6 +40,9 @@ Access the editor at `http://127.0.0.1:5678` from the host.
 ## Option B: Run n8n directly on the host
 If you install n8n directly (npm/yarn or binary), configure it to listen on `127.0.0.1:5678` and connect to the API at `http://127.0.0.1:3000`.
 
+## Option C: Run n8n on the `apps-network` Docker network
+A container on `apps-network` reaches the API at `http://api:3000` directly, with no published port. Use that as the base URL below. Port `3001` is published on `127.0.0.1` only; set `API_PUBLISH_HOST` to change that (see `docker-compose.yml`).
+
 ## Create API credentials in n8n
 1. In n8n, go to **Credentials** → **New** → **HTTP Request**.
 2. Set **Base URL**: `http://127.0.0.1:3000`.
@@ -57,7 +60,7 @@ If you install n8n directly (npm/yarn or binary), configure it to listen on `127
 
 To trigger commands:
 - Method: `POST`
-- URL: `/api/command`
+- URL: `/api/command/execute`
 - Body: e.g., `{"command":"echo hello"}` with `JSON` body type.
 
 ## Security notes

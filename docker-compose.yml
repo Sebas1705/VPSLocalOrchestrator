@@ -8,9 +8,17 @@ services:
     image: vps-local-orchestrator-api:local
     env_file:
       - ./api/.env
+    environment:
+      # All interfaces inside the container only. What the host exposes is decided
+      # by the published ports below; a loopback bind here would make them dead.
+      API_HOST: 0.0.0.0
     ports:
-      - "127.0.0.1:${PORT:-3000}:3000"  # loopback para acceso local
-      - "3001:3000"                       # puerto en apps-network para n8n (protegido con token Bearer)
+      - "127.0.0.1:${PORT:-3000}:3000"
+      # Loopback unless overridden, e.g. API_PUBLISH_HOST=172.18.0.1 in the shell
+      # or in the .env next to this file (not api/.env). 0.0.0.0 reaches the Internet
+      # on a VPS: Docker's published ports bypass ufw. Containers on apps-network
+      # do not need this port, they can call http://api:3000 directly.
+      - "${API_PUBLISH_HOST:-127.0.0.1}:3001:3000"
     restart: unless-stopped
     networks:
       - internal

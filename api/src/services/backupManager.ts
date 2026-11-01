@@ -1,11 +1,10 @@
 import fs from 'fs/promises';
 import path from 'path';
-import os from 'os';
 import { spawn } from 'child_process';
-import { fileURLToPath } from 'url';
+import { API_ROOT } from '../config/paths.js';
+import { resolveAllowedPath } from './pathPolicy.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const STORAGE_DIR = path.join(__dirname, '../../backups');
+const STORAGE_DIR = path.join(API_ROOT, 'backups');
 
 export interface BackupMetadata {
   name: string;
@@ -18,22 +17,6 @@ export interface RestoreResult {
   name: string;
   destination: string;
   restoredAt: string;
-}
-
-function validatePath(targetPath: string): boolean {
-  try {
-    const resolved = path.resolve(targetPath);
-    const home = os.homedir();
-    const allowedPrefixes = [home, '/tmp', '/var/log', '/var/tmp'];
-    const isAllowed = allowedPrefixes.some(prefix =>
-      resolved === prefix || resolved.startsWith(prefix + path.sep)
-    );
-    if (!isAllowed) return false;
-    if (resolved.includes('..')) return false;
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 async function ensureDirectory(targetDir: string): Promise<void> {
@@ -71,10 +54,7 @@ export async function createBackup(paths: string[], name?: string): Promise<Back
     if (typeof p !== 'string' || p.trim() === '') {
       throw new Error('each path must be a non-empty string');
     }
-    if (!validatePath(p)) {
-      throw new Error('Path access denied: must be in /home, /tmp, or /var/log');
-    }
-    const resolved = path.resolve(p);
+    const resolved = await resolveAllowedPath(p);
     try {
       await fs.stat(resolved);
     } catch {
@@ -162,11 +142,7 @@ export async function restoreBackup(name: string, destination: string): Promise<
     throw new Error('destination is required');
   }
 
-  if (!validatePath(destination)) {
-    throw new Error('Destination access denied: must be in /home, /tmp, or /var/log');
-  }
-
-  const destResolved = path.resolve(destination);
+  const destResolved = await resolveAllowedPath(destination);
   await ensureDirectory(destResolved);
 
   const backupPath = await getBackupPath(name);

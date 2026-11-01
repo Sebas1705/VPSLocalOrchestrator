@@ -178,7 +178,7 @@ export async function setProcessPriority(
     // Intentar sin sudo primero (si el proceso pertenece al usuario actual)
     let result = await runProcess('renice', [String(priority), '-p', safePid]);
 
-    // Si falla por permisos, intentar con sudo -n (salvo ALLOW_SUDO_COMMANDS=false)
+    // Si falla por permisos, intentar con sudo -n (solo con ALLOW_SUDO_COMMANDS=true)
     if (result.exitCode !== 0 && /permission/i.test(result.stderr) && getCommandPolicyConfig().allowSudo) {
       result = await runProcess('sudo', ['-n', 'renice', String(priority), '-p', safePid]);
     }

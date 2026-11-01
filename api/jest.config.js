@@ -19,6 +19,7 @@ export default {
   testTimeout: 10000,
   verbose: true,
   moduleNameMapper: {
+    '^(\\.{1,2}/)+(src/)?config/paths\\.js$': '<rootDir>/tests/support/paths.stub.ts',
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   transformIgnorePatterns: [

@@ -228,7 +228,7 @@ describe('getCommandPolicyConfig', () => {
   it('uses the default allowlist when COMMAND_ALLOWLIST is unset', () => {
     const config = getCommandPolicyConfig({});
     expect([...config.allowlist].sort()).toEqual([...DEFAULT_COMMAND_ALLOWLIST].sort());
-    expect(config.allowSudo).toBe(true);
+    expect(config.allowSudo).toBe(false);
     expect(config.searchPath).toContain('/usr/bin');
   });
 
@@ -247,9 +247,13 @@ describe('getCommandPolicyConfig', () => {
     expect(getCommandPolicyConfig({ COMMAND_ALLOWLIST: '' }).allowlist.size).toBe(0);
   });
 
+  it.each(['false', '1', 'yes', 'TRUE', ''])('keeps sudo off for ALLOW_SUDO_COMMANDS=%j', (value) => {
+    expect(getCommandPolicyConfig({ ALLOW_SUDO_COMMANDS: value }).allowSudo).toBe(false);
+  });
+
   it('reads ALLOW_SUDO_COMMANDS and COMMAND_SEARCH_PATH', () => {
-    const config = getCommandPolicyConfig({ ALLOW_SUDO_COMMANDS: 'false', COMMAND_SEARCH_PATH: `${binDir}${path.delimiter}relative` });
-    expect(config.allowSudo).toBe(false);
+    const config = getCommandPolicyConfig({ ALLOW_SUDO_COMMANDS: 'true', COMMAND_SEARCH_PATH: `${binDir}${path.delimiter}relative` });
+    expect(config.allowSudo).toBe(true);
     expect(config.searchPath).toEqual([binDir]);
   });
 
@@ -274,7 +278,7 @@ describe('sanitizeRequestEnv', () => {
     expect(sanitizeRequestEnv(undefined)).toBeUndefined();
   });
 
-  it.each(['PATH', 'path', 'LD_PRELOAD', 'LD_LIBRARY_PATH', 'DYLD_INSERT_LIBRARIES', 'NODE_OPTIONS', 'BASH_ENV', 'IFS', 'PROMPT_COMMAND'])(
+  it.each(['PATH', 'path', 'LD_PRELOAD', 'LD_LIBRARY_PATH', 'DYLD_INSERT_LIBRARIES', 'NODE_OPTIONS', 'BASH_ENV', 'IFS', 'PROMPT_COMMAND', 'DOCKER_HOST', 'DOCKER_CONFIG', 'SYSTEMD_PAGER', 'PS_FORMAT', 'HOME', 'XDG_CONFIG_HOME', 'PAGER', 'PGPASSFILE'])(
     'rejects protected variable %s',
     (key) => {
       expectDenied(() => sanitizeRequestEnv({ [key]: '/tmp/evil' }));

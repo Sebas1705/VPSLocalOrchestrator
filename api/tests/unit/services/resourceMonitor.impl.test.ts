@@ -145,7 +145,8 @@ describe('resourceMonitor', () => {
       expect(result.currentPriority).toBe(-5);
     });
 
-    it('retries with sudo when permission denied', async () => {
+    it('retries with sudo when permission denied and ALLOW_SUDO_COMMANDS=true', async () => {
+      process.env.ALLOW_SUDO_COMMANDS = 'true';
       executeCommandMock
         .mockResolvedValueOnce({ stdout: '', stderr: '', exitCode: 0, duration: 1 }) // check ps
         .mockResolvedValueOnce({ stdout: '', stderr: 'permission denied', exitCode: 1, duration: 1 }) // renice
@@ -157,11 +158,12 @@ describe('resourceMonitor', () => {
       expect(executeCommandMock).toHaveBeenNthCalledWith(1, 'ps', ['-p', '200', '-o', 'pid=']);
       expect(executeCommandMock).toHaveBeenNthCalledWith(2, 'renice', ['10', '-p', '200']);
       expect(executeCommandMock).toHaveBeenNthCalledWith(3, 'sudo', ['-n', 'renice', '10', '-p', '200']);
+      delete process.env.ALLOW_SUDO_COMMANDS;
     });
 
-    it('does not retry with sudo when ALLOW_SUDO_COMMANDS=false', async () => {
+    it('does not retry with sudo by default', async () => {
       const previous = process.env.ALLOW_SUDO_COMMANDS;
-      process.env.ALLOW_SUDO_COMMANDS = 'false';
+      delete process.env.ALLOW_SUDO_COMMANDS;
       try {
         executeCommandMock
           .mockResolvedValueOnce({ stdout: '', stderr: '', exitCode: 0, duration: 1 }) // check ps

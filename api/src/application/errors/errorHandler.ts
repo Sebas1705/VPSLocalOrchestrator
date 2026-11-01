@@ -91,9 +91,11 @@ export class ApplicationErrorHandler {
    */
   static logError(error: unknown, context?: Record<string, any>): void {
     if (isDomainError(error)) {
+      // `command` is the full command line, which may hold a secret.
+      const { command: _command, ...errorContext } = error.context ?? {};
       console.error(`[${error.code}] ${error.message}`, {
         statusCode: error.statusCode,
-        context: { ...error.context, ...context },
+        context: { ...errorContext, ...context },
       });
     } else {
       console.error('[INTERNAL_ERROR]', error, context);

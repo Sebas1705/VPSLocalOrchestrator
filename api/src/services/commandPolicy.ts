@@ -15,11 +15,15 @@
  *      default `DEFAULT_COMMAND_ALLOWLIST`). Bare names are resolved to an
  *      absolute path inside a fixed set of trusted directories
  *      (`COMMAND_SEARCH_PATH`), never via the caller's or the process's `PATH`.
- *   3. `sudo` is never allowlisted on its own. `sudo [-n] <cmd> ...` is accepted
- *      only when `ALLOW_SUDO_COMMANDS` is not `false`, and `<cmd>` must itself
- *      pass the allowlist; it always runs as `sudo -n <absolute path> ...`.
- *   4. Caller-supplied environment variables cannot override `PATH`, loader or
- *      interpreter hooks (`LD_*`, `NODE_OPTIONS`, `BASH_ENV`, ...).
+ *   3. The arguments must fit the rule for that program in commandArgPolicy.ts
+ *      (which docker subcommands, which date flags, ...), checked after any
+ *      `sudo` is stripped so sudo never widens what a program may do.
+ *   4. `sudo` is off unless `ALLOW_SUDO_COMMANDS=true`, and is never allowlisted
+ *      on its own. `sudo [-n] <cmd> ...` needs `<cmd>` to pass the checks above
+ *      and always runs as `sudo -n <absolute path> ...`.
+ *   5. Caller-supplied environment variables cannot override `PATH`, loader or
+ *      interpreter hooks (`LD_*`, `NODE_OPTIONS`, `BASH_ENV`, ...) or redirect
+ *      an allowlisted tool (`DOCKER_HOST`, `SYSTEMD_*`, `PS_FORMAT`, ...).
  *
  * Denials throw `CommandExecutionError` with HTTP 403 (400 for malformed input).
  */
@@ -27,6 +31,7 @@
 import fs from 'fs';
 import path from 'path';
 import { CommandExecutionError } from '../domain/errors/index.js';
+import { checkCommandArguments } from './commandArgPolicy.js';
 
 /** A command given as an executable plus an explicit argument vector. */
 export interface CommandSpec {
@@ -42,7 +47,7 @@ export interface CommandPolicyConfig {
   allowlist: ReadonlySet<string>;
   /** Trusted directories searched, in order, to resolve bare names. */
   searchPath: readonly string[];
-  /** Whether `sudo -n <allowlisted command>` is permitted. */
+  /** Whether `sudo -n <allowlisted command>` is permitted. Off unless ALLOW_SUDO_COMMANDS=true. */
   allowSudo: boolean;
 }
 
@@ -63,8 +68,9 @@ export interface AuthorizedCommand {
  * Default allowlist: what the orchestrator's own features and documented API
  * examples use. Deliberately excludes shells and interpreters (sh, bash,
  * python, node, perl), `env`, `xargs`, `find`, `awk`, `git` and `sudo`, which can
- * all run arbitrary code from their arguments. Note that `docker` is
- * root-equivalent on a host where the API can reach the Docker socket.
+ * all run arbitrary code from their arguments. `docker` is root-equivalent on a
+ * host where the API can reach the Docker socket, which is why its subcommands
+ * are limited in commandArgPolicy.ts.
  */
 export const DEFAULT_COMMAND_ALLOWLIST: readonly string[] = [
   'docker',
@@ -128,8 +134,18 @@ const PROTECTED_ENV_KEYS = new Set([
   'PERL5OPT',
   'RUBYOPT',
   'RUBYLIB',
+  // Would point an allowlisted tool somewhere else, or run a helper program.
+  'HOME',
+  'PAGER',
+  'EDITOR',
+  'VISUAL',
+  'LESSOPEN',
+  'LESSCLOSE',
+  'PS_FORMAT',
+  'PS_PERSONALITY',
+  'CMD_ENV',
 ]);
-const PROTECTED_ENV_PREFIXES = ['LD_', 'DYLD_'];
+const PROTECTED_ENV_PREFIXES = ['LD_', 'DYLD_', 'DOCKER_', 'COMPOSE_', 'SYSTEMD_', 'XDG_', 'PG'];
 
 /** systemctl/service verbs that only read state. Anything else is privileged. */
 const READ_ONLY_SERVICE_VERBS = new Set([
@@ -263,7 +279,7 @@ function parseList(value: string, separator: RegExp): string[] {
  *   Entries must be bare names or absolute paths; anything else is ignored.
  * - `COMMAND_SEARCH_PATH`: trusted directories (separated by the platform path
  *   delimiter, `:` on Linux) used to resolve bare names.
- * - `ALLOW_SUDO_COMMANDS`: `false` disables the `sudo -n <cmd>` form.
+ * - `ALLOW_SUDO_COMMANDS`: `true` enables the `sudo -n <cmd>` form. Off otherwise.
  */
 export function getCommandPolicyConfig(env: NodeJS.ProcessEnv = process.env): CommandPolicyConfig {
   const rawAllowlist = env.COMMAND_ALLOWLIST;
@@ -280,7 +296,7 @@ export function getCommandPolicyConfig(env: NodeJS.ProcessEnv = process.env): Co
   return {
     allowlist,
     searchPath,
-    allowSudo: env.ALLOW_SUDO_COMMANDS !== 'false',
+    allowSudo: env.ALLOW_SUDO_COMMANDS === 'true',
   };
 }
 
@@ -430,7 +446,7 @@ export function authorizeCommand(
 
   if (argv[0] === 'sudo' || (argv[0] && path.isAbsolute(argv[0]) && path.basename(argv[0]) === 'sudo')) {
     if (!config.allowSudo) {
-      throw denied(original, 'sudo commands are disabled (ALLOW_SUDO_COMMANDS=false)');
+      throw denied(original, 'sudo commands are disabled (set ALLOW_SUDO_COMMANDS=true to enable them)');
     }
     rest = argv.slice(1);
     if (rest[0] === '-n') rest = rest.slice(1);
@@ -451,6 +467,10 @@ export function authorizeCommand(
   const executable = rest[0] as string;
   const resolved = authorizeExecutable(executable, original, config);
   const args = rest.slice(1);
+  const argumentDenial = checkCommandArguments(path.basename(resolved), args);
+  if (argumentDenial) {
+    throw denied(original, argumentDenial);
+  }
   privileged = privileged || isPrivilegedArgv([resolved, ...args]);
 
   const fullArgv = [...prefix, resolved, ...args];

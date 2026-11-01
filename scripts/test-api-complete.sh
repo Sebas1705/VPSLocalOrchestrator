@@ -203,8 +203,9 @@ start_server() {
     sleep 2
     
     # Start server in background
+    # This script sends hundreds of requests in a few seconds.
     cd "$API_DIR"
-    npm start > /tmp/api-server-test.log 2>&1 &
+    RATE_LIMIT_TIER=unlimited npm start > /tmp/api-server-test.log 2>&1 &
     SERVER_PID=$!
     
     log "Server started with PID: $SERVER_PID"
@@ -276,7 +277,8 @@ test_health_endpoints() {
     
     test_endpoint "Health Check" "GET" "/health" "no" "" "200"
     test_endpoint "API Info" "GET" "/" "no" "" "200"
-    test_endpoint "Metrics" "GET" "/metrics" "no" "" "200"
+    test_endpoint "Metrics" "GET" "/metrics" "yes" "" "200"
+    test_endpoint "Metrics (no auth)" "GET" "/metrics" "no" "" "401"
 }
 
 test_resource_endpoints() {
@@ -285,9 +287,10 @@ test_resource_endpoints() {
     log "Category 2: System Resources"
     log "=========================================="
     
-    test_endpoint "System Resources" "GET" "/api/resources" "no" "" "200"
-    test_endpoint "Top Processes" "GET" "/api/resources/processes?limit=5" "no" "" "200"
-    test_endpoint "Network Stats" "GET" "/api/resources/network" "no" "" "200"
+    test_endpoint "System Resources" "GET" "/api/resources" "yes" "" "200"
+    test_endpoint "System Resources (no auth)" "GET" "/api/resources" "no" "" "401"
+    test_endpoint "Top Processes" "GET" "/api/resources/processes?limit=5" "yes" "" "200"
+    test_endpoint "Network Stats" "GET" "/api/resources/network" "yes" "" "200"
 }
 
 test_command_endpoints() {

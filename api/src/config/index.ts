@@ -55,7 +55,7 @@ export function getConfig(): Config {
     security: {
       apiToken: process.env.API_TOKEN || '',
       enablePrivilegedEndpoints: process.env.ENABLE_PRIVILEGED_ENDPOINTS !== 'false',
-      allowSudoCommands: process.env.ALLOW_SUDO_COMMANDS !== 'false',
+      allowSudoCommands: process.env.ALLOW_SUDO_COMMANDS === 'true',
       sudoPassword: process.env.SUDO_PASSWORD || '',
       secretKey: process.env.SECRET_KEY || '',
     },

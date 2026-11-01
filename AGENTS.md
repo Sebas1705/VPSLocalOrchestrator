@@ -116,8 +116,8 @@ docs/
 ## 🔐 Security & Authentication
 
 ### Authentication Rules
-1. **Protected Endpoints**: All command execution endpoints require Bearer token authentication
-2. **Public Endpoints**: Health checks and read-only resource endpoints are public
+1. **Protected Endpoints**: Every route requires Bearer token authentication unless it is listed in `PUBLIC_ROUTES` (`api/src/middleware/authGate.ts`); new routes are protected automatically
+2. **Public Endpoints**: Only liveness (`/health`) and API documentation are public. Adding one means changing `api/tests/integration/auth-gate.test.ts` too
 3. **Token Validation**: Use `timingSafeEqual` to prevent timing attacks
 4. **Token Configuration**: Set `API_TOKEN` environment variable in `.env`
 

@@ -16,8 +16,8 @@ Server: http://localhost:3000
 `Authorization: Bearer <API_TOKEN>` for protected routes.
 
 ## Key endpoints (public noted)
-- Public: `GET /`, `GET /health`, `GET /api/resources`, `GET /api/resources/processes`, `GET /api/resources/network`, `GET /api/openapi.json`
-- Commands: `POST /api/command/execute`, `POST /api/command/batch`, `POST /api/command/service` (passwordless sudo recommended). Body: `{ "command": "docker", "args": ["ps", "-a"] }` (preferred) or `{ "command": "docker ps -a" }`; no shell is used, the executable must be on `COMMAND_ALLOWLIST`, and denied commands return 403 (see "Security model" in the README)
+- Public: `GET /`, `GET /health`, `GET /api/openapi.json`, `GET /api/schema*` and the read-only version metadata. Everything else needs the token, including `/metrics` (see `PUBLIC_ROUTES` in `api/src/middleware/authGate.ts`)
+- Commands: `POST /api/command/execute`, `POST /api/command/batch`, `POST /api/command/service` (mutating actions need `ALLOW_SUDO_COMMANDS=true` and passwordless sudo). Body: `{ "command": "docker", "args": ["ps", "-a"] }` (preferred) or `{ "command": "docker ps -a" }`; no shell is used, the executable must be on `COMMAND_ALLOWLIST`, its arguments must fit the rules in `api/src/services/commandArgPolicy.ts`, and denied commands return 403 (see "Security model" in the README)
 - Resources: `GET /api/resources`, `/processes`, `/network`; `POST /api/resources/process/:pid/priority`; `DELETE /api/resources/process/:pid`
 - Files/backups: `GET|POST /api/file`, `POST /api/file/upload`, `POST /api/backup/create`, `POST /api/backup/restore`
 - Jobs/workflows: `POST /api/jobs`, `GET /api/jobs/:id`, `POST /api/workflows/run`

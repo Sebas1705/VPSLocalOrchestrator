@@ -177,8 +177,7 @@ describe('POST /api/command/execute', () => {
     noChildProcessCalls();
   });
 
-  it('denies sudo when ALLOW_SUDO_COMMANDS=false', async () => {
-    process.env.ALLOW_SUDO_COMMANDS = 'false';
+  it('denies sudo by default', async () => {
     const res = await auth(request(app).post('/api/command/execute')).send({ command: 'sudo systemctl restart nginx' });
     expect(res.status).toBe(403);
     noChildProcessCalls();
@@ -222,7 +221,15 @@ describe('POST /api/command/service', () => {
     );
   });
 
+  it('denies mutating actions while sudo is off, which is the default', async () => {
+    const res = await auth(request(app).post('/api/command/service')).send({ service: 'nginx', action: 'restart' });
+
+    expect(res.status).toBe(403);
+    noChildProcessCalls();
+  });
+
   it('runs mutating actions as sudo -n with the resolved systemctl', async () => {
+    process.env.ALLOW_SUDO_COMMANDS = 'true';
     const res = await auth(request(app).post('/api/command/service')).send({ service: 'nginx', action: 'restart' });
 
     expect(res.status).toBe(200);

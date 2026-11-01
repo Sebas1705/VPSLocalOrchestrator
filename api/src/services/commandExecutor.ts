@@ -25,9 +25,15 @@ export interface CommandOptions {
   maxBuffer?: number | undefined;
 }
 
-/** A denied command, as reported to the audit sink. */
+/**
+ * A denied command, as reported to the audit sink. It never carries the
+ * arguments or the raw command line: people paste tokens and passwords into
+ * commands, and a denial is exactly when such a line ends up here.
+ */
 export interface CommandDeniedEvent {
-  command: string;
+  /** The program, or `<unparsed>` when the first word does not look like one. */
+  executable: string;
+  argCount: number;
   reason: string;
   statusCode: number;
   source?: string | undefined;
@@ -49,15 +55,28 @@ export function setCommandAuditSink(sink: CommandAuditSink | undefined): void {
   auditSink = sink ?? defaultAuditSink;
 }
 
-function reportDenied(input: CommandInput, error: any, source?: string): void {
-  const command =
+const AUDITABLE_EXECUTABLE = /^[A-Za-z0-9/][A-Za-z0-9._+/-]{0,127}$/;
+
+function summarizeForAudit(input: CommandInput): { executable: string; argCount: number } {
+  const [first = '', ...rest] =
     typeof input === 'string'
-      ? input
-      : [input?.command, ...(Array.isArray(input?.args) ? input.args : [])].join(' ');
+      ? input.trim().split(/\s+/)
+      : [String(input?.command ?? ''), ...(Array.isArray(input?.args) ? input.args : [])];
+  return { executable: AUDITABLE_EXECUTABLE.test(first) ? first : '<unparsed>', argCount: rest.length };
+}
+
+/** Denial reasons quote caller-supplied values; everything between quotes goes. */
+function redactReason(message: unknown): string {
+  return String(message ?? 'denied')
+    .replace(/".*"/s, '"<redacted>"')
+    .slice(0, 300);
+}
+
+function reportDenied(input: CommandInput, error: any, source?: string): void {
   try {
     const result = auditSink({
-      command: String(command).slice(0, 500),
-      reason: error?.message ?? 'denied',
+      ...summarizeForAudit(input),
+      reason: redactReason(error?.message),
       statusCode: error?.statusCode ?? 403,
       source,
     });

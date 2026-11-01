@@ -1,6 +1,7 @@
+import { constants as fsConstants } from 'fs';
 import fs from 'fs/promises';
 import path from 'path';
-import os from 'os';
+import { PathAccessDeniedError, resolveAllowedEntry, resolveAllowedPath } from './pathPolicy.js';
 
 export interface FileInfo {
   name: string;
@@ -24,40 +25,13 @@ export interface DirectoryListing {
   totalSize?: number;
 }
 
-/**
- * Valida que el path no escape del directorio base permitido
- * Solo permite acceso dentro de /home/*, /tmp/, /var/log
- */
-function validatePath(filePath: string): boolean {
-  try {
-    const resolved = path.resolve(filePath);
-    const home = os.homedir();
-    
-    // Permitir directorios seguros
-    const allowedPrefixes = [
-      home,              // /home/usuario
-      '/tmp',
-      '/var/log',
-      '/var/tmp',
-    ];
+/** Refuse a symlink swapped in as the last component after the path was checked. */
+const O_NOFOLLOW = fsConstants.O_NOFOLLOW ?? 0;
 
-    const isAllowed = allowedPrefixes.some(prefix => 
-      resolved === prefix || resolved.startsWith(prefix + path.sep)
-    );
-
-    if (!isAllowed) {
-      return false;
-    }
-
-    // Evitar path traversal
-    if (resolved.includes('..')) {
-      return false;
-    }
-
-    return true;
-  } catch {
-    return false;
-  }
+/** Keep the policy error as it is so routes can answer 403; wrap everything else. */
+function wrapError(prefix: string, error: any): Error {
+  if (error instanceof PathAccessDeniedError) return error;
+  return new Error(`${prefix}: ${error.message}`);
 }
 
 /**
@@ -65,11 +39,7 @@ function validatePath(filePath: string): boolean {
  */
 export async function readFile(filePath: string): Promise<FileReadResult> {
   try {
-    if (!validatePath(filePath)) {
-      throw new Error('Path access denied: must be in /home, /tmp, or /var/log');
-    }
-
-    const resolved = path.resolve(filePath);
+    const resolved = await resolveAllowedPath(filePath);
     const stats = await fs.stat(resolved);
 
     if (!stats.isFile()) {
@@ -81,7 +51,13 @@ export async function readFile(filePath: string): Promise<FileReadResult> {
       throw new Error('File too large (max 10MB)');
     }
 
-    const content = await fs.readFile(resolved, 'utf-8');
+    const handle = await fs.open(resolved, fsConstants.O_RDONLY | O_NOFOLLOW);
+    let content: string;
+    try {
+      content = await handle.readFile('utf-8');
+    } finally {
+      await handle.close();
+    }
 
     return {
       path: resolved,
@@ -90,7 +66,7 @@ export async function readFile(filePath: string): Promise<FileReadResult> {
       type: content.length === Buffer.byteLength(content) ? 'text' : 'binary',
     };
   } catch (error: any) {
-    throw new Error(`Failed to read file: ${error.message}`);
+    throw wrapError('Failed to read file', error);
   }
 }
 
@@ -103,41 +79,39 @@ export async function writeFile(
   options?: { mode?: number; append?: boolean }
 ): Promise<{ path: string; size: number; written: number }> {
   try {
-    if (!validatePath(filePath)) {
-      throw new Error('Path access denied: must be in /home, /tmp, or /var/log');
-    }
-
     // Limitar tamaño de escritura (50MB)
     if (Buffer.byteLength(content) > 50 * 1024 * 1024) {
       throw new Error('Content too large (max 50MB)');
     }
 
-    const resolved = path.resolve(filePath);
+    const resolved = await resolveAllowedPath(filePath);
 
     // Crear directorio padre si no existe
-    const dir = path.dirname(resolved);
-    await fs.mkdir(dir, { recursive: true });
+    await fs.mkdir(path.dirname(resolved), { recursive: true });
 
-    if (options?.append) {
-      await fs.appendFile(resolved, content, 'utf-8');
-    } else {
-      await fs.writeFile(resolved, content, 'utf-8');
+    const mode = options?.append ? fsConstants.O_APPEND : fsConstants.O_TRUNC;
+    const handle = await fs.open(resolved, fsConstants.O_WRONLY | fsConstants.O_CREAT | mode | O_NOFOLLOW, 0o644);
+    let size: number;
+    try {
+      await handle.writeFile(content, 'utf-8');
+
+      // Set permisos si se especifican
+      if (options?.mode) {
+        await handle.chmod(options.mode);
+      }
+
+      size = (await handle.stat()).size;
+    } finally {
+      await handle.close();
     }
-
-    // Set permisos si se especifican
-    if (options?.mode) {
-      await fs.chmod(resolved, options.mode);
-    }
-
-    const stats = await fs.stat(resolved);
 
     return {
       path: resolved,
-      size: stats.size,
+      size,
       written: Buffer.byteLength(content),
     };
   } catch (error: any) {
-    throw new Error(`Failed to write file: ${error.message}`);
+    throw wrapError('Failed to write file', error);
   }
 }
 
@@ -146,14 +120,10 @@ export async function writeFile(
  */
 export async function deleteFile(filePath: string): Promise<{ path: string; deleted: boolean }> {
   try {
-    if (!validatePath(filePath)) {
-      throw new Error('Path access denied: must be in /home, /tmp, or /var/log');
-    }
+    const resolved = await resolveAllowedEntry(filePath);
+    const stats = await fs.lstat(resolved);
 
-    const resolved = path.resolve(filePath);
-    const stats = await fs.stat(resolved);
-
-    if (!stats.isFile()) {
+    if (!stats.isFile() && !stats.isSymbolicLink()) {
       throw new Error('Path is not a file');
     }
 
@@ -164,7 +134,7 @@ export async function deleteFile(filePath: string): Promise<{ path: string; dele
       deleted: true,
     };
   } catch (error: any) {
-    throw new Error(`Failed to delete file: ${error.message}`);
+    throw wrapError('Failed to delete file', error);
   }
 }
 
@@ -173,11 +143,7 @@ export async function deleteFile(filePath: string): Promise<{ path: string; dele
  */
 export async function listDirectory(dirPath: string): Promise<DirectoryListing> {
   try {
-    if (!validatePath(dirPath)) {
-      throw new Error('Path access denied: must be in /home, /tmp, or /var/log');
-    }
-
-    const resolved = path.resolve(dirPath);
+    const resolved = await resolveAllowedPath(dirPath);
     const stats = await fs.stat(resolved);
 
     if (!stats.isDirectory()) {
@@ -191,7 +157,7 @@ export async function listDirectory(dirPath: string): Promise<DirectoryListing> 
       entries.map(async (entry) => {
         const fullPath = path.join(resolved, entry.name);
         try {
-          const entryStats = await fs.stat(fullPath);
+          const entryStats = await fs.lstat(fullPath);
           const type = entry.isDirectory() ? 'directory' : entry.isSymbolicLink() ? 'symlink' : 'file';
 
           if (type === 'file') {
@@ -234,7 +200,7 @@ export async function listDirectory(dirPath: string): Promise<DirectoryListing> 
 
     return listing;
   } catch (error: any) {
-    throw new Error(`Failed to list directory: ${error.message}`);
+    throw wrapError('Failed to list directory', error);
   }
 }
 
@@ -243,11 +209,7 @@ export async function listDirectory(dirPath: string): Promise<DirectoryListing> 
  */
 export async function createDirectory(dirPath: string): Promise<{ path: string; created: boolean }> {
   try {
-    if (!validatePath(dirPath)) {
-      throw new Error('Path access denied: must be in /home, /tmp, or /var/log');
-    }
-
-    const resolved = path.resolve(dirPath);
+    const resolved = await resolveAllowedPath(dirPath);
 
     try {
       await fs.mkdir(resolved, { recursive: true });
@@ -265,7 +227,7 @@ export async function createDirectory(dirPath: string): Promise<{ path: string; 
       throw error;
     }
   } catch (error: any) {
-    throw new Error(`Failed to create directory: ${error.message}`);
+    throw wrapError('Failed to create directory', error);
   }
 }
 
@@ -274,11 +236,7 @@ export async function createDirectory(dirPath: string): Promise<{ path: string; 
  */
 export async function getFileStats(filePath: string): Promise<FileInfo> {
   try {
-    if (!validatePath(filePath)) {
-      throw new Error('Path access denied: must be in /home, /tmp, or /var/log');
-    }
-
-    const resolved = path.resolve(filePath);
+    const resolved = await resolveAllowedPath(filePath);
     const stats = await fs.stat(resolved);
 
     const type = stats.isDirectory() ? 'directory' : stats.isSymbolicLink() ? 'symlink' : 'file';
@@ -292,7 +250,7 @@ export async function getFileStats(filePath: string): Promise<FileInfo> {
       permissions: stats.mode.toString(8).slice(-3),
     };
   } catch (error: any) {
-    throw new Error(`Failed to get file stats: ${error.message}`);
+    throw wrapError('Failed to get file stats', error);
   }
 }
 
@@ -301,11 +259,7 @@ export async function getFileStats(filePath: string): Promise<FileInfo> {
  */
 export async function deleteDirectory(dirPath: string): Promise<{ path: string; deleted: boolean }> {
   try {
-    if (!validatePath(dirPath)) {
-      throw new Error('Path access denied: must be in /home, /tmp, or /var/log');
-    }
-
-    const resolved = path.resolve(dirPath);
+    const resolved = await resolveAllowedPath(dirPath);
     const stats = await fs.stat(resolved);
 
     if (!stats.isDirectory()) {
@@ -319,6 +273,6 @@ export async function deleteDirectory(dirPath: string): Promise<{ path: string; 
       deleted: true,
     };
   } catch (error: any) {
-    throw new Error(`Failed to delete directory: ${error.message}`);
+    throw wrapError('Failed to delete directory', error);
   }
 }

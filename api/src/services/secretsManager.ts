@@ -1,11 +1,10 @@
 import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { API_ROOT } from '../config/paths.js';
 import { getConfig } from '../config/index.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const STORAGE_DIR = path.join(__dirname, '../../secrets');
+const STORAGE_DIR = path.join(API_ROOT, 'secrets');
 const SECRETS_FILE = path.join(STORAGE_DIR, 'secrets.json');
 const MAX_VALUE_BYTES = 10 * 1024; // 10KB
 

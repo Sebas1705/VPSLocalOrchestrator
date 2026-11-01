@@ -1,10 +1,9 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { API_ROOT } from '../config/paths.js';
 import { executeCommand } from './commandExecutor.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const STORAGE_DIR = path.join(__dirname, '../../workflows');
+const STORAGE_DIR = path.join(API_ROOT, 'workflows');
 const WORKFLOWS_FILE = path.join(STORAGE_DIR, 'workflows.json');
 const WORKFLOW_RUNS_FILE = path.join(STORAGE_DIR, 'workflow-runs.json');
 const MAX_HISTORY_PER_WORKFLOW = 50;

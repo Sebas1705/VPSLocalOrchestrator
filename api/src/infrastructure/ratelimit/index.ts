@@ -91,6 +91,8 @@ export class RateLimiter {
     this.cleanupTimer = setInterval(() => {
       this.cleanup();
     }, 300000);
+    // Housekeeping must not keep the process alive on its own.
+    this.cleanupTimer.unref();
 
     logger.info('Rate limiter initialized');
   }
@@ -110,15 +112,15 @@ export class RateLimiter {
   /**
    * Get rate limit config for token
    */
-  getConfig(token: string): RateLimitConfig {
-    return this.configs.get(token) || RateLimitTiers.standard;
+  getConfig(token: string, fallback: RateLimitConfig = RateLimitTiers.standard): RateLimitConfig {
+    return this.configs.get(token) || fallback;
   }
 
   /**
    * Check if request is allowed (token bucket algorithm)
    */
-  async checkLimit(token: string): Promise<RateLimitResult> {
-    const config = this.getConfig(token);
+  async checkLimit(token: string, fallback?: RateLimitConfig): Promise<RateLimitResult> {
+    const config = this.getConfig(token, fallback);
     const now = Date.now();
 
     // Get or create window
