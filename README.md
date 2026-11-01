@@ -6,7 +6,7 @@
 
 > GitHub Releases lag behind the tags: the latest published release is [v1.0.0](https://github.com/Sebas1705/VPSLocalOrchestrator/releases). Use the tags for the version history.
 
-A self-hosted REST API for orchestrating VPS resources and executing commands locally — with production-grade features built in: role-based access control, AES-256-GCM encryption, structured audit logging, Prometheus metrics, distributed tracing, rate limiting, and more.
+A self-hosted REST API for orchestrating VPS resources and executing commands locally — with AES-256-GCM secret encryption, a default-deny bearer token gate, rate limiting, per-program command rules and a log of denied commands. See [Security model](#security-model) for what is enforced today and what is not.
 
 Designed to run on your own VPS behind a reverse proxy, giving you a secure HTTP interface to automate infrastructure tasks without exposing SSH.
 
@@ -14,23 +14,23 @@ Designed to run on your own VPS behind a reverse proxy, giving you a secure HTTP
 
 Managing a VPS typically means SSH + manual commands. This API wraps those operations behind a single authenticated HTTP surface with:
 
-- Fine-grained RBAC — different tokens, different permissions
-- A full audit trail of every command executed
-- Automatic metrics and tracing you can hook into Grafana
+- One bearer token in front of everything except liveness and API docs
+- An allowlist of programs, subcommands and flags instead of a shell
+- A log of denied commands, without their arguments
 - Secret encryption at rest
 
 ## Features
 
 | Category | Capabilities |
 |---|---|
-| **Security** | RBAC with role/permission model, AES-256-GCM secret encryption, threat detection, rate limiting per route |
+| **Security** | Single-token auth on all but a short public list, rate limiting per token and per client address, AES-256-GCM secret encryption. An RBAC model and threat detector exist behind their own APIs but do not gate other routes |
 | **Commands** | Run allowlisted host commands via authenticated endpoints (argv only, no shell) |
-| **Docker** | Start/stop/inspect containers and services |
+| **Docker** | List, start and stop containers |
 | **Services** | Manage systemd services |
-| **Files** | Read, write, and manage files on the host |
-| **Database** | Run queries and migrations |
+| **Files** | Read, write, and manage files inside the allowed roots |
+| **Database** | Back up PostgreSQL databases and check readiness |
 | **Jobs** | Schedule and track background jobs |
-| **Observability** | Prometheus metrics, structured audit logs, distributed tracing |
+| **Observability** | Custom metrics and Prometheus output, denied-command log, in-memory audit events. The automatic HTTP metrics and tracing middlewares exist but are currently disabled |
 | **Events** | Event store, event processor, webhook delivery |
 | **Workflows** | Define and execute multi-step automation workflows |
 | **Backups** | Trigger and track backup operations |
@@ -48,7 +48,8 @@ npm install
 # API_TOKEN=your_secret_token
 # SECRET_KEY=$(openssl rand -base64 32)
 # PORT=3000
-# Optional: COMMAND_ALLOWLIST=docker,systemctl,df   (see "Security model")
+# Optional, see "Security model": COMMAND_ALLOWLIST, ALLOW_SUDO_COMMANDS,
+# FILE_ALLOWED_ROOTS, RATE_LIMIT_TIER, API_HOST
 
 npm run build && npm start
 ```
@@ -64,13 +65,16 @@ cd VPSLocalOrchestrator
 docker compose build api
 docker compose up -d
 ```
-The service binds to `127.0.0.1:3000` only — put Nginx or Caddy in front.
+Ports `3000` and `3001` are published on `127.0.0.1` only, so put Nginx or Caddy in front. To publish `3001` on another address, set `API_PUBLISH_HOST` in the shell or in the `.env` next to `docker-compose.yml`.
 
 **Systemd**:
 ```bash
 cp vps-orchestrator.service /etc/systemd/system/
 systemctl enable --now vps-orchestrator
 ```
+The unit listens on `127.0.0.1`. Set `API_HOST` in `api/.env` to listen elsewhere; that file overrides the unit.
+
+Upgrading an existing install: read [Upgrade notes](docs/OPERATIONS.md#upgrade-notes) first, several defaults changed.
 
 ## Tech Stack
 
@@ -87,7 +91,7 @@ systemctl enable --now vps-orchestrator
 
 ```bash
 cd api
-npm test                 # Jest: 30 suites, 628 tests, no external services needed
+npm test                 # Jest: 37 suites, 1074 tests, no external services needed
 npm run test:coverage    # HTML/lcov report in api/coverage/
 ```
 
@@ -103,25 +107,30 @@ CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) installs, typechecks
 
 What the code does today, with the file that does it. Read this before exposing the API anywhere.
 
-**Who can call it.** Authentication is `requireAuth` ([`api/src/middleware/requireAuth.ts`](api/src/middleware/requireAuth.ts)): a single shared bearer token, `API_TOKEN`, compared in constant time with `crypto.timingSafeEqual` ([`api/src/middleware/auth.ts`](api/src/middleware/auth.ts)). It guards the routes that act on the host (`/api/command`, `/api/files`, `/api/secrets`, `/api/docker`, `/api/databases`, `/api/backups`, `/api/workflows`, `/api/webhooks`, `/api/jobs`, `/api/rbac`, `/api/encryption`, `/api/threat`, among others). As of this version the following route modules mount no auth middleware (see [`api/src/index.ts`](api/src/index.ts) and the files under `api/src/routes/`): `/health`, `/api/openapi.json` and `/api/schema`, `/api/resources`, `/api/services`, `/api/logs` (audit log reads), `/api/events`, `/api/eventstore` and `/api/processor`. There are no per-user identities: anyone holding the token can run any guarded endpoint, including every command on the command allowlist (see below), with `sudo -n` while `ALLOW_SUDO_COMMANDS` is on (the default, [`api/src/config/index.ts`](api/src/config/index.ts)).
+**Who can call it.** Every request goes through `authGate` ([`api/src/middleware/authGate.ts`](api/src/middleware/authGate.ts)), which runs before body parsing and is default-deny: anything outside `PUBLIC_ROUTES` needs the token, including routes added later. The public list is `GET /`, `GET /health`, the OpenAPI and schema documents and the read-only API version metadata; `/metrics`, `/api/resources`, `/api/services`, `/api/logs` and the `/health` of each subsystem all need the token. [`api/tests/integration/auth-gate.test.ts`](api/tests/integration/auth-gate.test.ts) walks the real Express route table and fails on any route that answers without one. Authentication is a single shared bearer token, `API_TOKEN`, compared in constant time with `crypto.timingSafeEqual` ([`api/src/middleware/auth.ts`](api/src/middleware/auth.ts)). There are no per-user identities: anyone holding the token can use every route.
 
 **Command execution.** Nothing in the API spawns a shell. Every process is started with `execFile`/`spawn` and an explicit argv ([`api/src/services/commandExecutor.ts`](api/src/services/commandExecutor.ts), [`api/src/infrastructure/adapters/child-process-command-executor.ts`](api/src/infrastructure/adapters/child-process-command-executor.ts)), so `;`, `&&`, `|`, backticks, `$()` and redirections are never interpreted. Caller-supplied commands (`/api/command/execute`, `/api/command/batch`, `/api/command/service`, `command` and `batch-command` jobs, workflow `command` steps) go through the policy in [`api/src/services/commandPolicy.ts`](api/src/services/commandPolicy.ts):
 
 - Contract: send `{ "command": "docker", "args": ["ps", "-a"] }`. The older `{ "command": "docker ps -a" }` still works: it is split by a quote-aware tokenizer (single quotes, double quotes, backslash escapes), and any string containing `;`, `&`, `|`, `$`, a backtick, `<`, `>`, a newline or a NUL byte is rejected with 403, quoted or not. Elements of `args` are passed verbatim and may contain those characters (they reach the program as literal text); only newlines and NUL bytes are refused there.
 - Allowlist: the executable must be listed in `COMMAND_ALLOWLIST` (comma or space separated; an empty value denies everything). The default is `docker, systemctl, journalctl, df, du, free, uptime, ps, ip, ss, ls, echo, date, whoami, hostname, uname, id, pwd, pg_isready`. Shells, interpreters and wrappers that run arbitrary code from their arguments (`sh`, `bash`, `python`, `node`, `env`, `xargs`, `find`, `awk`, `git`) are deliberately not in it; adding them re-opens arbitrary execution. Bare names are resolved to an absolute path inside `COMMAND_SEARCH_PATH` (default `/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`), never through `PATH`; absolute paths are accepted only when listed verbatim (for example a deploy script, which then needs a shebang and the executable bit) or when they are exactly where an allowlisted name resolves, so `/bin/rm`, `/tmp/docker`, `../x` and `FOO=1 cmd` are denied.
-- `sudo`: never allowlisted itself. `sudo [-n] <allowlisted command> ...` runs as `sudo -n <absolute path> ...` while `ALLOW_SUDO_COMMANDS` is not `false`; other sudo options are refused. `ALLOW_SUDO_COMMANDS=false` also disables the mutating `/api/command/service` actions and the `renice` sudo fallback.
-- Environment: job payloads may set variables, but not `PATH`, `IFS`, `LD_*`, `DYLD_*`, `NODE_OPTIONS`, `BASH_ENV` and similar loader or interpreter hooks.
-- Denials return `403` with code `COMMAND_EXECUTION_ERROR` (malformed input such as an unterminated quote returns `400`) and are appended to the audit log as `command.denied` with the command, the reason and the calling route, job or workflow step.
+- Arguments: each default program has a rule in [`api/src/services/commandArgPolicy.ts`](api/src/services/commandArgPolicy.ts) naming the subcommands and flags it may use; anything not listed is denied. `docker` is limited to `ps, images, logs, stats, top, port, version, info, start, stop, restart`, with no global options, so `docker run -v /:/host` and `docker -H ...` are out, as is `docker inspect` (it prints container secrets). `systemctl` has read verbs plus `start, stop, restart, reload, try-restart, enable, disable` on plain unit names. `ip` is read-only, and flags that read or write files or run things are refused (`date -f`, `journalctl --file`, `du --files0-from`, `ss -D`, `ip -batch`, `ps e`). Rules apply under `sudo` too. Programs you add to `COMMAND_ALLOWLIST` yourself have no rule and any arguments: to expose something denied here, put the exact command in a script and allowlist the script's absolute path.
+- `sudo`: off unless `ALLOW_SUDO_COMMANDS=true`, and never allowlisted itself. When enabled, `sudo [-n] <allowlisted command> ...` runs as `sudo -n <absolute path> ...` and other sudo options are refused. While it is off, the mutating `/api/command/service` actions return 403 and `renice` has no sudo fallback.
+- Environment: callers may set variables, but not `PATH`, `IFS`, `HOME`, `LD_*`, `DYLD_*`, `NODE_OPTIONS`, `BASH_ENV` and similar loader or interpreter hooks, nor anything that redirects an allowlisted tool (`DOCKER_*`, `COMPOSE_*`, `SYSTEMD_*`, `XDG_*`, `PG*`, `PS_FORMAT`, `PAGER`, `EDITOR`).
+- Denials return `403` with code `COMMAND_EXECUTION_ERROR` (malformed input such as an unterminated quote returns `400`) and are appended to the audit log as `command.denied` with the executable, the argument count, the reason with quoted values removed, and the calling route, job or workflow step. Arguments are never recorded, because a denied command line can carry a secret.
 
 Internal features (Docker listing, systemd health, resource and network monitors, database backups, the hexagonal adapters under `api/src/infrastructure/adapters/`) run fixed argv chosen by the code, validate user-supplied values (unit names, container ids, PIDs, signals, database names) and do any filtering in TypeScript instead of shell pipelines; they are not subject to `COMMAND_ALLOWLIST`. `requiresPrivileges` in [`api/src/middleware/auth.ts`](api/src/middleware/auth.ts) now only classifies a command (sudo, mutating `systemctl` verbs, destructive tools) and is not a security control; the former regex denylist was removed because it was trivially bypassed.
 
 **RBAC.** [`api/src/infrastructure/rbac/index.ts`](api/src/infrastructure/rbac/index.ts) ships three default roles: `admin` (every permission), `operator` (read, execute, start/stop/restart services, view metrics and logs, create/cancel jobs) and `viewer` (read, view metrics and logs), plus custom roles with inheritance, managed through `/api/rbac`. It is an in-memory model: it is not wired as a middleware gate on the other routes, so today it does not narrow what a token holder can do.
 
+**Files, backups and database dumps.** Paths from requests go through [`api/src/services/pathPolicy.ts`](api/src/services/pathPolicy.ts), which resolves symlinks with `realpath` and checks the real path. It must be inside `FILE_ALLOWED_ROOTS` (separated by `:`; default home, `/tmp`, `/var/log`, `/var/tmp`). The API install directory and anything below a root with a path segment starting with `.` (`.env`, `.ssh`, `.bashrc`, `.git`, ...) are refused whatever the roots say, with `403`. Dangling symlinks are refused and the last path component is opened with `O_NOFOLLOW`. Hard links, and a parent directory swapped between the check and the use, are not covered. Other applications in the home remain writable: if that is too much, narrow `FILE_ALLOWED_ROOTS`.
+
+**Rate limiting.** [`api/src/middleware/ratelimit.ts`](api/src/middleware/ratelimit.ts) runs before auth. The valid token gets the `RATE_LIMIT_TIER` budget (default `standard`: 50 burst, 5/s, 300/min, 10 concurrent; `free`, `premium` and `unlimited` also exist). Everything else is keyed by client address on the `free` tier (10 burst, 1/s, 60/min), so token guessing is throttled however many values are tried. `GET /health` is exempt. State is in memory, per process. Behind a reverse proxy all unauthenticated clients count as one address.
+
 **Secrets at rest.** [`api/src/services/secretsManager.ts`](api/src/services/secretsManager.ts) encrypts each stored secret with AES-256-GCM (Node `crypto`), a random 12-byte IV per value and the GCM auth tag kept alongside the ciphertext. The key is `SECRET_KEY`, a base64-encoded 32-byte value validated at startup. Ciphertext is written to `api/secrets/secrets.json` (mounted from `./data/secrets` in `docker-compose.yml`). The separate `/api/encryption` vault ([`api/src/infrastructure/encryption/index.ts`](api/src/infrastructure/encryption/index.ts)) also uses AES-256-GCM with key rotation, but keeps keys and secrets in memory only.
 
-**Audit logging.** [`api/src/services/auditLogger.ts`](api/src/services/auditLogger.ts) appends one JSON line per recorded action to `api/logs/audit.log`, queryable through `/api/logs`. [`api/src/infrastructure/audit/index.ts`](api/src/infrastructure/audit/index.ts) adds an in-memory typed event stream exposed at `/api/audit`. Credentials are kept out of logs: `requireAuth` logs only that a rejected request had a bearer token present or absent, never the header or token, and the startup banner and rate limiter identify tokens by a short SHA-256 fingerprint (`sha256:xxxxxxxx`, [`api/src/infrastructure/logging/redact.ts`](api/src/infrastructure/logging/redact.ts)) instead of a token prefix. Process logs still include request paths, command lines and error messages, so do not put secrets in URLs or command arguments.
+**Audit logging.** This is not a full audit trail: successful commands are not recorded. [`api/src/services/auditLogger.ts`](api/src/services/auditLogger.ts) appends denied commands to `api/logs/audit.log`, one JSON line each, queryable through `/api/logs`. [`api/src/infrastructure/audit/index.ts`](api/src/infrastructure/audit/index.ts) adds an in-memory typed event stream exposed at `/api/audit`, fed only by the RBAC and threat detection modules. Credentials are kept out of logs: `requireAuth` logs only that a rejected request had a bearer token present or absent, never the header or token, and the startup banner and rate limiter identify tokens by a short SHA-256 fingerprint (`sha256:xxxxxxxx`, [`api/src/infrastructure/logging/redact.ts`](api/src/infrastructure/logging/redact.ts)). Accepted commands are kept in memory with their arguments, and job and workflow definitions are stored as sent, so do not put secrets in command arguments or URLs.
 
-**Network assumption.** The server binds to `API_HOST`, default `127.0.0.1` ([`api/src/config/index.ts`](api/src/config/index.ts)); `docker-compose.yml` publishes it on loopback and on the internal `apps-network` for n8n. The `localhostOnly` and `rateLimitMiddleware` middlewares exist ([`api/src/middleware/security.ts`](api/src/middleware/security.ts), [`api/src/middleware/ratelimit.ts`](api/src/middleware/ratelimit.ts)) but are commented out in [`api/src/index.ts`](api/src/index.ts), so the token is the only barrier. The design assumes a trusted network: run it behind a reverse proxy or VPN on a host you control, and never expose port 3000 to the Internet directly. The allowlist narrows what a token holder can run, but a leaked token is still close to root on the host: with the default allowlist it can drive `docker` (which can mount the host filesystem through the mounted Docker socket) and `sudo -n systemctl`.
+**Network assumption.** The server binds to `API_HOST`, default `127.0.0.1` ([`api/src/config/index.ts`](api/src/config/index.ts)), which is also what the systemd unit sets. `docker-compose.yml` publishes ports `3000` and `3001` on loopback; `API_PUBLISH_HOST` overrides the address of `3001`. Containers on `apps-network` reach the API at `http://api:3000` without any published port. The `localhostOnly` middleware is not used, because a container sees the Docker gateway rather than loopback: the listen address is the control. The design assumes a trusted network: run it behind a reverse proxy or VPN on a host you control, and never expose the port to the Internet directly. The token remains powerful even with these limits: it can stop any container or service the API user can reach, read the journal and write files in the allowed roots. With `ALLOW_SUDO_COMMANDS=true` that extends to anything the sudoers entry allows.
 
 ## Architecture
 

@@ -14,7 +14,7 @@ Server: http://localhost:3000
 
 ## Key endpoints
 - Info/health: `GET /`, `GET /health`, `GET /api/openapi.json`
-- Commands: `POST /api/command/execute`, `POST /api/command/batch`, `POST /api/command/service` (passwordless sudo recommended)
+- Commands: `POST /api/command/execute`, `POST /api/command/batch`, `POST /api/command/service` (mutating actions need `ALLOW_SUDO_COMMANDS=true` and passwordless sudo)
 - Resources: `GET /api/resources`, `/processes`, `/network`; `POST /api/resources/process/:pid/priority`; `DELETE /api/resources/process/:pid`
 - Files/backups: `GET|POST /api/file`, `POST /api/file/upload`, `POST /api/backup/create`, `POST /api/backup/restore`
 - Security: `POST /api/auth/validate`, `GET /api/rbac/roles`, `GET /api/rbac/permissions`

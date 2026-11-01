@@ -13,13 +13,14 @@ StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=vps-orchestrator
 
-# Variables de entorno
+# Defaults. EnvironmentFile wins over Environment= whatever the order, so a line
+# in api/.env overrides these: API_HOST=<address> is how to listen elsewhere, and
+# an old API_HOST=0.0.0.0 left in that file keeps the API exposed.
 Environment="NODE_ENV=production"
-# Carga el .env del proyecto (API_TOKEN, SECRET_KEY, etc.)
-EnvironmentFile=/home/sebss/apps/VPSLocalOrchestrator/api/.env
-# Sobrescribe host/puerto para exponer a n8n
-Environment="API_HOST=0.0.0.0"
+Environment="API_HOST=127.0.0.1"
 Environment="PORT=3000"
+# Project settings (API_TOKEN, SECRET_KEY, etc.)
+EnvironmentFile=/home/sebss/apps/VPSLocalOrchestrator/api/.env
 
 [Install]
 WantedBy=multi-user.target

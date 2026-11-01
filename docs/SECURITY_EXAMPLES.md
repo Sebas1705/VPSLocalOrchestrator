@@ -5,10 +5,10 @@ Version: v1.0.3
 ## Security essentials
 - **Auth**: Bearer token; generate strong token with `openssl rand -hex 32`, store in `.env` as `API_TOKEN`.
 - **Rotation**: Change token every 30-60 days (prod) or 90 days (dev); update `.env` and restart.
-- **Sudo**: `/api/command/service` uses `sudo -n`; configure passwordless sudo to avoid 403.
+- **Sudo**: off by default. Set `ALLOW_SUDO_COMMANDS=true` and configure passwordless sudo to use mutating `/api/command/service` actions.
 - **Network**: Bind to `127.0.0.1` (default) for localhost-only; use reverse proxy (nginx) for prod access.
 - **Secrets**: Keep `.env` secret; never commit to git.
-- **Audit**: All protected operations logged.
+- **Audit**: Denied commands are logged, without their arguments. Successful commands are not logged.
 
 ## Example requests
 
@@ -33,11 +33,11 @@ curl -X POST http://localhost:3000/api/command/batch \
   -d '{"commands":["pwd","uname -a"]}'
 ```
 
-### Resource monitoring (public)
+### Resource monitoring
 ```bash
-curl http://localhost:3000/api/resources
-curl http://localhost:3000/api/resources/processes?limit=5
-curl http://localhost:3000/api/resources/network
+curl -H "Authorization: Bearer <API_TOKEN>" http://localhost:3000/api/resources
+curl -H "Authorization: Bearer <API_TOKEN>" "http://localhost:3000/api/resources/processes?limit=5"
+curl -H "Authorization: Bearer <API_TOKEN>" http://localhost:3000/api/resources/network
 ```
 
 ### Service management
@@ -51,18 +51,19 @@ curl -X POST http://localhost:3000/api/command/service \
 ### Process priority
 ```bash
 curl -X POST http://localhost:3000/api/resources/process/1234/priority \
+  -H "Authorization: Bearer <API_TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{"priority":10}'
 ```
 
-### Docker container list (public)
+### Docker container list
 ```bash
-curl http://localhost:3000/api/docker/containers
+curl -H "Authorization: Bearer <API_TOKEN>" http://localhost:3000/api/docker/containers
 ```
 
 ### File operations
 ```bash
-curl -X POST http://localhost:3000/api/file \
+curl -X POST http://localhost:3000/api/files \
   -H "Authorization: Bearer <API_TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{"path":"/tmp/test.txt","content":"Hello"}'
