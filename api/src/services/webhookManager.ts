@@ -1,10 +1,9 @@
 import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { API_ROOT } from '../config/paths.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const STORAGE_DIR = path.join(__dirname, '../../webhooks');
+const STORAGE_DIR = path.join(API_ROOT, 'webhooks');
 const WEBHOOKS_FILE = path.join(STORAGE_DIR, 'webhooks.json');
 
 export interface Webhook {

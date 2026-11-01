@@ -1,10 +1,9 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { API_ROOT } from '../config/paths.js';
 import crypto from 'crypto';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const STORAGE_DIR = path.join(__dirname, '../../metrics');
+const STORAGE_DIR = path.join(API_ROOT, 'metrics');
 const METRICS_FILE = path.join(STORAGE_DIR, 'metrics.json');
 const MAX_RESULTS = 500;
 

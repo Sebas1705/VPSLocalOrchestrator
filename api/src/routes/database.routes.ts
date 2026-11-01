@@ -1,5 +1,6 @@
 import express, { type Request, type Response, type Router } from 'express';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { pathErrorStatus } from '../services/pathPolicy.js';
 import { backupDatabase, databaseStatus } from '../services/databaseManager.js';
 
 const router: Router = express.Router();

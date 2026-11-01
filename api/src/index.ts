@@ -1,37 +1,4 @@
-import express, { type Application, type Request, type Response } from 'express';
-import { localhostOnly, requestLogger, errorHandler } from './middleware/security.js';
-import { errorHandlingMiddleware, notFoundHandler } from './middleware/errorHandlingMiddleware.js';
-import { tracingMiddleware } from './middleware/tracing.js';
-import { metricsMiddleware, metricsEndpoint } from './middleware/metrics.js';
-import { rateLimitMiddleware } from './middleware/ratelimit.js';
-import { backPressureMiddleware } from './middleware/backpressure.js';
-import { createCommandRoutes } from './routes/command.routes.js';
-import { createResourceRoutes } from './routes/resources.routes.js';
-import { createServiceRoutes } from './routes/services.routes.js';
-import auditRoutes from './routes/audit.routes.js';
-import fileRoutes from './routes/file.routes.js';
-import webhookRoutes from './routes/webhook.routes.js';
-import secretsRoutes from './routes/secrets.routes.js';
-import backupRoutes from './routes/backup.routes.js';
-import workflowRoutes from './routes/workflow.routes.js';
-import metricsRoutes from './routes/metrics.routes.js';
-import dockerRoutes from './routes/docker.routes.js';
-import databaseRoutes from './routes/database.routes.js';
-import loadBalancerRoutes from './routes/loadbalancer.routes.js';
-import analyticsRoutes from './routes/analytics.routes.js';
-import healthRoutes from './routes/health.routes.js';
-import jobsRoutes from './routes/jobs.routes.js';
-import ratelimitsRoutes from './routes/ratelimits.routes.js';
-import circuitbreakerRoutes from './routes/circuitbreaker.routes.js';
-import openapiRoutes from './routes/openapi.routes.js';
-import migrationRoutes from './routes/migration.routes.js';
-import auditEventsRoutes from './routes/audit-events.routes.js';
-import eventsRoutes from './routes/events.routes.js';
-import eventstoreRoutes from './routes/eventstore.routes.js';
-import eventprocessorRoutes from './routes/eventprocessor.routes.js';
-import encryptionRoutes from './routes/encryption.routes.js';
-import rbacRoutes from './routes/rbac.routes.js';
-import threatRoutes from './routes/threat.routes.js';
+import { createApp } from './app.js';
 import { getConfig, initializeLogger, getLogger } from './config/index.js';
 import { initializeMappers } from './application/mappers/index.js';
 import { createContainer } from './infrastructure/container.js';
@@ -111,10 +78,16 @@ const jobQueue = initializeJobQueue({
   defaultMaxAttempts: 3,
 });
 
-// Denied command attempts (allowlist, metacharacters, sudo policy) go to the
-// file-based audit log, queryable through /api/logs.
+// Denied command attempts (allowlist, argument rules, metacharacters, sudo) go
+// to the file-based audit log, queryable through /api/logs. Arguments are never
+// recorded: a denied command line can carry a secret.
 setCommandAuditSink((event) =>
-  logAction('command.denied', { command: event.command, source: event.source, statusCode: event.statusCode }, 'failure', event.reason)
+  logAction(
+    'command.denied',
+    { executable: event.executable, argCount: event.argCount, source: event.source, statusCode: event.statusCode },
+    'failure',
+    event.reason
+  )
 );
 
 // Register job processors
@@ -130,159 +103,10 @@ const commandRepository = await container.get<ICommandRepository>('commandReposi
 const resourceRepository = await container.get<IResourceRepository>('resourceRepository');
 const serviceRepository = await container.get<IServiceRepository>('serviceRepository');
 
-const app: Application = express();
+const app = createApp({ commandRepository, resourceRepository, serviceRepository });
 const PORT = config.api.port;
 const HOST = config.api.host;
-
-// Middleware global
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
-// TEMPORARILY DISABLED FOR TESTING - See BUG_REPORT_MIDDLEWARE_HANGING.md
-// app.use(tracingMiddleware);
-// app.use(metricsMiddleware);
-// app.use(backPressureMiddleware);
-// app.use(rateLimitMiddleware);
-// app.use(eventBusMiddleware);
-// app.use(requestLogger);
-// app.use(localhostOnly);
-
-// Health check
-app.get('/health', (req: Request, res: Response) => {
-  res.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-  });
-});
-
-// Metrics endpoint (Prometheus compatible)
-app.get('/metrics', metricsEndpoint);
-
-// Health check routes (Kubernetes-style probes)
-// TEMPORARILY DISABLED - Complex health checks cause hanging
-// app.use('/health', healthRoutes);
-
-// Rutas principales (con inyección de dependencias)
-app.use('/api/command', createCommandRoutes(commandRepository));
-app.use('/api/resources', createResourceRoutes(resourceRepository));
-app.use('/api/services', createServiceRoutes(serviceRepository));
-app.use('/api/logs', auditRoutes);
-app.use('/api/files', fileRoutes);
-app.use('/api/webhooks', webhookRoutes);
-app.use('/api/secrets', secretsRoutes);
-app.use('/api/backups', backupRoutes);
-app.use('/api/workflows', workflowRoutes);
-app.use('/api/metrics', metricsRoutes);
-app.use('/api/docker', dockerRoutes);
-app.use('/api/databases', databaseRoutes);
-app.use('/api/loadbalancer', loadBalancerRoutes);
-app.use('/api/analytics', analyticsRoutes);
-app.use('/api/jobs', jobsRoutes);
-app.use('/api/ratelimits', ratelimitsRoutes);
-app.use('/api/circuitbreakers', circuitbreakerRoutes);
-app.use('/api', openapiRoutes);
-app.use('/api', migrationRoutes);
-app.use('/api/audit', auditEventsRoutes);
-app.use('/api/events', eventsRoutes);
-app.use('/api/eventstore', eventstoreRoutes);
-app.use('/api/processor', eventprocessorRoutes);
-app.use('/api/encryption', encryptionRoutes);
-app.use('/api/rbac', rbacRoutes);
-app.use('/api/threat', threatRoutes);
-
-// Ruta por defecto
-app.get('/', (req: Request, res: Response) => {
-  res.json({
-    name: 'VPS Local Orchestrator API',
-    version: '1.2.0',
-    description: 'API para orquestar recursos y ejecutar comandos localmente - v1.2.0 Minor Release',
-    endpoints: {
-      health: 'GET /health',
-      healthLiveness: 'GET /health/live',
-      healthReadiness: 'GET /health/ready',
-      healthStartup: 'GET /health/startup',
-      metrics: 'GET /metrics',
-      jobsCreate: 'POST /api/jobs',
-      jobsList: 'GET /api/jobs',
-      jobsGet: 'GET /api/jobs/:id',
-      jobsCancel: 'DELETE /api/jobs/:id',
-      jobsRetry: 'POST /api/jobs/:id/retry',
-      jobsStats: 'GET /api/jobs/stats/summary',
-      jobsClear: 'DELETE /api/jobs/completed/clear',
-      rateLimitStats: 'GET /api/ratelimits/stats',
-      rateLimitAll: 'GET /api/ratelimits/all',
-      rateLimitConfig: 'POST /api/ratelimits/config',
-      rateLimitReset: 'DELETE /api/ratelimits/reset',
-      rateLimitTiers: 'GET /api/ratelimits/tiers',
-      circuitBreakers: 'GET /api/circuitbreakers',
-      circuitBreakerGet: 'GET /api/circuitbreakers/:name',
-      circuitBreakerReset: 'POST /api/circuitbreakers/:name/reset',
-      circuitBreakerState: 'POST /api/circuitbreakers/:name/state',
-      circuitBreakerResetAll: 'POST /api/circuitbreakers/actions/reset-all',
-      backpressureStatus: 'GET /api/backpressure/status',
-      executeCommand: 'POST /api/command/execute',
-      batchCommands: 'POST /api/command/batch',
-      serviceManagement: 'POST /api/command/service',
-      systemResources: 'GET /api/resources',
-      processes: 'GET /api/resources/processes',
-      networkStats: 'GET /api/resources/network',
-      processPriority: 'POST /api/resources/process/:pid/priority',
-      killProcess: 'DELETE /api/resources/process/:pid',
-      services: 'GET /api/services',
-      serviceHealth: 'GET /api/services/:name/health',
-      auditLogs: 'GET /api/logs',
-      searchLogs: 'POST /api/logs/search',
-      fileRead: 'GET /api/files?path=<path>',
-      fileWrite: 'POST /api/files',
-      fileDelete: 'DELETE /api/files?path=<path>',
-      mkdir: 'POST /api/files/mkdir',
-      rmdir: 'DELETE /api/files/rmdir?path=<path>',
-      webhooksList: 'GET /api/webhooks',
-      webhooksRegister: 'POST /api/webhooks',
-      webhooksDelete: 'DELETE /api/webhooks/:id',
-      webhooksTest: 'POST /api/webhooks/:id/test',
-      secretsList: 'GET /api/secrets',
-      secretsCreate: 'POST /api/secrets',
-      secretsGet: 'GET /api/secrets/:id',
-      secretsUpdate: 'PATCH /api/secrets/:id',
-      secretsDelete: 'DELETE /api/secrets/:id',
-      backupsList: 'GET /api/backups',
-      backupsCreate: 'POST /api/backups',
-      backupsGet: 'GET /api/backups/:name',
-      backupsDelete: 'DELETE /api/backups/:name',
-      backupsRestore: 'POST /api/backups/:name/restore',
-      workflowsList: 'GET /api/workflows',
-      workflowsCreate: 'POST /api/workflows',
-      workflowsGet: 'GET /api/workflows/:id',
-      workflowsUpdate: 'PATCH /api/workflows/:id',
-      workflowsDelete: 'DELETE /api/workflows/:id',
-      workflowsRun: 'POST /api/workflows/:id/run',
-      workflowsHistory: 'GET /api/workflows/:id/history',
-      metricsCreate: 'POST /api/metrics/custom',
-      metricsList: 'GET /api/metrics',
-      dockerContainers: 'GET /api/docker/containers',
-      dockerImages: 'GET /api/docker/images',
-      dockerStart: 'POST /api/docker/containers/:id/start',
-      dockerStop: 'POST /api/docker/containers/:id/stop',
-      databaseStatus: 'GET /api/databases/status',
-      databaseBackup: 'POST /api/databases/backup',
-      lbList: 'GET /api/loadbalancer/backends',
-      lbCreate: 'POST /api/loadbalancer/backends',
-      lbDrain: 'POST /api/loadbalancer/backends/:id/drain',
-      lbEnable: 'POST /api/loadbalancer/backends/:id/enable',
-      lbDelete: 'DELETE /api/loadbalancer/backends/:id',
-      analyticsSnapshot: 'GET /api/analytics/snapshot',
-      analyticsAggregate: 'GET /api/analytics/aggregate',
-      analyticsTrend: 'GET /api/analytics/trend',
-    },
-  });
-});
-
-// Manejador de rutas no encontradas (debe estar antes del error handler)
-app.use(notFoundHandler);
-
-// Middleware de manejo de errores (DEBE SER EL ÚLTIMO)
-app.use(errorHandlingMiddleware);
+const isLoopback = HOST === '127.0.0.1' || HOST === '::1' || HOST === 'localhost';
 
 // Iniciar servidor
 app.listen(PORT, HOST, () => {
@@ -290,7 +114,11 @@ app.listen(PORT, HOST, () => {
   logger.info('🚀 VPS Local Orchestrator API');
   logger.info('='.repeat(50));
   logger.info(`📍 Server running at: http://${HOST}:${PORT}`);
-  logger.info(`🔒 Access restricted to: localhost only`);
+  if (isLoopback) {
+    logger.info('🔒 Listening on loopback only');
+  } else {
+    logger.warn(`⚠️  Listening on ${HOST}: reachable from other hosts. Only the bearer token and the rate limiter stand in the way.`);
+  }
   logger.info(`⏰ Started at: ${new Date().toISOString()}`);
   logger.info('='.repeat(50));
   logger.info('\n🔑 API Configuration loaded:');

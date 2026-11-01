@@ -138,7 +138,7 @@ export class CommandController implements ICommandController {
     assertServiceName(service);
 
     // Read-only operations don't need sudo. Mutating ones go through the same
-    // command policy as /api/command, so ALLOW_SUDO_COMMANDS=false disables them
+    // command policy as /api/command, so they need ALLOW_SUDO_COMMANDS=true
     // and `systemctl` must be on the allowlist.
     const readOnlyActions = ['status'];
     const needsSudo = !readOnlyActions.includes(action);

@@ -9,6 +9,7 @@ import {
   getFileStats,
   deleteDirectory,
 } from '../services/fileManager.js';
+import { pathErrorStatus } from '../services/pathPolicy.js';
 
 const router: Router = express.Router();
 
@@ -63,7 +64,7 @@ router.get('/', async (req: Request, res: Response) => {
       throw error;
     }
   } catch (error: any) {
-    res.status(500).json({
+    res.status(pathErrorStatus(error)).json({
       success: false,
       error: error.message,
     });
@@ -113,7 +114,7 @@ router.post('/', async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error: any) {
-    res.status(500).json({
+    res.status(pathErrorStatus(error)).json({
       success: false,
       error: error.message,
     });
@@ -151,7 +152,7 @@ router.delete('/', async (req: Request, res: Response) => {
       throw error;
     }
   } catch (error: any) {
-    res.status(500).json({
+    res.status(pathErrorStatus(error)).json({
       success: false,
       error: error.message,
     });
@@ -185,7 +186,7 @@ router.post('/mkdir', async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error: any) {
-    res.status(500).json({
+    res.status(pathErrorStatus(error)).json({
       success: false,
       error: error.message,
     });
@@ -223,7 +224,7 @@ router.delete('/rmdir', async (req: Request, res: Response) => {
       throw error;
     }
   } catch (error: any) {
-    res.status(500).json({
+    res.status(pathErrorStatus(error)).json({
       success: false,
       error: error.message,
     });

@@ -1,10 +1,9 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { API_ROOT } from '../config/paths.js';
 import crypto from 'crypto';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const STORAGE_DIR = path.join(__dirname, '../../loadbalancer');
+const STORAGE_DIR = path.join(API_ROOT, 'loadbalancer');
 const BACKENDS_FILE = path.join(STORAGE_DIR, 'backends.json');
 
 export type BackendStatus = 'enabled' | 'draining';

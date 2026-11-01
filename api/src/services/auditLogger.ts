@@ -1,9 +1,8 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { API_ROOT } from '../config/paths.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const LOGS_DIR = path.join(__dirname, '../../logs');
+const LOGS_DIR = path.join(API_ROOT, 'logs');
 const AUDIT_LOG_FILE = path.join(LOGS_DIR, 'audit.log');
 
 export interface AuditLog {

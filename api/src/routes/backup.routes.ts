@@ -1,5 +1,6 @@
 import express, { type Request, type Response, type Router } from 'express';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { pathErrorStatus } from '../services/pathPolicy.js';
 import {
   createBackup,
   listBackups,
@@ -19,7 +20,7 @@ router.get('/', async (req: Request, res: Response) => {
     const backups = await listBackups();
     res.json({ success: true, count: backups.length, data: backups });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(pathErrorStatus(error)).json({ success: false, error: error.message });
   }
 });
 
