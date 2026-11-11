@@ -1,7 +1,7 @@
 afterAll(() => {
 # Testing Guide
 
-Lightweight guide to run and extend the test suite (v1.0.3).
+Lightweight guide to run and extend the test suite (v1.3.0).
 
 ## Stack
 - Jest with ts-jest (ESM enabled)
@@ -24,10 +24,10 @@ npm run test:coverage     # coverage + HTML report
 npm test -- file.test.ts  # single file
 ```
 
-Typical full run: 23 suites, 555 tests, ~1–2s.
+Typical full run: 37 suites, 1074 tests (14 skipped), a few seconds.
 
 ## Coverage
-- Current overall ~43% (target 80%)
+- Run `npm run test:coverage` for the current figure (target 80%)
 - Reports: `coverage/lcov-report/index.html`, `coverage/lcov.info`
 - Focus next: services 70%+, routes 60%+, utilities/middleware 80%+
 - Gaps and plan: `TEST_COVERAGE_EXPANSION_REPORT.md`

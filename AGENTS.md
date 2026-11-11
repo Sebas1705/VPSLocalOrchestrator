@@ -51,7 +51,7 @@ Follow Semantic Versioning (SemVer): `MAJOR.MINOR.PATCH`
 ### Version Update Process
 
 1. **Update `api/package.json`**: Change `"version"` field
-2. **Update `api/src/index.ts`**: Update version in GET `/` endpoint
+2. **Nothing else**: `GET /` reads the version from `api/package.json` (`api/src/version.ts`); update the lockfile too (`npm install --package-lock-only`)
 3. **Commit**: `git commit -m "bump: version X.X.X - <description>"`
 4. **Create release branch**: `git checkout -b release/vX.X.X`
 5. **Tag**: `git tag -a vX.X.X -m "Release vX.X.X"`

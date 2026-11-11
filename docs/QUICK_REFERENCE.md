@@ -1,6 +1,6 @@
 # Quick Reference
 
-Version: v1.0.3 · Tests: 555 (~43% coverage, target 80%)
+Version: v1.3.0
 
 ## Run
 ```bash

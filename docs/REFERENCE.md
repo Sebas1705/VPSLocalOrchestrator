@@ -1,6 +1,6 @@
 # Reference
 
-Version: v1.0.3 · Tests: 555 (23 suites) · Coverage: ~43% (target 80%)
+Version: v1.3.0
 
 ## Quick start
 ```bash

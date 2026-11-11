@@ -1,6 +1,6 @@
 # Docs Index
 
-Version: v1.0.3
+Version: v1.3.0
 
 - **Project overview**: `../README.md`
 - **Reference** (auth, endpoints, testing, deploy): `REFERENCE.md`

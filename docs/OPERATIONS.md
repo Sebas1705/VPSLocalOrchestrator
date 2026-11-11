@@ -1,6 +1,6 @@
 # Operations
 
-Version: v1.0.3
+Version: v1.3.0
 
 ## Security basics
 - Auth: Bearer `API_TOKEN`; keep `.env` secret.

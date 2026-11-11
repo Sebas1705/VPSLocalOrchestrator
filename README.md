@@ -2,9 +2,7 @@
 
 [![CI](https://github.com/Sebas1705/VPSLocalOrchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/Sebas1705/VPSLocalOrchestrator/actions/workflows/ci.yml)
 
-**v1.2.0** (per `api/package.json` and the `v1.2.0` git tag) · Node 18+ · TypeScript 5 · Express 5
-
-> GitHub Releases lag behind the tags: the latest published release is [v1.0.0](https://github.com/Sebas1705/VPSLocalOrchestrator/releases). Use the tags for the version history.
+**v1.3.0** (per `api/package.json`, the `v1.3.0` git tag and the latest GitHub release) · Node 18+ · TypeScript 5 · Express 5
 
 A self-hosted REST API for orchestrating VPS resources and executing commands locally — with AES-256-GCM secret encryption, a default-deny bearer token gate, rate limiting, per-program command rules and a log of denied commands. See [Security model](#security-model) for what is enforced today and what is not.
 
