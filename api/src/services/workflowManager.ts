@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { API_ROOT } from '../config/paths.js';
 import { executeCommand } from './commandExecutor.js';
+import { guardedRequest } from './outboundPolicy.js';
 
 const STORAGE_DIR = path.join(API_ROOT, 'workflows');
 const WORKFLOWS_FILE = path.join(STORAGE_DIR, 'workflows.json');
@@ -243,18 +244,24 @@ async function runStep(step: WorkflowStep): Promise<StepResult> {
       };
     }
     if (step.type === 'webhook') {
-      const response = await fetch(step.url!, {
+      // Destination policy (outboundPolicy.ts): public hosts only unless
+      // OUTBOUND_ALLOWED_HOSTS says otherwise, redirects re-checked, body capped.
+      const response = await guardedRequest(step.url, {
         method: step.method || 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: step.body ? JSON.stringify(step.body) : null,
       });
-      const text = await response.text();
       const ok = response.ok;
       const base: Omit<StepResult, 'status' | 'type'> & { status: StepResult['status']; type: WorkflowStepType } = {
         stepId: step.id,
         type: step.type,
         status: ok ? 'success' : 'failure',
-        output: { status: response.status, body: text },
+        output: {
+          status: response.status,
+          body: response.body,
+          ...(response.truncated ? { truncated: true } : {}),
+          ...(response.note ? { note: response.note } : {}),
+        },
         durationMs: Date.now() - started,
       };
       if (!ok) {
