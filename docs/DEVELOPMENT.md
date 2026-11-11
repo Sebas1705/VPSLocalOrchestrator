@@ -1,6 +1,6 @@
 # Development & Contribution
 
-Version: v1.0.3
+Version: v1.3.0
 
 ## Setup for development
 ```bash

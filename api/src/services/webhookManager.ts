@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
 import { API_ROOT } from '../config/paths.js';
+import { guardedRequest } from './outboundPolicy.js';
 
 const STORAGE_DIR = path.join(API_ROOT, 'webhooks');
 const WEBHOOKS_FILE = path.join(STORAGE_DIR, 'webhooks.json');
@@ -248,7 +249,8 @@ async function sendWebhook(webhook: Webhook, payload: WebhookPayload): Promise<v
       headers['X-Webhook-Signature'] = signature;
     }
 
-    const response = await fetch(webhook.url, {
+    // Same destination policy as workflow HTTP steps (outboundPolicy.ts).
+    const response = await guardedRequest(webhook.url, {
       method: 'POST',
       headers,
       body: JSON.stringify(payload),

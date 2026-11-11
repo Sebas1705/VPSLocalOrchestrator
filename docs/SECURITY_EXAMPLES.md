@@ -1,6 +1,6 @@
 # Security & Examples
 
-Version: v1.0.3
+Version: v1.3.0
 
 ## Security essentials
 - **Auth**: Bearer token; generate strong token with `openssl rand -hex 32`, store in `.env` as `API_TOKEN`.

@@ -257,6 +257,25 @@ describe('commandExecutor.executeStreamCommand', () => {
     );
   });
 
+  it('spawns with a scrubbed environment, without the API token or key', () => {
+    mockChild();
+    const saved = { token: process.env.API_TOKEN, key: process.env.SECRET_KEY };
+    process.env.API_TOKEN = 'tok-stream';
+    process.env.SECRET_KEY = 'key-stream';
+    try {
+      executeStreamCommand('docker', ['logs', 'app'], jest.fn(), jest.fn(), jest.fn());
+    } finally {
+      if (saved.token === undefined) delete process.env.API_TOKEN;
+      else process.env.API_TOKEN = saved.token;
+      if (saved.key === undefined) delete process.env.SECRET_KEY;
+      else process.env.SECRET_KEY = saved.key;
+    }
+    const env = spawnMock.mock.calls[0][2].env;
+    expect(env).toBeDefined();
+    expect(env).not.toHaveProperty('API_TOKEN');
+    expect(env).not.toHaveProperty('SECRET_KEY');
+  });
+
   it('handles close event without code (defaults to 0)', () => {
     const child = mockChild();
     const onClose = jest.fn();

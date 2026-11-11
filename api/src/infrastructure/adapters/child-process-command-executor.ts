@@ -10,6 +10,7 @@
  */
 
 import { execFile } from 'child_process';
+import { buildChildEnv } from '../../services/childEnv.js';
 import path from 'path';
 import type { ICommandExecutor, CommandExecutionOptions, CommandExecutionResult } from '../ports/os-adapters.js';
 import { getCommandPolicyConfig, resolveExecutable } from '../../services/commandPolicy.js';
@@ -34,7 +35,7 @@ export class ChildProcessCommandExecutor implements ICommandExecutor {
         {
           timeout,
           cwd: options.cwd,
-          env: { ...process.env, ...options.env },
+          env: buildChildEnv(options.env),
           maxBuffer,
           shell: false,
           windowsHide: true,

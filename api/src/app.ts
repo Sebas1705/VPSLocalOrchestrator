@@ -30,6 +30,7 @@ import encryptionRoutes from './routes/encryption.routes.js';
 import rbacRoutes from './routes/rbac.routes.js';
 import threatRoutes from './routes/threat.routes.js';
 import type { ICommandRepository, IResourceRepository, IServiceRepository } from './domain/ports/repository.interfaces.js';
+import { VERSION } from './version.js';
 
 export interface AppDependencies {
   commandRepository: ICommandRepository;
@@ -126,8 +127,8 @@ export function createApp(dependencies: AppDependencies, { rateLimit = true }: A
   app.get('/', (req: Request, res: Response) => {
     res.json({
       name: 'VPS Local Orchestrator API',
-      version: '1.2.0',
-      description: 'API para orquestar recursos y ejecutar comandos localmente - v1.2.0 Minor Release',
+      version: VERSION,
+      description: `API para orquestar recursos y ejecutar comandos localmente - v${VERSION}`,
       endpoints: {
         health: 'GET /health',
         healthLiveness: 'GET /health/live',

@@ -1,8 +1,9 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { spawn } from 'child_process';
+import { buildChildEnv } from './childEnv.js';
 import { API_ROOT } from '../config/paths.js';
-import { resolveAllowedPath } from './pathPolicy.js';
+import { resolveAllowedPath, resolveWritablePath } from './pathPolicy.js';
 
 const STORAGE_DIR = path.join(API_ROOT, 'backups');
 
@@ -70,6 +71,7 @@ export async function createBackup(paths: string[], name?: string): Promise<Back
 
   await new Promise<void>((resolve, reject) => {
     const tar = spawn('tar', ['-czf', archivePath, ...resolvedPaths], {
+      env: buildChildEnv(),
       stdio: 'inherit',
     });
 
@@ -142,13 +144,14 @@ export async function restoreBackup(name: string, destination: string): Promise<
     throw new Error('destination is required');
   }
 
-  const destResolved = await resolveAllowedPath(destination);
+  const destResolved = await resolveWritablePath(destination);
   await ensureDirectory(destResolved);
 
   const backupPath = await getBackupPath(name);
 
   await new Promise<void>((resolve, reject) => {
     const tar = spawn('tar', ['-xzf', backupPath, '-C', destResolved], {
+      env: buildChildEnv(),
       stdio: 'inherit',
     });
 

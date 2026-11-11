@@ -1,6 +1,6 @@
 # Setup & Architecture
 
-Version: v1.0.3
+Version: v1.3.0
 
 ## Quick setup
 ```bash
@@ -42,7 +42,7 @@ api/src/
 
 ## Tech stack
 - Node.js + TypeScript + Express
-- Jest for testing (555 tests, 23 suites, ~43% coverage)
+- Jest for testing (see TESTING.md for the current count)
 - Prometheus + OpenTelemetry for observability
 
 ## Testing

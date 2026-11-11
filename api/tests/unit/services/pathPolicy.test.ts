@@ -50,6 +50,7 @@ describe('path policy', () => {
   let root: string;
   let outside: string;
   const previousRoots = process.env.FILE_ALLOWED_ROOTS;
+  const previousWriteRoots = process.env.FILE_WRITE_ROOTS;
 
   beforeEach(() => {
     base = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'path-policy-')));
@@ -60,12 +61,15 @@ describe('path policy', () => {
     fs.writeFileSync(path.join(root, 'plain.txt'), 'inside');
     fs.writeFileSync(path.join(outside, 'secret.txt'), 'outside');
     process.env.FILE_ALLOWED_ROOTS = root;
+    process.env.FILE_WRITE_ROOTS = root;
   });
 
   afterEach(() => {
     fs.rmSync(base, { recursive: true, force: true });
     if (previousRoots === undefined) delete process.env.FILE_ALLOWED_ROOTS;
     else process.env.FILE_ALLOWED_ROOTS = previousRoots;
+    if (previousWriteRoots === undefined) delete process.env.FILE_WRITE_ROOTS;
+    else process.env.FILE_WRITE_ROOTS = previousWriteRoots;
   });
 
   describe('resolveAllowedPath', () => {
@@ -108,6 +112,7 @@ describe('path policy', () => {
 
     it('fails closed with no usable roots', async () => {
       process.env.FILE_ALLOWED_ROOTS = 'relative/path';
+      process.env.FILE_WRITE_ROOTS = 'relative/path';
       await expect(getAllowedRoots()).resolves.toEqual([]);
       await expect(resolveAllowedPath(path.join(root, 'plain.txt'))).rejects.toBeInstanceOf(PathAccessDeniedError);
     });
