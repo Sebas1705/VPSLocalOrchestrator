@@ -21,7 +21,7 @@ Server: http://localhost:3000
 - Resources: `GET /api/resources`, `/processes`, `/network`; `POST /api/resources/process/:pid/priority`; `DELETE /api/resources/process/:pid`
 - Files/backups: `GET|POST /api/file`, `POST /api/file/upload`, `POST /api/backup/create`, `POST /api/backup/restore`
 - Jobs/workflows: `POST /api/jobs`, `GET /api/jobs/:id`, `POST /api/workflows/run`
-- Security/RBAC: `POST /api/auth/validate`, `GET /api/rbac/roles`, `GET /api/rbac/permissions`
+- Security (RBAC is a model behind `/api/rbac`, not enforced on other routes): `POST /api/auth/validate`, `GET /api/rbac/roles`, `GET /api/rbac/permissions`
 - Observability: `GET /api/metrics`, `GET /api/logs`, `GET /api/tracing`
 - Docker/system: `GET /api/docker/containers`, `POST /api/docker/containers/:id/:action`, `GET /api/services`
 

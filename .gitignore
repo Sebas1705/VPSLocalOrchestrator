@@ -47,6 +47,7 @@ coverage/
 api/workflows/
 api/metrics/
 api/databases/
+api/data/
 api/loadbalancer/
 api/backups/
 api/webhooks/

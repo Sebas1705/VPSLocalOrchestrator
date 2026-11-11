@@ -1,14 +1,18 @@
 import path from 'path';
-import os from 'os';
 import fs from 'fs/promises';
 import { runProcess } from './commandExecutor.js';
 import { formatArgv } from './commandPolicy.js';
-import { getAllowedRoots, resolveAllowedPath } from './pathPolicy.js';
+import { getWriteRoots, PathAccessDeniedError, resolveWritablePath } from './pathPolicy.js';
 
-/** Dumps may go anywhere the file API can write, except the system log directory. */
-async function resolveDestination(target: string): Promise<string> {
-  const roots = (await getAllowedRoots()).filter((root) => root !== '/var/log');
-  return resolveAllowedPath(target, roots);
+/** Dumps may go anywhere the file API can write (FILE_WRITE_ROOTS), and nowhere else. */
+async function resolveDestination(target: string | undefined): Promise<string> {
+  const roots = await getWriteRoots();
+  if (target === undefined) {
+    const first = roots[0];
+    if (!first) throw new PathAccessDeniedError('Path access denied: no write root is configured (FILE_WRITE_ROOTS)');
+    return resolveWritablePath(path.join(first, 'db-backups'), roots);
+  }
+  return resolveWritablePath(target, roots);
 }
 
 async function ensureDir(target: string): Promise<void> {
@@ -58,7 +62,7 @@ export async function backupDatabase(type: string, name: string, destination?: s
     throw new Error('database name is required');
   }
 
-  const destDir = await resolveDestination(destination || path.join(os.tmpdir(), 'db-backups'));
+  const destDir = await resolveDestination(destination || undefined);
   await ensureDir(destDir);
 
   const filename = timestampName(name);

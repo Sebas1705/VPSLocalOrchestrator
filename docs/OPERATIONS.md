@@ -17,7 +17,9 @@ Version: v1.3.0
 - Network access: for prod use a reverse proxy. `API_HOST` in `api/.env` changes the listen address; prefer a private address such as the Docker bridge gateway over `0.0.0.0`.
 - 429: `RATE_LIMIT_TIER` sizes the budget of the valid token (`standard` by default, also `premium` and `unlimited`).
 - 403 on a command: the message names the subcommand or option. See `api/src/services/commandArgPolicy.ts`; for a command that must stay denied here, wrap it in a script and allowlist the script.
-- 403 on a path: see "Files, backups and database dumps" in the README; `FILE_ALLOWED_ROOTS` sets the roots.
+- 403 on a path: see "Files, backups and database dumps" in the README; `FILE_ALLOWED_ROOTS` sets the read roots and `FILE_WRITE_ROOTS` the write roots.
+- "internal address" on a workflow HTTP step or webhook: the destination resolves to a private, loopback or link-local address. Add the host to `OUTBOUND_ALLOWED_HOSTS` if that is intended (see "Outbound HTTP" in the README).
+- A command lost an environment variable (`DOCKER_HOST`, `PGPASSWORD`, ...): child processes get a scrubbed environment; list what they need in `CHILD_ENV_PASSTHROUGH`.
 
 ## Upgrade notes
 
@@ -31,7 +33,11 @@ The security hardening that added the auth gate changes defaults. On a running i
 6. **Rate limit.** Bursts above 50 requests or 300 per minute now get 429. Raise `RATE_LIMIT_TIER` if a client needs more.
 7. **Paths.** Clients touching dotfiles or the API directory through `/api/files`, `/api/backups` or `/api/databases/backup` now get 403. Under compose the default roots do not include `/home/sebss/apps`, so set `FILE_ALLOWED_ROOTS` if you use the file API there.
 8. **Old audit entries.** `api/logs/audit.log` written by earlier versions still holds the arguments of denied commands. Rotate or scrub it, and rotate any credential that appears in it. The same goes for the journal, which logged them too.
-9. **Treat the token as exposed** if the API was reachable from outside: rotate `API_TOKEN`, and check `SECRET_KEY` if `api/.env` could have been read.
+9. **Writes, outbound HTTP and child environment** (the SSRF, write-roots and environment hardening).
+   - Writes through `/api/files`, `/api/backups/:name/restore` and `/api/databases/backup` are now limited to `FILE_WRITE_ROOTS`, default `api/data/files`. Anything that wrote elsewhere (home, `/tmp`) now gets 403: set `FILE_WRITE_ROOTS` to the directories clients must write to. Under compose, create `./data/files` next to `docker-compose.yml` and make it writable by the container user. Database dumps without a `destination` now go to `<first write root>/db-backups` instead of the system temp directory.
+   - Workflow `webhook` steps and webhook delivery to loopback, private or link-local hosts (n8n on the same host, `http://api:3000`, a Docker service name) are refused: list those hosts in `OUTBOUND_ALLOWED_HOSTS`. Allowlisted internal steps return the status but no body. Response bodies are capped at 1 MiB.
+   - Child processes no longer see the API environment. If a tool relied on `DOCKER_HOST`, `PGHOST`/`PGPASSWORD` or similar, list it in `CHILD_ENV_PASSTHROUGH` (for example `DOCKER_HOST,PG*`).
+10. **Treat the token as exposed** if the API was reachable from outside: rotate `API_TOKEN`, and check `SECRET_KEY` if `api/.env` could have been read.
 
 ## Cleanup
 Tests auto-clean `api/{workflows,metrics,databases,loadbalancer,backups,webhooks}` via `tests/setup.ts`. If needed, remove manually.

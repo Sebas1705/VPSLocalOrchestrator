@@ -1,7 +1,7 @@
 import { constants as fsConstants } from 'fs';
 import fs from 'fs/promises';
 import path from 'path';
-import { PathAccessDeniedError, resolveAllowedEntry, resolveAllowedPath } from './pathPolicy.js';
+import { PathAccessDeniedError, resolveAllowedPath, resolveWritableEntry, resolveWritablePath } from './pathPolicy.js';
 
 export interface FileInfo {
   name: string;
@@ -84,7 +84,7 @@ export async function writeFile(
       throw new Error('Content too large (max 50MB)');
     }
 
-    const resolved = await resolveAllowedPath(filePath);
+    const resolved = await resolveWritablePath(filePath);
 
     // Crear directorio padre si no existe
     await fs.mkdir(path.dirname(resolved), { recursive: true });
@@ -120,7 +120,7 @@ export async function writeFile(
  */
 export async function deleteFile(filePath: string): Promise<{ path: string; deleted: boolean }> {
   try {
-    const resolved = await resolveAllowedEntry(filePath);
+    const resolved = await resolveWritableEntry(filePath);
     const stats = await fs.lstat(resolved);
 
     if (!stats.isFile() && !stats.isSymbolicLink()) {
@@ -209,7 +209,7 @@ export async function listDirectory(dirPath: string): Promise<DirectoryListing> 
  */
 export async function createDirectory(dirPath: string): Promise<{ path: string; created: boolean }> {
   try {
-    const resolved = await resolveAllowedPath(dirPath);
+    const resolved = await resolveWritablePath(dirPath);
 
     try {
       await fs.mkdir(resolved, { recursive: true });
@@ -259,7 +259,7 @@ export async function getFileStats(filePath: string): Promise<FileInfo> {
  */
 export async function deleteDirectory(dirPath: string): Promise<{ path: string; deleted: boolean }> {
   try {
-    const resolved = await resolveAllowedPath(dirPath);
+    const resolved = await resolveWritablePath(dirPath);
     const stats = await fs.stat(resolved);
 
     if (!stats.isDirectory()) {

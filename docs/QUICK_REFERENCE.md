@@ -17,7 +17,7 @@ Server: http://localhost:3000
 - Commands: `POST /api/command/execute`, `POST /api/command/batch`, `POST /api/command/service` (mutating actions need `ALLOW_SUDO_COMMANDS=true` and passwordless sudo)
 - Resources: `GET /api/resources`, `/processes`, `/network`; `POST /api/resources/process/:pid/priority`; `DELETE /api/resources/process/:pid`
 - Files/backups: `GET|POST /api/file`, `POST /api/file/upload`, `POST /api/backup/create`, `POST /api/backup/restore`
-- Security: `POST /api/auth/validate`, `GET /api/rbac/roles`, `GET /api/rbac/permissions`
+- Security (one shared token; RBAC endpoints are informational): `POST /api/auth/validate`, `GET /api/rbac/roles`, `GET /api/rbac/permissions`
 - Observability: `GET /api/metrics`, `GET /api/logs`, `GET /api/tracing`
 
 ## Testing

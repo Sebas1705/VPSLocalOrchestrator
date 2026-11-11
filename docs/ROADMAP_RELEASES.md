@@ -7,7 +7,7 @@ Version: v1.3.0 (latest release, 2026-11-01). The version is defined once, in `a
 - v1.2.0: minor release.
 - v1.1.0: docs consolidation and test expansion.
 - v1.0.3: OpenAPI route, test expansion, docs condensed.
-- v1.0.2 and earlier: foundation features (commands, resources, RBAC, encryption, observability, backups/events, DI, tracing, metrics).
+- v1.0.2 and earlier: foundation features (commands, resources, an RBAC model that is not enforced on routes, encryption, observability, backups/events, DI, tracing, metrics).
 
 GitHub Releases exist for v1.0.0, v1.2.0 and v1.3.0; the git tags hold the full history.
 

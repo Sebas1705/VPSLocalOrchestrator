@@ -3,7 +3,7 @@ import path from 'path';
 import { spawn } from 'child_process';
 import { buildChildEnv } from './childEnv.js';
 import { API_ROOT } from '../config/paths.js';
-import { resolveAllowedPath } from './pathPolicy.js';
+import { resolveAllowedPath, resolveWritablePath } from './pathPolicy.js';
 
 const STORAGE_DIR = path.join(API_ROOT, 'backups');
 
@@ -144,7 +144,7 @@ export async function restoreBackup(name: string, destination: string): Promise<
     throw new Error('destination is required');
   }
 
-  const destResolved = await resolveAllowedPath(destination);
+  const destResolved = await resolveWritablePath(destination);
   await ensureDirectory(destResolved);
 
   const backupPath = await getBackupPath(name);

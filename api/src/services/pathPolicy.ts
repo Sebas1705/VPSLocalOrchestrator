@@ -13,6 +13,15 @@
  *  - anything with a path segment starting with `.` below the root: `.env`,
  *    `.ssh`, `.bashrc`, `.config`, `.git`, `.docker`, `.aws`, ...
  *
+ * Reads and writes are separate. Reads use FILE_ALLOWED_ROOTS (plus the write
+ * roots, so what was written can be read back). Writes (write, delete, mkdir,
+ * restore destinations, database dump destinations) use FILE_WRITE_ROOTS, which
+ * defaults to one dedicated directory, <api>/data/files, and additionally
+ * refuse the deploy files that live next to the API (docker-compose.yml, the
+ * systemd unit, scripts/, .git, .github). A configured write root that is, or
+ * contains, the API install directory (a home directory holding the checkout,
+ * or /) is ignored.
+ *
  * What remains cannot be closed here: hard links, and a symlink swapped in
  * between the check and the use (the last path component is opened with
  * O_NOFOLLOW by fileManager, parent directories are not).
@@ -33,10 +42,39 @@ export class PathAccessDeniedError extends Error {
 }
 
 const DEFAULT_ROOTS_MESSAGE = 'must be inside an allowed root (FILE_ALLOWED_ROOTS)';
+const WRITE_ROOTS_MESSAGE = 'writes must be inside a write root (FILE_WRITE_ROOTS)';
+
+/** The one directory inside the install directory that the file API may use. */
+export const DEFAULT_WRITE_DIR = path.join(API_ROOT, 'data', 'files');
+
+/** Entries next to the API directory that deploy or run it: never writable through the file API. */
+const PROTECTED_DEPLOY_ENTRIES = [
+  'docker-compose.yml',
+  'docker-compose.yaml',
+  'Dockerfile',
+  'vps-orchestrator.service',
+  'scripts',
+  '.git',
+  '.github',
+];
+
+function protectedDeployPaths(): string[] {
+  const repoRoot = path.dirname(API_ROOT);
+  return PROTECTED_DEPLOY_ENTRIES.map((entry) => path.join(repoRoot, entry));
+}
 
 function configuredRoots(env: NodeJS.ProcessEnv): string[] {
   const raw = env.FILE_ALLOWED_ROOTS;
   if (raw === undefined) return [os.homedir(), '/tmp', '/var/log', '/var/tmp'];
+  return raw
+    .split(path.delimiter)
+    .map((entry) => entry.trim())
+    .filter((entry) => path.isAbsolute(entry));
+}
+
+function configuredWriteRoots(env: NodeJS.ProcessEnv): string[] {
+  const raw = env.FILE_WRITE_ROOTS;
+  if (raw === undefined) return [DEFAULT_WRITE_DIR];
   return raw
     .split(path.delimiter)
     .map((entry) => entry.trim())
@@ -55,10 +93,46 @@ async function realpathOrNull(target: string): Promise<string | null> {
   }
 }
 
-/** Allowed roots with their own symlinks resolved. Roots that do not exist are dropped. */
+/** Read roots with their own symlinks resolved. Roots that do not exist are dropped. */
 export async function getAllowedRoots(env: NodeJS.ProcessEnv = process.env): Promise<string[]> {
   const resolved = await Promise.all(configuredRoots(env).map(realpathOrNull));
-  return resolved.filter((root): root is string => root !== null);
+  const readRoots = resolved.filter((root): root is string => root !== null);
+  const writeRoots = await getWriteRoots(env);
+  return [...new Set([...readRoots, ...writeRoots])];
+}
+
+async function realDefaultWriteDir(): Promise<string> {
+  return (await realpathOrNull(DEFAULT_WRITE_DIR)) ?? DEFAULT_WRITE_DIR;
+}
+
+/**
+ * Directories the file API may write to, with symlinks resolved. The default
+ * directory is created on first use. Roots that do not exist, that are inside
+ * the install directory (other than the default one), or that are, or contain,
+ * the install directory or a deploy file are dropped.
+ */
+export async function getWriteRoots(env: NodeJS.ProcessEnv = process.env): Promise<string[]> {
+  const configured = configuredWriteRoots(env);
+  if (env.FILE_WRITE_ROOTS === undefined) {
+    await fs.mkdir(DEFAULT_WRITE_DIR, { recursive: true }).catch(() => undefined);
+  }
+
+  const apiRoot = (await realpathOrNull(API_ROOT)) ?? API_ROOT;
+  const defaultDir = await realDefaultWriteDir();
+  const protectedPaths = await Promise.all(
+    protectedDeployPaths().map(async (entry) => (await realpathOrNull(entry)) ?? entry)
+  );
+
+  const roots: string[] = [];
+  for (const entry of configured) {
+    const root = await realpathOrNull(entry);
+    if (root === null) continue;
+    const isDefault = root === defaultDir;
+    if (!isDefault && (isInside(root, apiRoot) || isInside(apiRoot, root))) continue;
+    if (protectedPaths.some((guarded) => isInside(root, guarded) || isInside(guarded, root))) continue;
+    roots.push(root);
+  }
+  return [...new Set(roots)];
 }
 
 /**
@@ -92,15 +166,15 @@ async function resolveExistingPrefix(absolute: string): Promise<string> {
   }
 }
 
-async function assertAllowed(real: string, roots: readonly string[]): Promise<void> {
+async function assertAllowed(real: string, roots: readonly string[], rootsMessage = DEFAULT_ROOTS_MESSAGE): Promise<void> {
   const apiRoot = (await realpathOrNull(API_ROOT)) ?? API_ROOT;
-  if (isInside(real, apiRoot)) {
+  if (isInside(real, apiRoot) && !isInside(real, await realDefaultWriteDir())) {
     throw new PathAccessDeniedError('Path access denied: the API install directory is off limits');
   }
 
   const matchingRoots = roots.filter((root) => isInside(real, root));
   if (matchingRoots.length === 0) {
-    throw new PathAccessDeniedError(`Path access denied: ${DEFAULT_ROOTS_MESSAGE}`);
+    throw new PathAccessDeniedError(`Path access denied: ${rootsMessage}`);
   }
 
   const passesDotRule = matchingRoots.some((root) =>
@@ -130,6 +204,37 @@ export async function resolveAllowedPath(target: unknown, roots?: readonly strin
   const real = await resolveExistingPrefix(absolute);
   await assertAllowed(real, roots ?? (await getAllowedRoots()));
   return real;
+}
+
+async function assertWritable(real: string, roots: readonly string[]): Promise<void> {
+  for (const guarded of protectedDeployPaths()) {
+    const resolved = (await realpathOrNull(guarded)) ?? guarded;
+    if (isInside(real, resolved) || isInside(real, guarded)) {
+      throw new PathAccessDeniedError('Path access denied: deploy files are read-only');
+    }
+  }
+  await assertAllowed(real, roots, WRITE_ROOTS_MESSAGE);
+}
+
+/**
+ * Like resolveAllowedPath, for a path that will be created or changed: it must
+ * be inside a write root (FILE_WRITE_ROOTS), which is stricter than the read
+ * roots. Use the returned path, never the requested one.
+ */
+export async function resolveWritablePath(target: unknown, roots?: readonly string[]): Promise<string> {
+  const absolute = toAbsolute(target);
+  const real = await resolveExistingPrefix(absolute);
+  await assertWritable(real, roots ?? (await getWriteRoots()));
+  return real;
+}
+
+/** Like resolveAllowedEntry (last component not resolved), against the write roots. For deleting. */
+export async function resolveWritableEntry(target: unknown, roots?: readonly string[]): Promise<string> {
+  const absolute = toAbsolute(target);
+  const parent = await resolveExistingPrefix(path.dirname(absolute));
+  const entry = path.join(parent, path.basename(absolute));
+  await assertWritable(entry, roots ?? (await getWriteRoots()));
+  return entry;
 }
 
 /**
