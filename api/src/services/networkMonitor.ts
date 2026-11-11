@@ -1,10 +1,11 @@
 import { execFileSync } from 'child_process';
+import { buildChildEnv } from './childEnv.js';
 import { getCommandPolicyConfig, resolveExecutable } from './commandPolicy.js';
 
 /** Run a fixed argv synchronously, without a shell, resolving the program in trusted dirs. */
 function runSync(file: string, args: string[], timeout = 5000): string {
   const resolved = resolveExecutable(file, getCommandPolicyConfig().searchPath) ?? file;
-  return execFileSync(resolved, args, { timeout, shell: false, windowsHide: true }).toString();
+  return execFileSync(resolved, args, { timeout, env: buildChildEnv(), shell: false, windowsHide: true }).toString();
 }
 
 export interface NetworkInterface {

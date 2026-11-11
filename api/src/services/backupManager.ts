@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { spawn } from 'child_process';
+import { buildChildEnv } from './childEnv.js';
 import { API_ROOT } from '../config/paths.js';
 import { resolveAllowedPath } from './pathPolicy.js';
 
@@ -70,6 +71,7 @@ export async function createBackup(paths: string[], name?: string): Promise<Back
 
   await new Promise<void>((resolve, reject) => {
     const tar = spawn('tar', ['-czf', archivePath, ...resolvedPaths], {
+      env: buildChildEnv(),
       stdio: 'inherit',
     });
 
@@ -149,6 +151,7 @@ export async function restoreBackup(name: string, destination: string): Promise<
 
   await new Promise<void>((resolve, reject) => {
     const tar = spawn('tar', ['-xzf', backupPath, '-C', destResolved], {
+      env: buildChildEnv(),
       stdio: 'inherit',
     });
 

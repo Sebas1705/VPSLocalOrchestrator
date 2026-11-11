@@ -10,6 +10,7 @@
  */
 
 import { getLogger } from '../../config/index.js';
+import { buildChildEnv } from '../../services/childEnv.js';
 
 const logger = getLogger('health-checks');
 
@@ -365,7 +366,7 @@ export class BuiltInHealthChecks {
         const { promisify } = await import('util');
         const execFileAsync = promisify(execFile);
 
-        const { stdout } = await execFileAsync('df', ['-BG', '--', path], { shell: false, windowsHide: true });
+        const { stdout } = await execFileAsync('df', ['-BG', '--', path], { env: buildChildEnv(), shell: false, windowsHide: true });
         const lastLine = String(stdout).split('\n').filter((line) => line.trim()).pop() ?? '';
         const freeGB = parseInt((lastLine.trim().split(/\s+/)[3] ?? '').replace('G', ''), 10);
 

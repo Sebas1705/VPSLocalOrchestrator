@@ -1,4 +1,5 @@
 import { execFile, spawn } from 'child_process';
+import { buildChildEnv } from './childEnv.js';
 import path from 'path';
 import {
   authorizeCommand,
@@ -120,7 +121,7 @@ export function runProcess(file: string, args: readonly string[] = [], options: 
       {
         timeout,
         cwd: options.cwd,
-        env: { ...process.env, ...options.env },
+        env: buildChildEnv(options.env),
         maxBuffer: options.maxBuffer || 1024 * 1024 * 10, // 10MB buffer
         shell: false,
         windowsHide: true,
@@ -196,6 +197,7 @@ export function executeStreamCommand(
 ) {
   const { authorized } = authorizeRequestedCommand({ command, args }, undefined, 'stream');
   const child = spawn(authorized.file, authorized.args, {
+    env: buildChildEnv(),
     shell: false,
     windowsHide: true,
   });
